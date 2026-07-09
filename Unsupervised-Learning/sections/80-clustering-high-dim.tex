@@ -1,0 +1,107 @@
+\section{Clustering in High Dimensions}
+
+\medskip
+
+High-dimensional data introduce both computational and geometric difficulties. 
+Computationally, resource requirements can grow exponentially in the number of features $p$ (e.g., checking all subsets in regression requires $2^p$ models). Geometrically, the problem becomes qualitatively different: distances between points lose contrast. Since clustering methods such as K-means rely directly on distances, this phenomenon undermines their effectiveness.
+
+\medskip
+
+\textbf{Distance concentration.}
+
+Let $x_i, x_j \in \mathbb{R}^p$ have independent standard normal coordinates. The squared Euclidean distance is
+\[
+\|x_i - x_j\|^2 = \sum_{k=1}^p (x_{ik} - x_{jk})^2.
+\]
+Each coordinate difference has variance $2$, so
+\[
+\mathbb{E}\big[\|x_i - x_j\|^2\big] = 2p.
+\]
+Moreover,
+\[
+\frac{\text{stdev}\big(\|x_i - x_j\|^2\big)}{\mathbb{E}\big(\|x_i - x_j\|^2\big)} 
+= \frac{\sqrt{2p}}{2p}
+= \frac{1}{\sqrt{p}}
+\to 0 \quad \text{as } p \to \infty.
+\]
+The ratio above is the \emph{coefficient of variation}, which measures relative dispersion. 
+As $p$ increases, the relative spread of distances shrinks. Distances grow in magnitude, but their \emph{relative variability} vanishes. In high dimensions, most pairwise distances are nearly the same. This “flattening” of geometry makes distance-based clustering fragile.
+
+\medskip
+
+\textbf{PCA before clustering.}
+
+A standard remedy is to reduce dimension using Principal Components Analysis (PCA) and then cluster in the reduced subspace. If $X$ is a centered $n \times p$ data matrix, PCA computes
+\[
+S = \frac{1}{n-1} X^\top X, \qquad
+S = V \Lambda V^\top, \qquad
+Z = XV.
+\]
+The first $K$ principal components,
+\[
+Z_{1:K} = X V_{1:K},
+\]
+span directions of maximal variance. By projecting onto these directions, we often remove noise and collinearity while preserving dominant structure. Clustering is then performed on $Z_{1:K}$ rather than on the original $p$-dimensional space. Note that PCA maximizes variance, not class separation. High explained variance does not guarantee well-separated clusters.
+
+\medskip
+
+\textbf{Evaluating clustering performance.}
+
+When true labels are available (e.g., case studies), we can use external validation metrics.
+
+\emph{Adjusted Rand Index (ARI).}
+
+ARI compares a clustering to known labels. It equals 1 for perfect agreement and has expected value 0 under random partitions. Moderate ARI values (e.g., 0.2–0.5) can still indicate meaningful structure in unsupervised settings.
+
+A low ARI does not necessarily imply useless clusters. For example, in IoT flow data, labels may represent very specific attack categories, while K-means discovers broader traffic regimes (e.g., bursty vs steady behavior). The geometric structure found by clustering may not align with the semantic labeling scheme.
+
+\emph{Jaccard index.}
+When no ground-truth labels exist, we may compare two clusterings using pairwise co-membership overlap:
+\[
+J(A,B) = \frac{|A \cap B|}{|A \cup B|}.
+\]
+
+Intuitively, Jaccard answers the question: \emph{of all the pairs of observations that at least one clustering puts together, what fraction do both clusterings agree on?}
+
+Think in terms of pairs of data points. For any two observations, there are two possibilities in a given clustering: either they are placed in the same cluster (co-membership) or they are not. For two clusterings $A$ and $B$:
+
+\begin{itemize}[label=$\circ$, itemsep=0.3em]
+    \item $|A \cap B|$ counts the number of pairs that \emph{both} clusterings place in the same cluster.
+    \item $|A \cup B|$ counts the number of pairs that \emph{at least one} clustering places in the same cluster.
+\end{itemize}
+
+Thus, the Jaccard index measures the proportion of shared grouping decisions among all grouping decisions made by either clustering. 
+
+A value close to 1 means the two clusterings group essentially the same pairs together. A value near 0 means that when one clustering groups two observations together, the other typically does not.
+
+Because it only compares clusterings to each other, Jaccard is useful for assessing \emph{stability}: for example, re-running K-means with different random starts or on bootstrap samples and checking whether the resulting partitions are consistent.
+
+\medskip
+
+\textbf{Feature selection and sparsity.}
+
+If we prefer not to project onto principal components, we may instead reduce dimensionality by selecting or weighting features.
+
+\emph{Filter methods.}
+Rank variables by variance, mutual information, or univariate tests, and retain the top $m$. These methods are computationally simple and interpretable but ignore feature interactions.
+
+\emph{Embedded sparsity (e.g., sparse K-means).}
+Some methods learn feature weights directly during clustering:
+\[
+\max_{\{C_k\}, w} \sum_{j=1}^p w_j \, \text{BCSS}_j 
+\quad \text{s.t.} \quad 
+\sum_{j=1}^p |w_j| \le \tau, 
+\quad w_j \ge 0.
+\]
+Here $\text{BCSS}_j$ is the between-cluster sum of squares for feature $j$, and $w_j$ are nonnegative weights constrained by a budget $\tau$. The constraint induces sparsity, concentrating weight on a subset of discriminative variables and down-weighting noisy dimensions.
+
+\medskip
+
+\textbf{Common misconceptions of high-dimensional clustering are:}
+\begin{itemize}[label=$\circ$, itemsep=0.4em]
+    \item More features help $\longrightarrow$ Not necessarily true. Adding weak or noisy variables increases distance concentration and can blur cluster structure in distance-based methods.
+    \item High explained variance guarantees good clusters $\longrightarrow$ PCA maximizes variance, not class separation. A small set of PCs can explain most variance yet still fail to separate groups.
+    \item K-means failed so there are no clusters $\longrightarrow$ K-means searches for roughly spherical clusters under Euclidean distance. Non-spherical or density-based structure may require alternative methods (e.g., DBSCAN or hierarchical clustering).
+    \item Only ARIs near 1 are useful $\longrightarrow$ In real unsupervised problems, moderate ARI values (e.g., 0.2--0.5) can still reflect meaningful and managerially useful segmentation.
+\end{itemize}
+

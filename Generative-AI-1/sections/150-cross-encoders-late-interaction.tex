@@ -1,0 +1,44 @@
+\section{Cross-Encoders and Late Interaction}
+\medskip
+
+Bi-encoders trade expressiveness for efficiency. Cross-encoders do the opposite.
+
+\bigskip
+\subsection{Cross-Encoder}
+\medskip
+
+A cross-encoder feeds the pair jointly:
+\[
+\texttt{[CLS]} \; Q \; \texttt{[SEP]} \; D \; \texttt{[SEP]}.
+\]
+
+Full attention allows rich token-level interaction between query and document. However, at inference we must process every pair:
+\[
+O(N) \text{ forward passes per query.}
+\]
+
+This is computationally expensive, making cross-encoders suitable primarily for re-ranking a small candidate set.
+
+\bigskip
+\subsection{ColBERT and Late Interaction}
+\medskip
+
+ColBERT offers a middle ground. Queries and documents are encoded independently at the token level:
+\[
+\{T_i^Q\}, \quad \{T_j^D\}.
+\]
+
+Relevance is computed via
+\[
+\text{score}(Q, D)
+=
+\sum_i
+\max_{j}
+\langle T_i^Q, T_j^D \rangle.
+\]
+
+This preserves offline document encoding while enabling fine-grained token matching. The approach requires more memory than a single-vector bi-encoder, but avoids the full cost of cross-encoding. It balances scalability and expressiveness.
+
+
+\bigskip
+

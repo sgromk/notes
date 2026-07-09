@@ -1,0 +1,187 @@
+\documentclass[11pt]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage[margin=1in]{geometry} 
+\usepackage{colortbl} 
+\usepackage{array}    
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{parskip}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+
+\sisetup{
+  group-separator={,},
+  group-minimum-digits=4,
+  round-mode=places,
+  round-precision=2,
+  input-ignore={,} % <-- allows commas in input
+}
+
+\setlength{\parskip}{6pt}
+
+\setlist[itemize]{label=--}
+
+\setcounter{secnumdepth}{0}
+
+\definecolor{darkblue}{rgb}{0,0,0.8}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=darkblue,
+  citecolor=darkblue,
+  urlcolor=darkblue
+}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  breaklines=true,
+  frame=single,
+  captionpos=b
+}
+
+% --- Theorem Environments ---
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+% --- Custom Commands ---
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\prob}[1]{\mathbb{P}\left(#1\right\)}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\newcommand{\altrowtable}[3]{%
+  \renewcommand{\arraystretch}{1.4} 
+  \begin{minipage}{0.95\linewidth}
+  \rowcolors{1}{gray!10}{white}
+  \begin{tabular}{@{} >{\raggedright\arraybackslash}m{#1\linewidth} m{#2\linewidth} @{}}
+  #3
+  \end{tabular}
+  \end{minipage}
+}
+
+\lstdefinestyle{rstyle}{
+    language=R,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true
+}
+
+% Box style
+\tcbset{
+  qa/.style={
+    colback=white,
+    colframe=black,
+    coltitle=black,
+    fonttitle=\small\bfseries,
+    fontupper=\small,   % �� makes content smaller
+    sharp corners,
+    boxrule=0.3pt,
+    enhanced,
+    breakable,
+    colbacktitle=white
+  }
+}
+
+\titlespacing*{\section}{0pt}{*1}{*0.5}
+\titlespacing*{\subsection}{0pt}{*0.5}{*0.25}
+\setlist{noitemsep, topsep=0pt}
+
+% --- Document Start ---
+\begin{document}
+
+% --- Title Page ---
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    {\Huge\bfseries MIS 285N: Generative AI I \par}
+    \vspace{1.5cm}
+    {\Large Gabriel Kinshuk \par}
+    \vspace{0.5cm}
+    {\large Instructor: Dr. Constantine Caramanis \par}
+    \vfill
+    {\large Spring 2026 \par}
+\end{titlepage}
+
+% --- Table of Contents ---
+\tableofcontents
+\clearpage
+
+\newpage
+\input{sections/10-neural-networks.tex}
+
+\input{sections/20-convolutional-neural-networks.tex}
+
+\input{sections/30-logistic-regression.tex}
+
+\input{sections/40-transfer-learning.tex}
+
+\input{sections/50-embeddings.tex}
+
+\input{sections/60-word2vec.tex}
+
+\input{sections/70-search-knowledge-base.tex}
+
+\input{sections/80-llm-embedding-models.tex}
+
+\input{sections/90-self-supervised-training.tex}
+
+\input{sections/100-input-representation-bert.tex}
+
+\input{sections/110-mlm-head-core-encoder.tex}
+
+\input{sections/120-sentence-level-representations.tex}
+
+\input{sections/130-supervised-fine-tuning.tex}
+
+\input{sections/140-embedding-models-retrieval.tex}
+
+\input{sections/150-cross-encoders-late-interaction.tex}
+
+\input{sections/160-clip-contrastive-pretraining.tex}
+
+\input{sections/170-zero-shot-clip.tex}
+
+\input{sections/180-adversarial-attacks.tex}
+
+\newpage
+\input{sections/190-worked-examples.tex}
+
+\newpage
+\input{sections/200-practice-questions.tex}
+
+\end{document}

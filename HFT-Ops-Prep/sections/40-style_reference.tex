@@ -1,0 +1,37 @@
+\begin{center}
+{\Large {\color{red} Style Reference Page}}
+\end{center}
+\vspace{5em}
+
+\begin{definition}[Expectation]
+For a discrete random variable $X$ with support $\mathcal{X}$,
+$\E[X] = \sum_{x \in \mathcal{X}} x \, \Prob(X = x)$, provided the sum converges absolutely.
+\end{definition}
+
+\begin{keybox}[Linearity of expectation]
+For any random variables $X_1,\dots,X_n$ and scalars $a_i$,
+\[
+  \E\!\left[\sum_{i=1}^n a_i X_i\right] = \sum_{i=1}^n a_i \, \E[X_i].
+\]
+This holds with no independence assumption. It is the single highest-yield identity for interview brainteasers, especially when combined with indicator variables $\ind\{\cdot\}$.
+\end{keybox}
+
+\begin{theorem}[Variance of a sum]
+If $X_1,\dots,X_n$ are pairwise uncorrelated, then
+$\Var\!\left(\sum_i X_i\right) = \sum_i \Var(X_i)$.
+\end{theorem}
+
+\begin{proof}
+Expand $\Var(\sum_i X_i) = \sum_i \Var(X_i) + \sum_{i \neq j}\Cov(X_i,X_j)$.
+Pairwise uncorrelatedness kills every cross term, leaving the claim.
+\end{proof}
+
+\begin{example}
+Draw a uniformly random permutation of $\{1,\dots,n\}$. Let $X$ count fixed points.
+Write $X = \sum_i \ind\{\pi(i)=i\}$. Each indicator has mean $1/n$, so by linearity $\E[X]=1$, independent of $n$.
+\todo{Add the variance derivation and the derangement limit $\Prob(X=0)\to e^{-1}$.}
+\end{example}
+
+\begin{remark}
+Keep a running list of distributions with their mean, variance, and MGF. Interviewers probe recall speed on Bernoulli, Binomial, Geometric, Poisson, Exponential, and Normal.
+\end{remark}

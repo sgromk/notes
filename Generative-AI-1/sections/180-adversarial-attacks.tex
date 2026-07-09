@@ -1,0 +1,93 @@
+\section{Adversarial Attacks}
+\medskip
+
+We now shift to a different but related topic: adversarial robustness.
+
+Neural networks are trained by adjusting parameters $\theta$ to minimize a loss function:
+\[
+\theta_{+}
+=
+\theta
+-
+\eta
+\sum_{i \in S}
+\nabla_\theta \mathcal{L}(x_i, y_i, \theta).
+\]
+
+Training changes the model parameters to reduce loss.
+
+An adversarial attack flips this perspective. Instead of changing $\theta$, we hold the model fixed and change the input $x$:
+\[
+x_{+}
+=
+x
+\pm
+\eta
+\nabla_x \mathcal{L}(x, y, \theta).
+\]
+
+The gradient with respect to the input tells us how to perturb the image in order to increase or decrease the loss.
+
+\bigskip
+\subsection{Geometric Interpretation}
+\medskip
+
+Consider a trained classifier that correctly labels an image of a puppy. In pixel space, this image corresponds to a point $x$. The classifier partitions space into decision regions.
+
+The gradient $\nabla_x \mathcal{L}(x, y, \theta)$ indicates the direction in input space that most rapidly increases the loss. By taking a small step in that direction, we can push the image across a decision boundary.
+
+Although the perturbation may be visually imperceptible to humans, it can dramatically alter the model's prediction. An image that looks identical to us may now be classified with high confidence as a different category.
+
+This phenomenon reveals that high-dimensional decision boundaries can be extremely fragile.
+
+\bigskip
+\subsection{Fast Gradient Method}
+\medskip
+
+One common attack is the Fast Gradient Sign Method (FGSM). It constructs an adversarial example by:
+
+\[
+x_{\text{adv}}
+=
+x
++
+\epsilon \,\text{sign}\!\left(
+\nabla_x \mathcal{L}(x, y, \theta)
+\right).
+\]
+
+Here, $\epsilon$ controls the perturbation magnitude. The sign operation ensures that each pixel is shifted in the direction that increases the loss, but by a bounded amount.
+
+The result is an adversarial image that may appear unchanged to humans but is confidently misclassified by the model.
+
+\bigskip
+\subsection{Training vs. Attacking}
+\medskip
+
+The contrast between training and attacking is conceptually elegant:
+
+\begin{itemize}
+    \item Training modifies $\theta$ to minimize loss on fixed data.
+    \item Attacking modifies $x$ to maximize loss under fixed parameters.
+\end{itemize}
+
+Mathematically, both involve gradients. The difference lies in which variable we treat as adjustable.
+
+This duality highlights a deeper principle: the same optimization machinery that enables learning can also expose vulnerabilities.
+
+\bigskip
+\subsection{Implications for Embedding Models}
+\medskip
+
+For multimodal models such as CLIP, adversarial perturbations can affect either modality. An image can be altered to align with an incorrect text embedding, or a text prompt can be subtly modified to change similarity rankings.
+
+Because retrieval and zero-shot classification rely directly on inner products in embedding space,
+\[
+\langle t, v \rangle,
+\]
+small shifts in embeddings can significantly change rankings.
+
+Thus, robustness in embedding models is not merely a classification issue. It directly affects retrieval systems, search engines, and multimodal applications.
+
+Understanding adversarial behavior is therefore essential when deploying large embedding models in real-world systems.
+

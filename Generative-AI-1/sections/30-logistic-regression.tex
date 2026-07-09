@@ -1,0 +1,204 @@
+\section{Logistic Regression}
+
+\medskip
+
+Logistic regression can be viewed as the simplest neural network: a model with no hidden layers and a single linear transformation feeding directly into a probabilistic output. In this sense, it is a one-layer neural network trained with cross-entropy loss.
+
+It learns a linear decision boundary by assuming that the log-odds of the two classes are a linear function of the input. When the data are not perfectly linearly separable, different loss functions produce different separating hyperplanes, even though the classifier itself remains linear.
+
+\bigskip
+
+\subsection{Measuring Loss}
+
+\medskip
+
+Consider data in $\mathbb{R}^2$ where $x_1$ is informative and $x_2$ is mostly noise. As we slide a linear decision boundary along the $x_1$ axis, we can evaluate its quality using different loss functions.
+
+The most direct measure is the classification error rate. However, as a function of the boundary location, the error rate is \emph{discontinuous}. A small change in the boundary does nothing until it crosses a data point, at which point the loss jumps. This makes optimization difficult: gradients do not exist, and one would need to search explicitly, leading to slow convergence on the order of $\mathcal{O}(1/\epsilon)$ to reach accuracy $\epsilon$.
+
+Instead, we use smooth surrogate losses such as hinge loss, exponential loss, or cross-entropy loss. These are convex and differentiable, which allows efficient gradient-based optimization. For convex losses, convergence to accuracy $\epsilon$ can occur in time on the order of $\mathcal{O}(\log(1/\epsilon))$ under standard assumptions.
+
+Cross-entropy loss differs from minimizing classification error directly. Rather than penalizing only misclassifications, it penalizes \emph{confidence}. Predictions that are correct but uncertain still incur loss, and incorrect predictions that are confident incur large loss. This produces a smoother optimization landscape and leads to probabilistic outputs instead of just hard decisions.
+
+In non-separable data, cross-entropy does not attempt to eliminate every classification error. Instead, it adjusts the boundary to reduce the total loss over all points. If correcting a small cluster would increase the loss on a much larger group, the optimizer will leave that cluster misclassified. The solution is determined by the aggregate contribution of all data points to the objective.
+
+At the same time, points that lie near the decision boundary receive probabilities close to $0.5$ for each class, meaning the model has low confidence. If such a point is misclassified, the cross-entropy loss is moderate rather than large, because the prediction was not confident. For example, if the model distinguishes only red and blue but a point lies in a region that is effectively ambiguous between them, the best it can do is assign intermediate probabilities (approximately $0.5, 0.5$). The boundary may shift so that ambiguous regions correspond to uncertain predictions rather than confident errors.
+
+\bigskip
+
+\subsection{Convex Functions}
+
+\medskip
+
+A function $f$ is called \emph{convex} if, for any two points $x_1, x_2$ in its domain, the line segment joining $(x_1, f(x_1))$ and $(x_2, f(x_2))$ lies above the graph of the function. Analytically, this means that for any $\lambda \in [0,1]$,
+
+\[
+f\big(\lambda x_1 + (1-\lambda)x_2\big)
+\;\le\;
+\lambda f(x_1) + (1-\lambda) f(x_2).
+\]
+The left-hand side evaluates the function at a convex combination of the inputs.  
+The right-hand side forms the same convex combination of the function values.  
+
+Convexity therefore guarantees that averaging inputs cannot produce a function value larger than averaging the outputs. Another key characteristic of convex functions are that any local optimum must also be the \textit{global} optimum. 
+
+\bigskip
+
+\subsection{Gradient Descent}
+
+\medskip
+
+We defined the loss as
+\[
+L(\theta) = \frac{1}{n}\sum_{i=1}^n \text{Loss}(x_i, \theta),
+\]
+so its gradient is
+
+\[
+\nabla L(\theta)
+=
+\sum_{i=1}^n \nabla \text{Loss}(x_i, \theta).
+\]
+
+The full-batch update therefore takes the form
+\[
+\theta_{t+1}
+=
+\theta_t
+-
+\eta
+\sum_{i=1}^n
+\nabla \text{Loss}(x_i, \theta_t).
+\]
+
+For large datasets, evaluating this sum at every step is costly.  
+Instead, we approximate it using a subset $S \subset \{1,\dots,n\}$:
+
+\[
+\theta_{t+1}
+=
+\theta_t
+-
+\eta
+\sum_{i \in S}
+\nabla \text{Loss}(x_i, \theta_t).
+\]
+
+If $|S|=1$, this is stochastic gradient descent.  
+If $1<|S|<n$, this is mini-batch gradient descent.  
+Mini-batching reduces computation per update and injects useful noise into the optimization process.
+
+\medskip
+
+In PyTorch, the \texttt{DataLoader} handles mini-batching.  
+Within the training loop,
+
+\begin{itemize}
+\item \texttt{loss.backward()} computes the gradient of the batch loss,
+\item \texttt{optimizer.step()} updates the parameters via
+\[
+\theta \leftarrow \theta - \eta\,\widehat{\nabla L(\theta)},
+\]
+\end{itemize}
+
+where $\widehat{\nabla L(\theta)}$ denotes the gradient evaluated on the current batch.  
+With the default mean reduction, this is the average of the per-sample gradients in that batch.
+
+Each call to \texttt{optimizer.step()} therefore performs one gradient descent update based only on the selected subset of data.
+
+\bigskip
+
+\subsection{Code Implementation with PyTorch}
+
+\medskip
+
+\noindent
+\begin{minipage}[t]{0.55\textwidth}
+\vspace{0pt}
+
+\begin{lstlisting}[language=Python]
+import torch
+import torch.nn as nn
+
+class SimpleLogisticNN(nn.Module):
+    def __init__(self):
+        super(SimpleLogisticNN, self).__init__()
+        self.linear = nn.Linear(2, 2)
+
+    def forward(self, x):
+        x = self.linear(x)
+        x = nn.functional.softmax(x, dim=1)
+        return x
+
+model = MyNNet()
+\end{lstlisting}
+
+\end{minipage}
+\hspace{1em}
+\begin{minipage}[t]{0.4\textwidth}
+\vspace{0pt}
+\raggedright
+
+\texttt{nn.Linear(2,2)} defines a single linear layer mapping 2 input features to 2 output logits.
+
+\medskip
+
+\texttt{nn.functional.softmax} applies the softmax activation. The \texttt{nn.functional} module contains stateless activation functions that are applied directly in the forward pass.
+
+\medskip
+
+\texttt{dim=1} specifies that softmax is computed across the class dimension (the second axis of the tensor), so each row of the batch is converted into a probability distribution.
+
+\end{minipage}
+
+\bigskip
+
+\subsection{Geometric Interpretation of Logistic Regression}
+
+\medskip
+
+Logistic regression is fundamentally a geometric model.  
+Each class has an associated weight vector $w$, and the model computes the inner product
+\[
+z = w^\top x.
+\]
+This inner product measures how aligned the input vector $x$ is with the weight vector $w$.
+
+\medskip
+
+Geometrically, the inner product can be written as
+\[
+w^\top x = \|w\|\,\|x\|\cos\theta,
+\]
+where $\theta$ is the angle between the two vectors.  
+If $x$ points in roughly the same direction as $w$, the cosine is positive and large.  
+If it points in the opposite direction, the cosine is negative.  
+Thus, logistic regression classifies points based on their alignment with the learned weight vectors.
+
+\medskip
+
+In the multi-class case, each class has its own weight vector $w_k$, producing logits
+\[
+z_k = w_k^\top x.
+\]
+The softmax function then converts these scores into probabilities.  
+The predicted class is the one whose weight vector has the largest inner product with $x$.
+
+\medskip
+
+The decision boundary between two classes occurs when their scores are equal:
+\[
+w_1^\top x = w_2^\top x.
+\]
+Rewriting,
+\[
+(w_1 - w_2)^\top x = 0,
+\]
+which defines a hyperplane.  
+
+Therefore, logistic regression separates space with linear hyperplanes, and classification depends on which weight vector is most aligned with the input.
+
+
+
+\bigskip
+

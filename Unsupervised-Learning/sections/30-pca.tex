@@ -1,0 +1,499 @@
+\section{Principal Component Analysis}
+
+\medskip
+
+Some key R commands are:
+\begin{itemize}
+    \item \texttt{prcomp}: solve for principal components
+    \item \texttt{plot3d}: visualize PCs
+    \item \texttt{pairs}: create scatterplots of each feature against the others
+\end{itemize}
+
+\medskip
+
+\bigskip
+
+\subsection{Orthonormal Transformations}
+
+A linear transformation is \textit{orthonormal} if it preserves both angles between vectors and lengths of vectors. Such transformations correspond to rotations or reflections. No stretching or skewing occurs.
+
+\medskip
+
+Consider the transformation matrix
+\[
+Q =
+\begin{bmatrix}
+\frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} \\
+\frac{1}{\sqrt{2}} & \phantom{-}\frac{1}{\sqrt{2}}
+\end{bmatrix}
+\]
+
+Its columns are
+\[
+\mathbf{q}_1 =
+\begin{bmatrix}
+\frac{1}{\sqrt{2}} \\
+\frac{1}{\sqrt{2}}
+\end{bmatrix},
+\qquad
+\mathbf{q}_2 =
+\begin{bmatrix}
+-\frac{1}{\sqrt{2}} \\
+\frac{1}{\sqrt{2}}
+\end{bmatrix}
+\]
+
+\subsubsection*{Angle Preservation}
+
+Angles are preserved if the columns are orthogonal, meaning their dot product is zero:
+\[
+\mathbf{q}_1 \cdot \mathbf{q}_2
+=
+\begin{bmatrix}
+\frac{1}{\sqrt{2}} &
+\frac{1}{\sqrt{2}}
+\end{bmatrix} \cdot 
+\begin{bmatrix}
+-\frac{1}{\sqrt{2}} \\
+\frac{1}{\sqrt{2}}
+\end{bmatrix}
+=
+\left(\frac{1}{\sqrt{2}}\right)\left(-\frac{1}{\sqrt{2}}\right)
++
+\left(\frac{1}{\sqrt{2}}\right)\left(\frac{1}{\sqrt{2}}\right)
+=
+-\frac{1}{2} + \frac{1}{2} = 0
+\]
+
+Since the dot product is zero, the columns are perpendicular, so angles are preserved.
+
+\subsubsection*{Length Preservation}
+
+Lengths are preserved if each column has norm 1.
+
+For the first column:
+\[
+\|\mathbf{q}_1\|
+=
+\sqrt{
+\left(\frac{1}{\sqrt{2}}\right)^2
++
+\left(\frac{1}{\sqrt{2}}\right)^2
+}
+=
+\sqrt{\frac{1}{2} + \frac{1}{2}}
+=
+1
+\]
+
+The same calculation applies to $\mathbf{q}_2$.  
+Therefore, the transformation preserves vector lengths.
+
+\medskip
+
+\begin{center}
+\begin{tikzpicture}[scale=2]
+  \draw[->] (-1.2,0) -- (1.2,0) node[right] {$x$};
+  \draw[->] (0,-1.2) -- (0,1.2) node[above] {$y$};
+
+  \draw[thick, blue, ->] (0,0) -- (0.707,0.707) node[right] {$\mathbf{q}_1$};
+  \draw[thick, red, ->] (0,0) -- (-0.707,0.707) node[left] {$\mathbf{q}_2$};
+\end{tikzpicture}
+\end{center}
+
+The columns form an orthonormal basis: perpendicular unit vectors.
+
+\subsubsection{Eigenvectors}
+
+An \textit{eigenvector} of a matrix is a nonzero vector whose \emph{direction} does not change under the transformation. The vector may be stretched or shrunk, but it is not rotated or tilted into a different direction.
+
+\medskip
+
+Consider the transformation
+\[
+A =
+\begin{bmatrix}
+2 & 1 \\
+0 & 1
+\end{bmatrix}
+\]
+
+and the vectors
+\[
+\mathbf{v}_1 =
+\begin{bmatrix}
+1 \\ 0
+\end{bmatrix},
+\qquad
+\mathbf{v}_2 =
+\begin{bmatrix}
+0 \\ 1
+\end{bmatrix}
+\]
+
+\subsubsection*{Applying the Transformation}
+
+First apply the transformation to \( \mathbf{v}_1 \):
+\[
+A \mathbf{v}_1
+=
+\begin{bmatrix}
+2 & 1 \\
+0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 0
+\end{bmatrix}
+=
+\begin{bmatrix}
+2 \\ 0
+\end{bmatrix}
+=
+2\mathbf{v}_1
+\]
+
+The output vector lies on the same line as \( \mathbf{v}_1 \). Its direction is unchanged, so \( \mathbf{v}_1 \) is an eigenvector.
+
+\medskip
+
+Now apply the transformation to \( \mathbf{v}_2 \):
+\[
+A \mathbf{v}_2
+=
+\begin{bmatrix}
+2 & 1 \\
+0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+0 \\ 1
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 \\ 1
+\end{bmatrix}
+\]
+
+This result is not a scalar multiple of \( \mathbf{v}_2 \). The direction has changed, so \( \mathbf{v}_2 \) is \emph{not} an eigenvector.
+
+\medskip
+
+\begin{center}
+\begin{tikzpicture}[scale=1.6]
+  % Axes
+  \draw[->] (-0.5,0) -- (2.5,0) node[right] {$x$};
+  \draw[->] (0,-0.5) -- (0,2.0) node[above] {$y$};
+
+  % v1 and Av1
+  \draw[thick, blue, ->] (0,0) -- (1,0) node[below] {$\mathbf{v}_1$};
+  \draw[thick, blue, dashed, ->] (0,0) -- (2,0) node[below] {$A\mathbf{v}_1$};
+
+  % v2 and Av2
+  \draw[thick, red, ->] (0,0) -- (0,1) node[left] {$\mathbf{v}_2$};
+  \draw[thick, red, dashed, ->] (0,0) -- (1,1) node[above] {$A\mathbf{v}_2$};
+\end{tikzpicture}
+\end{center}
+
+The blue vector is stretched but stays on the same line.  
+The red vector is tilted into a new direction.
+
+\medskip
+
+Only vectors whose direction is preserved by the transformation are eigenvectors.
+
+\subsubsection*{Finding Eigenvalues}
+
+Eigenvalues \( \lambda \) are found by solving
+\[
+\det(A - \lambda I) = 0
+\]
+
+For this matrix,
+\[
+\det
+\begin{bmatrix}
+2 - \lambda & 1 \\
+0 & 1 - \lambda
+\end{bmatrix}
+=
+(2 - \lambda)(1 - \lambda)
+= 0
+\]
+
+So the eigenvalues are
+\[
+\lambda = 2, \quad \lambda = 1
+\]
+
+Each eigenvalue corresponds to a direction that the transformation scales without rotating.
+
+
+
+
+
+
+\bigskip
+
+\subsection{Principal Components}
+
+\medskip
+
+PCA finds an orthonormal change of basis in feature space that preserves the geometry of the original (centered) data while presenting a more favourable view of the data. When all components are retained, this transformation can be interpreted as a rotation of the coordinate system, in which the unit basis vectors remain at unit length and are perpendicular to each other. More precisely, PCA finds axes along which the data is maximally spread out, subject to orthogonality constraints on successive axes. This can be interpreted as finding directions which retain the most information, where variance in discarded orthogonal directions corresponds to information lost.
+
+It is common to standardize variables prior to applying PCA in order to prevent variables with larger magnitudes from dominating the principal components. When PCA is performed on standardized variables, the total variance is equal to the number of variables, since each variable has unit variance:
+\[
+\frac{X_i - \overline{X}_i}{s_{x_i}}
+\]
+An alternative to standardizing, if we do not want each feature to have the same weight, is to simply center, which is the same calculation without dividing by $s_{x_i}$.
+
+We might note that, although the variables in the standardized data matrix have a variance equal to 1, the variance of each resulting principal component is \textit{not} necessarily equal to one. However, the total variance of the original standardized matrix and the total variance of the PCs \textit{is} equal. 
+
+Each subsequent principal component is constrained to lie in the subspace orthogonal to all previous components. While this subspace contains infinitely many unit vectors, corresponding to rotations within the orthogonal complement, PCA selects the unique direction (up to sign) that maximizes the remaining variance. Once the final principal component is reached, the orthogonal subspace is one-dimensional, leaving no remaining degrees of freedom and fixing the direction uniquely.
+
+Once the principal components are extracted, the coordinates of the original data are obtained by multiplying the centered or standardized data matrix by the matrix of loadings. This yields coordinates in the principal component basis and corresponds to an orthonormal transformation in which the geometry of the standardized data is preserved. An additional detail about the matrix of loadings is that the coefficients for a PC are all proportional to the correlations between that PC and the standardized $X$'s.
+
+If we have a matrix of loadings $\boldsymbol\beta$ and a data matrix $X$ then the transformation of the data into the PC-space (Z) is simply $Z=X \boldsymbol\beta$, and the transformation \textit{back} into the original space is $X = Z\boldsymbol\beta^T$ (because the transformation is orthonormal, the transpose is also the inverse). 
+
+Rather than looking at how different features load into a principal component, we may be interested in how a feature is split (loaded) into multiple principal components, $\xi$:
+\[
+X_j = \beta_{1,j} \xi_1 + \beta_{2, j}\xi_2 + \dots + \beta_{p, j} \xi_{p}
+\]
+Where the sum of squared loadings is equal to 1 (or the original variance if the features were not standardized):
+\[
+\beta_{1, j}^2 + \beta_{2,j}^2 + \dots + \beta_{p,j}^2 = \Var(X_j)
+\]
+If we use a subset of the original PCs, the sum of squared loadings will be less than the original variance. This sum is the \textit{communality}, representing the variance of $X_j$ accounted for by the retained components. The remaining variance is the \textit{uniqueness}.
+
+Some heuristics for retaining/discarding PCs are: 1) It is desirable for the first 6 or fewer PCs to capture 80\% of the variance. 2) Since the variance of a standardized feature is 1, if a PC has an eigenvalue (magnitude) less than 1 than it has less explanatory power than an original variable and can be discarded.
+
+\medskip
+
+A few additional notes are:
+\begin{itemize}[label=$\circ$]
+    \item In the special case where a PCs eigenvalue $\lambda = 0$ (zero variance in that PC direction), this indicates that there is a superfluous dimension and the data is entirely contained in a hyperplane, or in other words that the original data has perfect multicollinearity.
+    \item The orthonormal principal component transformation is \textit{unique} (up to sign).
+    \item The PCs maximize the variance of each dimension before it moves to the next, in this sense it is \textit{greedy}.
+    \item The variance of the $k$th principal component is equal to the $k$th eigenvalue of the covariance matrix
+\end{itemize}
+
+An example of a worked PCA calculation is \hyperref[worked-pca-two-variables]{here}.
+
+\bigskip
+
+\subsection{PCA as a Regression}
+
+\medskip
+
+The word \textit{regression} originates from the Latin \textit{regressus}, meaning to go back or return. In statistics, the term was popularized by Francis Galton through his observation of regression toward the mean, where extreme values tend to be followed by values closer to the average. In modern usage, to regress a variable means to explain or approximate its behavior by expressing it in terms of other variables. Regression is therefore a method of reconstruction: we attempt to recover one quantity by projecting it back onto a set of explanatory quantities.
+
+\medskip
+
+\subsubsection{Ordinary Least Squares (OLS)}
+
+The canonical example of regression is Ordinary Least Squares (OLS). Given a collection of observed data points, OLS seeks a linear function that best approximates the data by minimizing the sum of squared residuals. These residuals are defined as vertical deviations between the observed values and the fitted line. The optimization problem is directional: deviations are measured only along the axis of the response variable (we assume no error in the $X$s).
+
+\medskip
+
+\subsubsection{Modeling Relationships}
+
+In simple linear regression, a single predictor $X$ is used to model a response variable $Y$:
+\[
+Y = \beta_0 + \beta_1 X + \epsilon
+\]
+Here, $\beta_1$ quantifies the expected change in $Y$ associated with a one-unit change in $X$, while $\epsilon$ represents unexplained variation.
+
+With multiple predictors, the model generalizes to
+\[
+Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \dots + \beta_p X_p + \epsilon
+\]
+The coefficients $\beta_j$ describe partial effects, holding all other predictors fixed. This formulation is inherently asymmetrical. The predictors are treated as fixed and error-free, and the optimization focuses entirely on minimizing error in the response variable. The geometry of OLS reflects this asymmetry: distances are measured parallel to the $Y$ axis.
+
+\medskip
+
+\subsubsection{PCA as Symmetrical Regression}
+
+Principal Component Analysis replaces this asymmetrical viewpoint with a symmetrical one. Rather than privileging one variable as the response, PCA treats all variables equally. The first principal component is the unique line through the data that minimizes the sum of squared perpendicular distances from the observations to the line. Equivalently, it is the linear combination of the variables that maximizes variance.
+
+This geometric criterion explains why PCA can be interpreted as a form of regression. Instead of regressing one variable on the others, PCA performs a mutual regression in which each variable is simultaneously approximated by a common lower-dimensional representation. Each data point is projected orthogonally onto a line or plane, and those projected coordinates are then used to reconstruct all original variables at once. The quality of the fit is judged by how well this shared representation reproduces the entire data cloud, not any single variable. In this sense, PCA replaces many separate directional regressions with one symmetric approximation problem.
+
+
+PCA proceeds greedily. The first component $\xi_1$ captures as much total variance as possible. The second component captures the maximum remaining variance subject to being uncorrelated with the first, and so on. Each successive component explains variance left unexplained by its predecessors. In this sense, PCA performs a sequence of orthogonal regressions, each one fitting the largest remaining structure in the data.
+
+\medskip
+
+\subsubsection{Variable Reconstruction}
+
+When all $p$ principal components are retained, the transformation from the original variables to the components is invertible. No information is lost. Each original standardized variable $X_j$ can be written exactly as a linear combination of the components:
+\[
+X_j = \beta_{1j}\xi_1 + \beta_{2j}\xi_2 + \dots + \beta_{pj}\xi_p
+\]
+This expression has the formal structure of a multiple linear regression, where $X_j$ is the response and the principal components are the predictors.
+
+A key distinction from ordinary multiple regression is that the predictors $\xi_1, \dots, \xi_p$ are mutually uncorrelated by construction. As a result, the multiple regression coefficients coincide with the simple regression coefficients obtained by regressing $X_j$ on each component individually. For example, if we chose to regress $X_j$ over $\xi_1$, then we would exactly get the regression coefficient $\beta_{1j}$:
+\[
+X_j = \beta_{1j}\xi_1 + \epsilon_j
+\]
+In a typical multiple linear regression, the $X$ features might be correlated in some way, so the coefficients of the MLR would differ from the coefficients of running every single simple linear regression individually and naively ``adding" the equations. 
+
+\medskip
+
+\subsubsection{The Simple Linear Regression Identity}
+
+The coefficients in this reconstruction arise from a general identity in simple linear regression. If a response variable $A$ is regressed on a predictor $B$, the slope coefficient is
+\[
+\beta = r_{A,B} \frac{S_A}{S_B}
+\]
+where $r_{A,B}$ is the correlation between $A$ and $B$, and $S_A$ and $S_B$ are their standard deviations. This formula is purely algebraic and follows directly from the definitions of covariance, correlation, and variance.
+
+\medskip
+
+\subsubsection{Deriving the PCA Coefficients}
+
+Applying this identity to PCA, we treat $X_j$ as the response variable and $\xi_i$ as the predictor. The resulting coefficient is
+\[
+\beta_{ij} = r_{X_j, \xi_i} \frac{S_{X_j}}{S_{\xi_i}}
+\]
+The structure of PCA allows this expression to simplify substantially.
+
+First, the original variables are standardized, so
+\[
+S_{X_j} = 1.
+\]
+Second, the variance of the $i$th principal component is equal to its eigenvalue $\lambda_i$:
+\[
+Var(\xi_i) = \lambda_i,
+\qquad
+S_{\xi_i} = \sqrt{\lambda_i}.
+\]
+Substituting these facts into the regression formula yields
+\[
+\beta_{ij} = r_{X_j, \xi_i} \frac{1}{\sqrt{\lambda_i}}.
+\]
+
+This result shows that the coefficients linking variables to components are proportional to the correlations between them. For a fixed component $\xi_i$, the factor $1/\sqrt{\lambda_i}$ is constant across all variables. Consequently, the relative magnitudes of the coefficients depend entirely on the correlations $r_{X_j, \xi_i}$.
+
+Variables that are strongly correlated with a component receive large coefficients in its reconstruction. Variables with weak correlations contribute little. The component therefore represents a weighted average of the variables that are most strongly aligned with it.
+
+\medskip
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{0.95\textwidth}{
+>{\raggedright\arraybackslash}p{2.6cm}
+>{\raggedright\arraybackslash}p{1.2cm}
+X X X}
+\toprule
+\textit{Quantity} 
+& \textit{Symbol} 
+& \textit{Definition} 
+& \textit{Formula (standardized data)} 
+& \textit{Interpretation} \\
+\midrule
+
+Eigenvalue 
+& $\lambda_i$ 
+& Variance of principal component $\xi_i$ 
+& $\lambda_i = Var(\xi_i)$ 
+& Total variance explained by component $i$ \\
+
+Eigenvector entry 
+(regression coefficient) 
+& $v_{ji}$ 
+& Coefficient of $X_j$ in PC $i$ 
+& $\xi_i = \sum_j v_{ji} X_j$ 
+& Weight of variable $j$ in component $i$ \\
+
+Correlation 
+& $r_{X_j,\xi_i}$ 
+& Correlation between variable and component 
+& $r_{X_j,\xi_i} = v_{ji}\sqrt{\lambda_i}$ 
+& Strength of association between $X_j$ and PC $i$ \\
+
+Loading 
+(correlation form) 
+& $\ell_{ji}$ 
+& Correlation loading 
+& $\ell_{ji} = r_{X_j,\xi_i}$ 
+& Contribution of PC $i$ to explaining $X_j$ \\
+
+Reconstruction coefficient 
+& $\beta_{ij}$ 
+& Coefficient when regressing $X_j$ on $\xi_i$ 
+& $\beta_{ij} = \dfrac{r_{X_j,\xi_i}}{\sqrt{\lambda_i}} = v_{ji}$ 
+& Amount of $\xi_i$ used to reconstruct $X_j$ \\
+
+Communality 
+& $h_j^2$ 
+& Variance of $X_j$ explained by retained PCs 
+& $h_j^2 = \sum_{i=1}^k r_{X_j,\xi_i}^2$ 
+& Fraction of variance of $X_j$ captured by first $k$ PCs \\
+
+\bottomrule
+\end{tabularx}
+\caption*{Relationships Among Eigenvalues, Eigenvectors, Correlations, Loadings, and Regression Coefficients in PCA (Standardized Variables)}
+\end{table}
+
+\noindent\textbf{Recap of Definitions and Relationships}
+
+\begin{itemize}[itemsep=0.6em, label=$\circ$]
+
+\item \textbf{Eigenvalue $\lambda_i$.}  
+The eigenvalue associated with principal component $\xi_i$ is the variance of that component. Since the data are standardized, the total variance across all variables equals $p$, and the eigenvalues satisfy
+\[
+\sum_{i=1}^p \lambda_i = p.
+\]
+Each $\lambda_i$ measures how much total variability in the data is captured along direction $i$.
+
+\item \textbf{Eigenvector entry $v_{ji}$.}  
+The value $v_{ji}$ is the $j$th coordinate of the $i$th eigenvector of the covariance (correlation) matrix, defined by
+\[
+R v_i = \lambda_i v_i.
+\]
+It is the weight placed on variable $X_j$ when constructing the $i$th principal component:
+\[
+\xi_i = \sum_{j=1}^p v_{ji} X_j.
+\]
+Thus $v_{ji}$ measures how strongly $X_j$ contributes to the direction that maximizes variance subject to orthogonality constraints. Because eigenvectors are orthonormal,
+\[
+\sum_{j=1}^p v_{ji}^2 = 1,
+\]
+so the component direction has unit length. When the variables are standardized, $v_{ji}$ is exactly the simple regression coefficient obtained by regressing $X_j$ on $\xi_i$, since
+\[
+\beta_{ij} = \frac{\mathrm{Cov}(X_j,\xi_i)}{\mathrm{Var}(\xi_i)} = v_{ji}.
+\]
+
+\item \textbf{Correlation $r_{X_j,\xi_i}$.}  
+This is the Pearson correlation between the original variable $X_j$ and the component $\xi_i$. It satisfies
+\[
+r_{X_j,\xi_i} = v_{ji}\sqrt{\lambda_i}.
+\]
+Thus correlations are scaled versions of eigenvector entries. Large magnitude indicates that $X_j$ is strongly aligned with component $i$.
+
+\item \textbf{Loading $\ell_{ji}$.}  
+In most treatments of PCA, the term “loading” refers to the correlation between a variable and a component:
+\[
+\ell_{ji} = r_{X_j,\xi_i}.
+\]
+Loadings indicate how strongly each variable contributes to the meaning of a component. Some authors instead call $v_{ji}$ the loading, so terminology must be checked carefully.
+
+\item \textbf{Reconstruction coefficient $\beta_{ij}$.}  
+When expressing a variable as a linear combination of components,
+\[
+X_j = \sum_{i=1}^p \beta_{ij}\xi_i,
+\]
+the coefficient is
+\[
+\beta_{ij} = \frac{r_{X_j,\xi_i}}{\sqrt{\lambda_i}} = v_{ji}.
+\]
+Because the components are orthogonal, this multiple regression coincides with the simple regression of $X_j$ on $\xi_i$.
+
+\item \textbf{Communality $h_j^2$.}  
+If only the first $k$ components are retained, the communality of variable $X_j$ is
+\[
+h_j^2 = \sum_{i=1}^k r_{X_j,\xi_i}^2.
+\]
+This is the proportion of variance of $X_j$ explained by the retained components. The remaining variance is called uniqueness.
+
+\end{itemize}
+

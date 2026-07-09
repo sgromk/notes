@@ -1,0 +1,19 @@
+\section{Transfer Learning}
+
+\medskip
+
+Training large neural networks from scratch requires enormous amounts of data and computation. Transfer learning addresses this by reusing representations learned in one domain and applying them to another.
+
+The basic idea is simple, first we train a large network on a huge dataset, then reuse the learned representations for a different but related task. In practice, we typically replace the final output head to match the new objective (e.g., regression instead of classification, or a different number of classes). Initially, we may freeze the earlier layers and train only this new head. After it stabilizes, we can optionally unfreeze some or all of the earlier layers and fine-tune the network so that the shared features become better specialized to our dataset.
+
+\medskip
+
+Early layers of deep networks tend to learn general features such as edges, textures, and simple shapes.  
+These low-level patterns appear across many image domains. Later layers become task-specific. If the new task is related to the original one, the earlier representations remain useful. We only need to adapt the final layers.
+
+\medskip
+
+Transfer learning works best when the source and target domains share structure.  If the new dataset is small but related to the original dataset, the pre-trained features provide a strong starting point. For example, even though ImageNet consists of natural images and ultrasound images look very different, low-level visual patterns such as edges and textures are still present. The network can reuse these early features and adapt the higher-level layers to the new medical task.
+
+\bigskip
+

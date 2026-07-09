@@ -1,0 +1,200 @@
+\section{Outliers}
+
+\medskip
+
+An outlier is a case/observation that is not typical of the rest of the data. There are several different ways that we could ways we could define what an outlier is for a given dataset. For example, we could define it as any point $> 2 \sigma$ away from the mean. With this definition, there isn't anything necessarily ``wrong" with an outlier. In fact, if the data were normally distributed we would expect ~ 4\% of the data to be outliers. The following table compares some different ways to define an outlier for a given dataset.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{0.95\textwidth}{
+l
+>{\hsize=1.1\hsize}X
+>{\hsize=0.9\hsize}X
+}
+\toprule
+\textit{Meaning} 
+& \textit{Definition / Key Idea} 
+& \textit{Features (Advantage / Disadvantage)} \\
+\midrule
+Absolute standard 
+& A value that exceeds a fixed cutoff (e.g., 2 or more standard deviations from the mean). 
+The expected number of such values increases with sample size. 
+& + Simple and easy to apply \newline
+-- Ignores sample size effects and distributional context \\
+
+Relative standard 
+& A value that exceeds what would reasonably be expected given the size of the dataset. 
+Outlier status depends on sample size and probabilistic expectations. 
+& + Adjusts for sample size and randomness \newline
+-- Requires distributional assumptions \\
+
+Objective standard 
+& A value known not to belong for an external, substantive reason 
+(e.g., drawn from a different population). 
+& + Grounded in subject-matter knowledge \newline
+-- May rely on unverifiable or subjective judgment \\
+
+Effect 
+& A value whose inclusion or exclusion substantially changes the analysis 
+(e.g., regression slope, parameter estimates, or conclusions). 
+& + Directly tied to inferential impact \newline
+-- Identified only after model fitting, can be circular \\
+\bottomrule
+\end{tabularx}
+\caption*{Four Meanings of an Outlier}
+\end{table}
+
+When defining outliers based on their effect on a regression, what we are really identifying are \textit{influential observations}. We check whether removing a point meaningfully changes the fitted model, including the slope coefficients, the intercept, or fit statistics such as $R^2$. A noticeable change in any of these suggests influence.
+
+Influence itself is not inherently bad. In fact, influential observations often carry much of the information that determines the fitted relationship. Points that have no influence simply do not affect the model. The real concern is whether the influential observations are “good” data, meaning correctly measured and representative of the population of interest.
+
+In regression, an observation may be unusual in the predictor space (an outlier in $X$), unusual in the response (an outlier in $Y$), both, or neither. Not all such points are influential. Some extreme observations have little effect on the fitted line, while others, particularly high-leverage points, can substantially shift the estimates. For this reason, observations cannot be treated uniformly under this definition. Unlike the other approaches, this perspective classifies points based on their impact on the analysis rather than their magnitude or origin.
+
+\bigskip
+
+\subsection{Dealing with Outliers}
+
+\medskip
+
+For highly (inappropriately) influential outliers, we may choose the drastic option of dropping (removing) the data point entirely. This approach needs strong justification because it assumes that your model choice is correct and that the data is wrong. In many data sets, the reality may be that the model is insufficiently capturing the information in the data. 
+
+Another approach is to keep them, but to turn them into binary variables (if we are doing a regression). This treats the influential point as a special case rather than allowing it to distort the overall relationship.
+
+\bigskip
+
+\subsection{Isolation Forest}
+
+\medskip
+
+Some key R commands are:
+\begin{itemize}
+    \item \texttt{library(isotree)}: Loads the \texttt{isotree} package, which implements IF and EIF.
+
+    \item \texttt{isolation.forest()}: Fits an Isolation Forest (or Extended IF) model to the data.
+
+    With key parameters:
+    \begin{itemize}[label=$\circ$, itemsep=0.3em]
+        \item \texttt{ntrees}: Number of trees in the forest (default 100).
+        \item \texttt{sample\_size}: Number of observations used to train each tree (default is ``auto'', typically $\min(256, n)$).
+        \item \texttt{ndim}: Number of features used per split; \texttt{ndim = 1} gives standard IF, \texttt{ndim > 1} gives EIF.
+        \item \texttt{max\_depth}: Maximum tree depth (default ``auto'', allowing full isolation).
+        \item \texttt{nthreads}: Number of CPU threads for parallel computation (default 1).
+        \item \texttt{missing\_action}: How to handle missing values (e.g., ``fail'', ``impute'', or ``divide'').
+    \end{itemize}
+\end{itemize}
+
+\medskip
+
+
+The way Isolation Forest (IF) works is that, similar in structure to a decision tree, it repeatedly makes \textit{random axis-aligned hyperplane partitions} of the data. “Axis-aligned” means that each split involves only one feature at a time, so in two dimensions these would look like vertical or horizontal cuts, and in higher dimensions they are coordinate-wise hyperplane splits of the form $x_j=c$. Importantly, unlike standard decision trees, these splits are not chosen greedily to optimize a criterion, both the feature and the split point are selected at random.
+
+This recursive partitioning continues until a data point is isolated in its own node, or until a maximum tree depth is reached. For each observation, we record the number of splits required to isolate it, known as its \textit{path length}, and average this quantity across many random trees. Observations that require substantially fewer splits to isolate, meaning they have shorter average path lengths, are labeled as outliers.
+
+The underlying idea is that anomalies should be both rare and different from the bulk of the data. Because they are isolated in sparse regions of the feature space, random partitions tend to separate them more quickly than typical observations.
+
+\bigskip
+
+\subsubsection{IF Algorithm}
+
+\medskip
+
+An Isolation Forest consists of many independently constructed isolation trees. 
+Each tree is grown on a random subsample of the data, which increases variability across trees and stabilizes the final anomaly score through averaging.
+
+Within a single tree, the recursive splitting process continues across all branches until observations are isolated in terminal nodes (or a predefined maximum depth is reached). 
+The result is a random partitioning of the feature space into progressively smaller regions. 
+Because splits are random rather than optimized, the structure of any single tree is not meaningful on its own, only the aggregated behavior across many trees is informative.
+
+For each observation, we compute its \textit{path length}, defined as the number of splits required to travel from the root node (the full dataset) to the terminal leaf containing that observation. This path length is averaged over the ensemble. Short average path lengths indicate that the observation consistently falls into small, sparse regions of the feature space, whereas longer paths indicate that the point lies in denser regions and is harder to isolate.
+
+Thus, the anomaly score is fundamentally a measure of how quickly random recursive partitioning separates a point from the rest of the data.
+
+
+\medskip
+
+\textbf{Anomaly Score}
+
+Formally, the anomaly score $s(x,n)$ for a point $x$ in a dataset of size $n$ is defined as
+\[
+s(x,n) = 2^{-\frac{E(h(x))}{c(n)}},
+\]
+where:
+
+\begin{itemize}
+    \item $h(x)$ is the path length of $x$ in a single isolation tree, that is, the number of splits required to isolate $x$.
+    \item $E(h(x))$ is the average path length of $x$ across all trees in the ensemble.
+    \item $c(n)$ is a normalizing constant representing the average path length of an unsuccessful search in a random binary search tree of size $n$. 
+    That is, it approximates the expected depth of a point under purely random binary partitioning, providing a baseline for how many splits it should take to isolate a typical observation.
+
+\end{itemize}
+
+The quantity $c(n)$ can be approximated by
+\[
+c(n) = 2H(n-1) - \frac{2(n-1)}{n},
+\]
+where $H(i)$ is the $i$th harmonic number,
+\[
+H(i) = \sum_{k=1}^{i} \frac{1}{k}.
+\]
+
+The harmonic number appears because the expected depth of a node in a randomly constructed binary search tree grows proportionally to $H(n)$. 
+Since $H(n) \approx \log(n)$ for large $n$, this reflects the fact that under random splitting, the expected number of partitions needed to isolate a typical point grows roughly logarithmically with the dataset size. 
+Thus, $c(n)$ provides a baseline for how long paths are expected to be purely due to sample size and random partitioning.
+
+The ratio $\frac{E(h(x))}{c(n)}$ therefore measures how the observed path length of $x$ compares to what we would expect for a typical point in a dataset of size $n$. 
+Values smaller than 1 indicate that $x$ is isolated more quickly than expected, while values near or above 1 indicate typical or longer-than-expected isolation.
+
+The exponential form $2^{-\frac{E(h(x))}{c(n)}}$ rescales this quantity to lie between 0 and 1 in a smooth and monotonic way. 
+Because isolation trees are binary, path lengths naturally scale in powers of 2, so the base 2 transformation is consistent with the tree structure. 
+Shorter path lengths produce scores close to 1, while longer path lengths push the score toward 0.
+
+Intuitively, the anomaly score answers the question: 
+\emph{How quickly does random recursive partitioning separate this point from the rest of the data, relative to what we would expect under random structure?} 
+Points that are isolated unusually quickly are considered anomalous because they lie in sparse or distinct regions of the feature space.
+
+\bigskip
+
+\subsubsection{Extended Isolation Forest}
+
+\medskip
+
+Extended Isolation Forest (EIF) is a modification of the original Isolation Forest. Instead of only making splits perpendicular to the axes, EIF uses more general hyperplanes to partition the data.
+
+It achieves this by selecting a random subset of features and generating a random linear combination to define a splitting hyperplane. This allows partitions that are not constrained to be parallel to coordinate axes. The rest of the procedure is the same: trees are built via recursive random partitioning, and anomaly scores are computed using average path length. 
+
+The advantage of EIF is that the more flexible hyperplanes can better adapt to the geometry of the data, which often leads to more effective isolation of anomalies in high-dimensional settings.
+
+\medskip
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{0.95\textwidth}{
+>{\raggedright\arraybackslash}p{0.18\textwidth}
+X
+X
+}
+\toprule
+\textit{Method} 
+& \textit{Partitioning Strategy} 
+& \textit{Features} \\
+\midrule
+Isolation Forest (IF) 
+& Uses random axis-aligned hyperplane splits (perpendicular to a single feature axis at each partition). 
+& + Simpler and computationally efficient \newline
+-- Can be limited when structure is not aligned with coordinate axes \\
+
+Extended Isolation Forest (EIF) 
+& Uses randomly oriented hyperplanes, allowing splits at arbitrary angles in the feature space. 
+& + More flexible partitioning \newline
++ More effective anomaly detection in high-dimensional data \newline
+-- Increased computational complexity \newline
+-- Greater parameter sensitivity (e.g., number of features used per split) \\
+\bottomrule
+\end{tabularx}
+\caption*{Comparison of Isolation Forest and Extended Isolation Forest}
+\end{table}
+

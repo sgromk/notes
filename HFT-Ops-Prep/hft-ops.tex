@@ -1,0 +1,142 @@
+\documentclass[a4paper,11pt]{article}
+
+% ============================================================
+%  QUANT INTERVIEW PREP TEMPLATE
+%  Adapted from a class-notes template.
+%
+%  Three sections:
+%    1) Math / Probability Theory   -> theorem/definition/proof + key-result boxes
+%    2) Brainteasers                -> numbered problems + toggleable solutions
+%    3) Code                        -> paradigm notes + syntax-highlighted practice
+%
+%  SOLUTION TOGGLE (self-testing): flip the switch below.
+%    \showsolutionstrue   -> solutions printed (review / check mode)
+%    \showsolutionsfalse  -> solutions hidden  (quiz yourself, then recompile)
+% ============================================================
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}       % utf8x is deprecated; utf8 is the modern default
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}              % scalable fonts for all shapes (incl. italic monospace)
+\usepackage[a4paper,margin=1in]{geometry}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}            % superset of amsmath (\coloneqq, \DeclarePairedDelimiter, etc.)
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{comment}             % used to drop solution blocks when hidden
+\usepackage{parskip}             % paragraph spacing instead of indent, reads better for notes
+\usepackage{enumitem}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black,citecolor=blue!55!black]{hyperref}
+\setlength{\marginparwidth}{2cm}            % avoids a todonotes load-time warning
+\usepackage[colorinlistoftodos]{todonotes}  % \todo{revisit this} to flag weak spots
+\setuptodonotes{inline}                     % full-width inline banners, never clip off the page
+
+% ---------- theorem-like environments ----------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+% ---------- probability / math shorthand ----------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\ind}{\mathbf{1}}                   % indicator function (no extra font package)
+\newcommand{\given}{\,\vert\,}
+\newcommand{\indep}{\perp\!\!\!\perp}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% ---------- key-result highlight box (math section) ----------
+\newtcolorbox{keybox}[1][Key result]{%
+  breakable, colback=blue!4, colframe=blue!55!black, coltitle=white,
+  fonttitle=\bfseries, title=#1, boxrule=0.6pt, arc=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt}
+
+% ---------- numbered problem environment (brainteasers) ----------
+% Optional argument holds metadata, e.g. \begin{problem}[Brainstellar, Medium]
+\makeatletter
+\newcounter{problem}[section]
+\renewcommand{\theproblem}{\thesection.\arabic{problem}}
+\newenvironment{problem}[1][]{%
+  \par\medskip\refstepcounter{problem}%
+  \noindent\textbf{Problem~\theproblem}%
+  \def\prob@meta{#1}%
+  \ifx\prob@meta\@empty\else\ \textnormal{\itshape[#1]}\fi%
+  \par\nobreak\smallskip
+}{\par\medskip}
+\makeatother
+
+% ---------- toggleable solution environment ----------
+\newif\ifshowsolutions
+\showsolutionstrue        % <-- flip to \showsolutionsfalse to hide all solutions
+\ifshowsolutions
+  \newenvironment{solution}%
+    {\par\smallskip\noindent\textbf{Solution.}\enspace}%
+    {\par\medskip}
+\else
+  \excludecomment{solution}
+\fi
+
+% ---------- code listing styles ----------
+\definecolor{lstbg}{RGB}{248,248,248}
+\definecolor{lstkw}{RGB}{0,0,170}
+\definecolor{lstcm}{RGB}{95,120,95}
+\definecolor{lstst}{RGB}{160,60,60}
+\definecolor{cream}{RGB}{253,251,245}
+\lstdefinestyle{common}{%
+  backgroundcolor=\color{lstbg}, basicstyle=\ttfamily\small,
+  keywordstyle=\color{lstkw}\bfseries, commentstyle=\color{lstcm}\itshape,
+  stringstyle=\color{lstst}, numbers=left, numberstyle=\tiny\color{gray},
+  numbersep=8pt, showstringspaces=false, breaklines=true, frame=single,
+  framerule=0.3pt, rulecolor=\color{gray!40}, tabsize=4, captionpos=b,
+  xleftmargin=16pt, aboveskip=1em, belowskip=1em}
+\lstdefinestyle{python}{style=common, language=Python}
+\lstdefinestyle{sql}{style=common, language=SQL}
+\lstset{style=common}
+
+% \complexity{time}{space}  -> "Complexity: time O(...), space O(...)."
+\newcommand{\complexity}[2]{\noindent\textbf{Complexity:}\enspace time $#1$, space $#2$.\par}
+
+% ============================================================
+
+\title{HFT Ops Interview Preparation \\[0.4em]
+    \large \textit{Probability \, / \, Brainteasers \, / \, Code}}
+\author{Gabriel Kinshuk}
+\date{\today}
+
+\begin{document}
+\pagecolor{cream}
+\maketitle
+\tableofcontents
+\newpage
+
+\input{sections/10-probability}
+\newpage
+
+\input{sections/20-brainteasers}
+\newpage
+
+\input{sections/30-code}
+\newpage
+
+\input{sections/40-style_reference}
+
+%
+
+\end{document}

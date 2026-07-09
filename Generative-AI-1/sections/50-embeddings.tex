@@ -1,0 +1,167 @@
+\section{Embeddings}
+
+\medskip
+
+Recall that in logistic regression the score for a class is an inner product, $z = \langle W, X \rangle.$. Geometrically, this quantity is large when the vectors $W$ and $X$ are aligned, that is, when the angle between them is small. On the unit sphere,
+\[
+\langle W, X \rangle = \|W\| \|X\| \cos \theta,
+\]
+so classification reduces to measuring geometric similarity. This geometric view becomes much more powerful in deep networks. Suppose we take an input vector
+\[
+X = [x_1, x_2, \dots, x_n]^T
+\]
+and pass it through multiple layers: convolution, ReLU, pooling, fully connected layers. The output of these transformations is a new vector
+\[
+h = f_\theta(X),
+\]
+which is another numerical representation of the same data. This vector $h$ is called an \emph{embedding}.
+
+\begin{itemize}
+\item In the original input space (for example, raw pixel space), classes may be highly intertwined.
+\item After applying a learned nonlinear transformation, the data are mapped into an embedding space.
+\item In this embedding space, the classes are often close to linearly separable.
+\end{itemize}
+
+The final layer of a neural network is typically just logistic regression applied to this embedding:
+\[
+z_k = \langle W_k, h \rangle,
+\qquad
+y = \text{softmax}(z).
+\]
+In other words, the network first learns a representation where geometry reflects semantic similarity, and then applies a linear classifier in that space.
+
+\bigskip
+
+\subsection{Why this matters}
+
+\medskip
+
+Consider logistic regression applied directly to CIFAR-10 cats and dogs in pixel space.  
+The accuracy remains low because the two classes are not linearly separable in raw pixel coordinates. If they were, a linear model would achieve low loss and high accuracy.
+
+Now consider a pre-trained network such as ResNet18.  
+If we remove the final classification layer and extract the penultimate layer activations, we obtain an embedding vector for each image. When these embeddings are projected into two dimensions, we observe that cats and dogs are nearly separable by a linear boundary, thus the representation has changed the geometry of the data.
+
+\bigskip
+
+\subsection{Geometric distance vs. semantic distance}
+
+\medskip
+
+In raw pixel space, two images of kangaroos can be extremely far apart numerically. Pixel-by-pixel they may differ in lighting, background, orientation, and scale. Geometrically, they are distant, yet semantically they are very similar.
+
+A good embedding replaces pixel-level distance with a learned geometric distance that reflects meaning. Images that depict the same concept are mapped to nearby points in embedding space. Images of different concepts are pushed farther apart. Thus, embeddings convert semantic similarity into geometric proximity.
+
+\bigskip
+
+\subsection{General perspective}
+
+\medskip
+
+Embeddings are not limited to images. The same idea applies to words, text, audio, or even multimodal combinations of images and language. In each case, the goal is the same: learn a transformation
+\[
+X \mapsto h
+\]
+such that simple geometric operations in the embedding space, such as inner products or linear separators, solve tasks that are highly nonlinear in the original space. From this perspective, a deep network can be viewed as:
+
+\begin{enumerate}
+\item A feature extractor that constructs an embedding where the data are organized geometrically by meaning.
+\item A final linear classifier that separates the classes in that embedding space.
+\end{enumerate}
+
+\bigskip
+
+\subsection{Search/Retrieval}
+
+\medskip
+
+Embeddings fundamentally change how we perform search and retrieval. Exact string matching is brittle: if we search for `bicycle' using \texttt{ctrl-f}, we will miss occurrences of `bike', `cycling', or `two-wheeler'. Even with heuristic normalization rules such as stemming or lemmatization, exact matching only captures surface-level variations of the same token. It does not capture semantic equivalence or relatedness. What we actually want is retrieval based on meaning rather than spelling.
+
+As discussed earlier, each word $w$ is mapped to a vector $v_w \in \mathbb{R}^d$ such that semantic similarity corresponds to geometric proximity in embedding space. In particular, the angle $\theta_{\alpha\beta}$ between $v_\alpha$ and $v_\beta$ should be small when the meanings of $\alpha$ and $\beta$ are similar. Therefore, instead of matching strings, we rank documents by cosine similarity:
+\[
+\cos(\theta_{\alpha\beta}) 
+=
+\frac{\langle v_\alpha, v_\beta \rangle}
+{\|v_\alpha\|\,\|v_\beta\|}.
+\]
+
+The normalization by $\|v_\alpha\|\,\|v_\beta\|$ is necessary because embeddings are not constrained to have unit norm. Cosine similarity removes dependence on vector magnitude and isolates angular similarity, which is what encodes semantic relatedness.
+
+\medskip
+
+This reframes search as a nearest-neighbor problem in $\mathbb{R}^d$. Given a query word or phrase embedding $v_q$, we retrieve items whose embeddings have the largest inner product or cosine similarity with $v_q$.
+
+\bigskip
+
+\subsubsection{Self-Supervision and Learning Embeddings}
+
+\medskip
+
+We now address the central question: how do we learn these vectors?
+
+Suppose our dictionary contains $30{,}000$ words. There are roughly $9 \times 10^8$ ordered word pairs. It is infeasible to manually specify a target similarity or angle $\theta_{\alpha\beta}$ for every pair. Even if such targets were available, directly solving for vectors satisfying
+\[
+\angle(v_\alpha, v_\beta) \approx \theta_{\alpha\beta}
+\quad \text{for all } (\alpha,\beta)
+\]
+would be computationally and statistically intractable.
+
+\medskip
+
+The key idea is \emph{self-supervision}. We exploit an essentially inexhaustible resource: raw text. Instead of hand-labeling semantic relationships, we construct a supervised learning problem from the text itself. Recall that in supervised learning we observe labeled examples
+\[
+(X_1, y_1), (X_2, y_2), \dots, (X_n, y_n),
+\]
+and we learn a function $f_\theta$ mapping $X \mapsto y$. Our original objective is to learn semantic embeddings. To use the machinery of supervised learning, we must cast this goal into the form of labeled examples $(X,y)$. We do this by predicting word co-occurrence.
+
+Consider a corpus containing the text:
+\begin{quote}
+``April is the cruelest month, breeding lilacs out of the dead land, mixing memory and desire, stirring dull roots with spring rain.''
+\end{quote}
+
+From this corpus, we can automatically generate training examples such as:
+\[
+X_1 = (\text{April}, \text{cruelest}), 
+\quad 
+y_1 = P(\text{cruelest follows April}),
+\]
+\[
+X_2 = (\text{breeding}, \text{lilacs}), 
+\quad 
+y_2 = P(\text{lilacs follows breeding}),
+\]
+\[
+X_3 = (\text{memory}, \text{desire}), 
+\quad 
+y_3 = P(\text{desire follows memory}),
+\]
+\[
+X_4 = (\text{dull}, \text{roots}), 
+\quad 
+y_4 = P(\text{roots follows dull}).
+\]
+
+More generally, for a preceding center word $\alpha$ and a following context word $\beta$ within a fixed window, we define
+\[
+y = P(\beta \mid \alpha).
+\]
+In general, the context window may include words that appear either before or after the center word. In this formulation, we are using a forward window, which is why the context word $\beta$ appears after $\alpha$.
+
+These labels are not manually annotated. They are computed directly from the corpus via observed co-occurrence frequencies. This is why the method is called \emph{self-supervised}: the data provides its own supervision signal.
+
+\medskip
+
+We then parameterize $P(\beta \mid \alpha)$ using embeddings $v_\alpha$ and $v_\beta$, typically through a softmax model where $\beta'$ is every possible word in the vocabulary:
+\[
+P(\beta \mid \alpha)
+=
+\frac{\exp(\langle v_\alpha, v_\beta \rangle)}
+{\sum_{\beta'} \exp(\langle v_\alpha, v_{\beta'} \rangle)}.
+\]
+
+Training consists of maximizing the log-likelihood of observed word-context pairs. The optimization process adjusts the vectors so that words appearing in similar contexts obtain similar embeddings.
+
+In summary, self-supervision converts the ill-posed problem of specifying semantic similarity directly into a tractable supervised learning problem derived from raw text. The geometry of the learned embedding space then enables semantic search, retrieval, and downstream generative modeling.
+
+\bigskip
+

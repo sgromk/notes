@@ -1,0 +1,388 @@
+\section{Practice Questions}
+
+\medskip
+
+1. \textit{True or False: A linear layer without bias can always be represented as a matrix multiplication.}
+
+True. A linear layer without bias is exactly a matrix multiplication: $y = Wx$. The output is a vector whose entries are linear combinations of the input features. If a bias term is included, the layer becomes an affine transformation: $y = Wx + b$.
+
+\vspace{1cm}
+
+2. \textit{True or False: A maxpooling layer can always be represented as a matrix multiplication.}
+
+False. Max pooling is a nonlinear operation, so it cannot be represented as a fixed matrix multiplication. In contrast, average pooling is linear and can be represented as a matrix whose rows contain the appropriate averaging weights, e.g., entries equal to $\frac{1}{k}$ over each pooling region size $k$.
+
+\vspace{1cm}
+
+3. \textit{True or False: A common structure for neural networks is 1–4 linear layers (with ReLU activation) followed by 1–4 convolutional layers.}
+
+False. In standard CNN architectures, convolutional layers are applied first to exploit spatial structure and perform feature extraction, often with intermediate pooling. Linear (fully connected) layers are applied afterward for classification. Reversing order would destroy spatial information.
+
+
+\vspace{1cm}
+
+4. \textit{True or False: A convolutional layer with no bias can always be represented as a matrix multiplication.}
+
+True. A convolutional layer without bias is a linear map, so it can be written as $y = Wx$ for some matrix $W$. This matrix is large, sparse, and highly structured: each row corresponds to one output location, and contains the filter weights placed in the positions corresponding to that local receptive field, with zeros elsewhere. Weight sharing across spatial locations is reflected in repeated patterns within $W$.
+
+
+\vspace{1cm}
+
+5. \textit{True or False: A fully connected layer is a special case of a convolutional layer.}
+
+True. A fully connected layer can be viewed as a convolution whose kernel has the same spatial dimensions as the input, so it covers the entire input at once and produces a single output per filter.
+
+\vspace{1cm}
+
+6. \textit{True or False: Transfer learning primarily gets its performance from the size of the model.}
+
+False. The benefit of transfer learning comes from pretraining on large, diverse datasets that produce useful feature representations, not from the size of the downstream model. A small model built on top of a pretrained foundation model can perform well because it leverages those learned embeddings.
+
+\vspace{1cm}
+
+7. \textit{True or False: A large model that has been trained on billions of text tokens can be used for transfer learning to image.}
+
+False. A model trained only on text learns representations in a linguistic embedding space and does not learn visual features or spatial structure. Therefore, it cannot be directly used for transfer learning to image tasks without additional multimodal training.
+
+\vspace{1cm}
+
+8. \textit{True or False: If a vision model has been trained on gray scale images, it cannot be used for transfer learning to color images.}
+
+False. A model trained on grayscale images can still learn useful spatial features such as edges, textures, and shapes. These features can transfer to color images, and the model can be fine-tuned to incorporate color-specific information.
+
+\vspace{1cm}
+
+9. \textit{True or False: Minimizing exponential loss is computationally easier than maximizing accuracy (minimizing number of mistakes).}
+
+True. Exponential loss is a smooth, differentiable surrogate loss, so it can be optimized using gradient-based methods. For smooth convex objectives, gradient descent achieves an $\epsilon$-accurate solution in $\mathcal{O}(1/\epsilon)$ iterations. In contrast, accuracy is discontinuous and non-differentiable, making it computationally intractable to optimize directly.
+
+\vspace{1cm}
+
+10. \textit{True or False: Though minimizing exponential loss is easier, it is equivalent to maximizing accuracy.}
+
+False. Exponential loss is a surrogate for 0–1 loss, not an equivalent objective. Minimizing exponential loss does not generally produce the same classifier that maximizes accuracy, since it penalizes misclassified points with large negative margins much more heavily.
+
+\vspace{1cm}
+
+11. \textit{True or False: Gradient descent is guaranteed to find an approximate local minimum of the loss function.}
+
+False. For neural networks, the loss function is non-convex. Gradient descent is not guaranteed to find a local minimum. Under standard smoothness and step-size conditions it converges to a first-order stationary point, which may be a local minimum or a saddle point. If the step size is too large, convergence is not guaranteed.
+
+\vspace{1cm}
+
+12. \textit{True or False: It is generally a good idea to use a smaller step size when using smaller batch size.}
+
+True. Smaller batch sizes produce higher-variance gradient estimates. Using a smaller step size helps stabilize updates and prevents divergence caused by this increased stochastic noise.
+
+\vspace{1cm}
+
+13. \textit{True or False: Though there are no guarantees for non-convex functions, momentum provably improves convergence rate for smooth convex functions.}
+
+True. Momentum dampens movement in oscillatory directions and accelerates movement in consistent directions, improving convergence rate.
+
+\vspace{1cm}
+
+14. \textit{True or False: ADAM is always better than SGD for training deep neural networks.}
+
+False. ADAM often converges faster in early training due to adaptive learning rates, but it does not always achieve better final performance. In many deep learning settings, SGD with momentum can generalize better and produce superior test accuracy.
+
+\vspace{1cm}
+
+15. \textit{True or False: If we do not know what step size to use, taking $\eta = 2^{-t}$ is a good idea.}
+
+False. The schedule $\eta_t = 2^{-t}$ decays exponentially fast, so the total cumulative step size is finite and heavily concentrated in the first few iterations. This makes the method highly sensitive to early noise and generally impractical for optimization.
+
+
+\vspace{1cm}
+
+16. \textit{True or False: If in a 3-class classification problem the classes are linearly separable, then logistic regression achieves low loss and high accuracy.}
+
+True. Multiclass logistic regression learns linear decision boundaries between classes. If the classes are linearly separable, it can achieve perfect accuracy and arbitrarily low loss.
+
+\vspace{1cm}
+
+17. \textit{Free answer: In a 5-class classification problem in 10 dimensions, logistic regression produces $M, N$-dimensional vectors. What are $M$ and $N$?}
+
+$M = 5$ and $N = 10$. Multiclass logistic regression learns one weight vector per class, each in $\mathbb{R}^{10}$, so the parameter matrix has shape $5 \times 10$.
+
+\vspace{1cm}
+
+18. \textit{Free Response: If the classes are separable, where do those vectors point?}
+
+If the classes are linearly separable, each weight vector points roughly toward the region of feature space where its class resides. The decision boundaries depend on differences between weight vectors, and optimization pushes them in directions that increase separation between class clusters.
+
+\vspace{1cm}
+
+19. \textit{True or False: Just because a CNN achieves high accuracy, it does not necessarily mean that the $(n-1)$st layers produce a near-separable embedding of the data.}
+
+False. If the final layer is a linear classifier (e.g., logistic regression), then the $n-1$ layer must have been linearly separable.
+
+\vspace{1cm}
+
+20. \textit{True or False: If a CNN achieves high accuracy, then for any two classes there is a 2-dimensional embedding where the data points are nearly separable.}
+
+False. High accuracy implies that the learned embedding is approximately linearly separable in its full dimension. However, this does not imply that any pair of classes is separable in a 2-dimensional projection; separability may require higher-dimensional structure.
+
+\vspace{1cm}
+
+21. \textit{True or False: If two words are exact synonyms, Word2Vec produces vectors that are exactly the same.}
+
+False. Word2Vec learns embeddings based on contextual co-occurrence patterns. Even exact synonyms typically appear in slightly different contexts, so their learned vectors will be similar but not exactly identical.
+
+\vspace{1cm}
+
+22. \textit{Free answer: The words ``skibidi'' and ``rizz'' are not in the Word2Vec vocabulary. How would we add them?}
+
+Ideally, we would retrain Word2Vec on a corpus that includes the new words. More realistically, we would continue training the existing model on additional text containing those words so it can learn their embeddings from co-occurrence statistics.
+
+\vspace{1cm}
+
+23. \textit{Free answer: What is a scenario where Recall is the most important metric?}
+
+Recall measures the fraction of actual positive cases that are correctly identified. It is most important when the cost of false negatives is high. A canonical example is medical diagnosis, where failing to detect a disease such as cancer can be far more costly than producing false alarms.
+
+\vspace{1cm}
+
+24. \textit{Free answer: What about NDCG?}
+
+NDCG is a position-sensitive ranking metric that assigns higher weight to relevant items appearing near the top of the ranked list. It is most appropriate when we care about ordering quality, especially placing highly relevant documents at the top, rather than simply retrieving all relevant items.
+
+\vspace{1cm}
+
+25. \textit{Argue for or against: A computationally inexpensive retrieval model should focus on Recall over NDCG.}
+
+For. In a multi-stage retrieval pipeline, a computationally inexpensive first-stage model should prioritize high recall to ensure that most relevant documents are retrieved. A more expensive re-ranking model can then optimize ordering metrics such as NDCG on this smaller candidate set.
+
+\vspace{1cm}
+
+26. \textit{True or False: In Bag of Words, the order of the words does not matter.}
+
+True. Bag of Words represents a document as a vector of word counts and ignores word order. It captures term frequency but does not encode positional information.
+
+\vspace{1cm}
+
+27. \textit{True or False: In contrast, TF.IDF considers the order of the words.}
+
+False. TF-IDF does not encode word order; like Bag of Words, it represents documents as unordered term-frequency vectors. It differs by reweighting terms using inverse document frequency to downweight common words and emphasize more informative ones.
+
+\vspace{1cm}
+
+28. \textit{True or False: TF.IDF is generally better than dense (semantic) embeddings for NDCG, but not for retrieval.}
+
+False. TF-IDF relies on exact term overlap and does not capture semantic similarity, so it often underperforms dense embeddings on ranking metrics such as NDCG when semantic relevance matters. It may achieve high recall for keyword-based queries, but can miss semantically relevant documents that do not share surface terms. Dense embeddings typically improve both semantic recall and ranking quality.
+
+\vspace{1cm}
+
+29. \textit{True or False: TF.IDF is better than Bag of Words because it boosts scientific words.}
+
+True. If scientific terms are less frequent across documents, they will receive higher weight than in a plain Bag of Words representation.
+
+\vspace{1cm}
+
+30. \textit{Free answer: How would you implement TF.IDF and what would the computational cost be?}
+
+We first create a matrix of all zeroes, with dimensions the size of the vocabulary and the number of documents. For each document, we then take the count of each word and divide it by the number of total terms in the document. We create a second vector, 1 by vocabulary size, which has a count for each word of how many documents it appears in (irrespective of how many times it appears in that document), after counting it all up we divide the vector entries by the number of documents. The final output for TF-IDF is the term frequency of a word in its own document multipled by the log of the total documents divided by the number of documents containing the term. The computational cost is The computational cost is $\mathcal{O}(T)$ to compute all term counts over $T$ total tokens, plus $\mathcal{O}(V)$ to compute IDF values for vocabulary size $V$, assuming sparse storage. (Essentially, linear in the size of the corpus). 
+
+\vspace{1cm}
+
+31. \textit{True or False: Since Word2Vec trains on co-occurrence (neighboring words), it is a dense contextual embedding.}
+
+False. Word2Vec produces dense semantic embeddings learned from local co-occurrence statistics, but it is not contextual. Each word has a single fixed vector representation, regardless of the specific sentence in which it appears.
+
+\vspace{1cm}
+
+32. \textit{True or False: BERT as presented in class can be used for question answering, i.e., next word prediction.}
+
+False. BERT is trained with masked language modeling, not autoregressive next-token prediction. It is trained to predict masked tokens within a sentence using full bidirectional context, which makes it effective for learning representations for downstream tasks. Because it is a bidirectional encoder and does not generate tokens sequentially, it cannot directly perform next-word prediction like autoregressive models such as GPT.
+
+\vspace{1cm}
+
+33. \textit{Free answer: What could we do to make BERT usable for next word prediction?}
+
+We would change how BERT is trained so that instead of predicting missing words using both left and right context, it predicts the next word using only the words that come before it. This requires restricting the attention mechanism so each word can only look at earlier words, effectively turning BERT into a left-to-right language model. After predicting a word, we append it to the sequence and repeat the process until an end-of-sequence token is generated.
+
+\vspace{1cm}
+
+34. \textit{True or False: BERT ranks documents (for use in a RAG) by embedding the query as sentence 1 and the document as sentence 2.}
+
+True for a cross-encoder. In a cross-encoder setup, BERT ranks documents by taking as input [CLS] Q [SEP] D [SEP] and producing a relevance score. However, in scalable RAG systems, a bi-encoder is typically used instead, where the query and document are embedded separately and compared via a similarity function.
+
+\vspace{1cm}
+
+35. \textit{True or False: A good RAG should be using a dense embedding but also a sparse embedding like TF.IDF.}
+
+True. A hybrid retrieval approach that combines dense embeddings with sparse methods such as TF-IDF or BM25 can improve performance. Sparse methods capture exact term matches, while dense embeddings capture semantic similarity, and combining them often improves recall and ranking quality.
+
+\vspace{1cm}
+
+36. \textit{True or False: The first step for BERT training is to map tokens to pre-trained embeddings given by a model like Word2Vec.}
+
+False. BERT does not use pre-trained embeddings such as Word2Vec. It learns its own token embeddings from scratch during pretraining, along with positional and segment embeddings.
+
+\vspace{1cm}
+
+37. \textit{True or False: The best way to make BERT a good retriever on our data is to use MLM on our specific dataset.}
+
+False. Masked language modeling adapts BERT to the domain but does not directly optimize retrieval performance. To make BERT a strong retriever, it should be trained with a contrastive or ranking objective using positive and negative query–document pairs.
+
+\vspace{1cm}
+
+38. \textit{True or False: InfoNCE is a version of contrastive learning and essentially uses cross entropy.}
+
+True. InfoNCE is a contrastive learning objective that compares a positive pair against multiple negative pairs using a softmax over similarity scores. It is optimized using cross-entropy loss.
+
+\vspace{1cm}
+
+39. \textit{True or False: InfoNCE can use small batch size, even batch size of 1, but it is not recommended because it will have high variance.}
+
+False. InfoNCE requires negative examples to provide a learning signal. With batch size 1 and no additional negatives, the softmax denominator contains only the positive term, so the loss is always zero regardless of embedding quality. Therefore, meaningful contrastive learning requires multiple negatives.
+
+\vspace{1cm}
+
+40. \textit{True or False: When training a bi-encoder model, we can have overlap in some of the parameters.}
+
+True. In a bi-encoder model, the query and document encoders may share parameters so that both are embedded into the same representation space, although they can also be trained with separate parameters.
+
+\vspace{1cm}
+
+41. \textit{True or False: BERT can be used as a cross-encoder for re-ranking.}
+
+True. BERT can be used as a cross-encoder for re-ranking by taking the input as [CLS] Q [SEP] D [SEP] and producing a relevance score. In practice, this is applied to a small candidate set retrieved by a first-stage retriever, since scoring every document in the corpus would be computationally expensive.
+
+\vspace{1cm}
+
+42. \textit{Describe: How would we turn BERT into a good cross encoder?}
+
+We would fine-tune BERT on labeled query–document pairs using a ranking objective. This could involve supervised relevance labels and optimizing a cross-entropy or pairwise ranking loss so that relevant documents receive higher scores than non-relevant ones.
+
+\vspace{1cm}
+
+43. \textit{Free answer: How else could we generate hard negatives for contrastive learning?}
+
+Hard negatives can be generated by retrieving top-ranked but incorrect documents using a current or weaker retriever and treating them as negatives. Alternatively, we can use in-batch negatives, adversarially perturb relevant documents, or mine negatives from documents that are semantically similar but labeled non-relevant.
+
+\vspace{1cm}
+
+44. \textit{Describe: What is ColBERT and how does it work?}
+
+ColBERT is a late-interaction retrieval model that sits between bi-encoders and cross-encoders. Like a bi-encoder, it encodes queries and documents separately, allowing document representations to be precomputed for efficiency. However, instead of compressing each document into a single vector, it produces contextualized embeddings for each token. At retrieval time, it computes similarity using a MaxSim operation: for each query token, it finds the maximum similarity over all document tokens and sums these scores. This preserves fine-grained token-level interaction while remaining much more efficient than a full cross-encoder.
+
+
+
+\vspace{1cm}
+
+45. \textit{True or False: We have been using BERT just as a stand-in and should be exploring other models on HuggingFace.}
+
+True. In practice, we would evaluate multiple transformer models available on HuggingFace, fine-tune them on our task, and compare their performance. Rather than relying solely on BERT, we select the model that achieves the best validation or test performance for our specific retrieval or ranking objective.
+
+\vspace{1cm}
+
+46. \textit{True or False: Fine tuning BERT makes most of its progress in epochs 10–20.}
+
+False. BERT fine-tuning typically achieves most performance gains in the first few epochs. Training for 10–20 epochs often leads to diminishing returns or overfitting, especially on smaller datasets.
+
+\vspace{1cm}
+
+47. \textit{Describe: What does the AutoTokenizer class do and why do we need it?}
+
+AutoTokenizer loads the correct tokenizer associated with a specific pretrained model and converts raw text into model-ready inputs. It handles tokenization, vocabulary lookup, special tokens, padding, truncation, and conversion to input IDs and attention masks. We need it because transformer models operate on token IDs, not raw text, and each model may use a different tokenization scheme.
+
+\vspace{1cm}
+
+48. \textit{Describe: When we download BERT using AutoModelForMaskedLM.from\_pretrained, what do we get back?}
+
+AutoModelForMaskedLM.from\_pretrained returns a pretrained BERT model configured for masked language modeling. This includes the transformer encoder along with a task-specific output head that maps the final hidden states to vocabulary-sized logits for predicting masked tokens. The returned object contains the pretrained weights and is ready for inference or fine-tuning.
+
+\vspace{1cm}
+
+49. \textit{Describe: How could we count the number of parameters in a BERT model?}
+
+We can count the number of parameters by summing the total number of elements in all model parameter tensors. In practice, this can be done by iterating over model.parameters() and summing p.numel() for each parameter. This gives the total number of trainable parameters in the BERT model.
+
+\[
+\text{MHSA} =
+3 \cdot (hidden\_dim \cdot hidden\_dim + hidden\_dim)
++
+(hidden\_dim \cdot hidden\_dim + hidden\_dim)
+\]
+
+\[
+\text{FFN} =
+hidden\_dim \cdot intermediate\_dim + intermediate\_dim
++
+intermediate\_dim \cdot hidden\_dim + hidden\_dim
+\]
+
+\[
+\text{LayerNorm} = 2 \cdot (2 \cdot hidden\_dim)
+\]
+
+\[
+\text{Total per layer} =
+\text{MHSA} + \text{FFN} + \text{LayerNorm}
+\]
+
+\[
+\text{Total BERT params} =
+vocab\_size \cdot hidden\_dim
++
+num\_layers \cdot (\text{Total per layer})
+\]
+
+\vspace{1cm}
+
+50. \textit{Describe: What is the difference in memory usage between inference and training?}
+
+During inference, we only store model parameters and the activations needed for the forward pass. During training, we must additionally store intermediate activations for backpropagation and the gradients for each parameter. As a result, training requires more memory than inference, about twice more, due to storing activations and optimizer states.
+
+\vspace{1cm}
+
+51. \textit{Describe: How could you use CLIP for searching an image dataset based on a text prompt?}
+
+We would encode all images in the dataset using CLIP’s image encoder and store their embeddings. Given a text prompt, we encode it using CLIP’s text encoder and compute similarity scores (e.g., cosine similarity) between the text embedding and each image embedding. We then rank images by similarity and return the highest-scoring results.
+
+\vspace{1cm}
+
+52. \textit{Describe: How could you use CLIP for zero-shot classification?}
+
+To perform zero-shot classification with CLIP, we first create text prompts describing each class (e.g., "a photo of a cat", "a photo of a dog") and encode them using CLIP’s text encoder. We then encode the input image using CLIP’s image encoder. By computing similarity scores between the image embedding and each class text embedding, we assign the image to the class with the highest similarity, without any task-specific training.
+
+\vspace{1cm}
+
+53. \textit{Describe: How is CLIP trained?}
+
+CLIP is trained with a symmetric contrastive (InfoNCE) loss on batches of image–text pairs. For batch size $N$, we compute similarities
+
+\[
+S_{ij} = \frac{\langle t_i, v_j \rangle}{\tau}.
+\]
+
+Each text should match only its paired image. The loss is
+
+\[
+\mathcal{L}_i^{\text{text}}
+=
+- \log
+\frac{\exp(S_{ii})}
+{\sum_{j=1}^{N} \exp(S_{ij})},
+\quad
+\mathcal{L}_i^{\text{image}}
+=
+- \log
+\frac{\exp(S_{ii})}
+{\sum_{j=1}^{N} \exp(S_{ji})}.
+\]
+
+The final loss averages both directions. This pulls matched image–text embeddings together and pushes all other batch pairs apart.
+
+\vspace{1cm}
+
+54. \textit{Describe: Why would using BERT to produce multiple tokens at a time be problematic (e.g., feeding in [sentence] [mask] [mask] [mask])?}
+
+Using BERT to predict multiple masked tokens at once is problematic because masked language modeling predicts each masked token independently given the surrounding context. If we input multiple [MASK] tokens, the model does not model dependencies between those predicted tokens. As a result, the generated words may be inconsistent or incoherent, since BERT was not trained to generate sequences autoregressively.
+
+\vspace{1cm}
+
+55. \textit{Describe: If we are producing one token at a time in an autoregressive manner (the way GPT works), what is the difference in computation between using an encoder or a decoder?}
+
+In autoregressive generation, a decoder uses causal masking so each token attends only to previous tokens, and it can cache past key and value states to avoid recomputing attention over the entire sequence at every step. An encoder, which uses bidirectional attention, would require recomputing representations over the full sequence each time a new token is added. Therefore, a decoder is computationally more efficient for autoregressive generation.

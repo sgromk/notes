@@ -1,0 +1,58 @@
+\section{Embedding Models for Retrieval}
+\medskip
+
+Classification predicts discrete labels. Retrieval ranks documents by relevance.
+
+\bigskip
+\subsection{Bi-Encoder Architecture}
+\medskip
+
+In a bi-encoder, queries and documents are encoded independently:
+\begin{align*}
+v_Q &= f_\theta(Q), \\
+v_{\kappa_i} &= g_\theta(\kappa_i).
+\end{align*}
+
+Relevance is computed by inner product:
+\[
+\text{score}(Q, \kappa_i)
+=
+\langle v_Q, v_{\kappa_i} \rangle.
+\]
+
+The advantage is scalability. Document embeddings can be computed once and stored. At query time, only $v_Q$ must be computed. Retrieval becomes a nearest-neighbor search in vector space.
+
+\bigskip
+\subsection{Contrastive Fine-Tuning with InfoNCE}
+\medskip
+
+To optimize retrieval directly, we fine-tune using labeled pairs $\{(q_i, d_i)\}$.
+
+For a batch of size $B$, we compute embeddings
+\begin{align*}
+u_i &= f_{\theta_Q}(q_i), \\
+v_j &= g_{\theta_D}(d_j),
+\end{align*}
+and similarities
+\[
+S_{ij} = \langle u_i, v_j \rangle.
+\]
+
+The InfoNCE loss is
+\[
+\mathcal{L}_i
+=
+- \log
+\frac{\exp(S_{ii})}
+{\sum_{k=1}^{B} \exp(S_{ik})},
+\quad
+\mathcal{L}
+=
+\frac{1}{B}
+\sum_{i=1}^B \mathcal{L}_i.
+\]
+
+This objective pulls matching pairs together and pushes mismatched pairs apart. Because negatives are drawn from the same batch, the model learns relative discrimination rather than absolute scoring.
+
+\bigskip
+

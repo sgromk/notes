@@ -1,0 +1,124 @@
+\section{CLIP: Contrastive Language–Image Pretraining}
+\medskip
+
+So far, we have learned how to embed text into a vector space. We now ask a broader question: can we build a single embedding space that contains both text and images?
+
+Suppose we want to search an image database using natural language. A user types the query ``panda.'' We would like the system to return images of pandas. One naive solution would be to train an image classifier with a fixed set of categories, for example the 1,000 ImageNet labels, classify every image, and then look for the label ``panda.'' This works only if the category exists in the label set. If the user searches for something more specific or unusual, such as ``sleepy panda eating bamboo in snow,'' the fixed label taxonomy breaks down.
+
+The core limitation is that classification assumes a closed set of categories. Real-world search is open-ended. We need a system that understands arbitrary text queries and arbitrary images.
+
+\bigskip
+\subsection{Where Does the Data Come From?}
+\medskip
+
+Training large image classifiers traditionally requires hand-labeled data. ImageNet contains roughly 15 million images with carefully curated labels. While extremely valuable, this approach does not scale indefinitely. Labeling is expensive, slow, and constrained to predefined categories.
+
+However, the internet already contains an enormous number of image–text pairs. When people post on social media, they often include a caption alongside an image. The caption may be formal, casual, noisy, or emotional, but it is text paired with an image. In aggregate, this provides supervision at scale.
+
+The key idea behind CLIP is to treat these naturally occurring image–text pairs as training data.
+
+\bigskip
+\subsection{Two Encoders, One Space}
+\medskip
+
+The model architecture mirrors what we have already seen in bi-encoders for retrieval.
+
+We build:
+\begin{itemize}
+    \item A text encoder that maps a sentence to a vector.
+    \item An image encoder that maps an image to a vector.
+\end{itemize}
+
+Given $N$ paired examples $(T_i, I_i)$, we compute embeddings:
+\[
+t_i = f_\theta(T_i), 
+\qquad
+v_i = g_\phi(I_i).
+\]
+
+The goal is to learn parameters $\theta$ and $\phi$ such that matching text–image pairs are close in vector space, and mismatched pairs are far apart.
+
+Intuitively, we want both modalities to ``speak the same geometric language.'' A picture of a panda and the word ``panda'' should land near each other in $\mathbb{R}^d$.
+
+\bigskip
+\subsection{The Contrastive Objective}
+\medskip
+
+Training proceeds using a contrastive loss, very similar to the InfoNCE loss we discussed for text retrieval.
+
+For a batch of size $N$, we compute all pairwise similarities:
+\[
+S_{ij} = \langle t_i, v_j \rangle.
+\]
+
+Each text $T_i$ should match only its paired image $I_i$. For the text-to-image direction, the loss is:
+\[
+\mathcal{L}_i^{\text{text}}
+=
+- \log
+\frac{\exp(S_{ii})}
+{\sum_{j=1}^{N} \exp(S_{ij})}.
+\]
+
+Symmetrically, we also treat images as queries and texts as candidates:
+\[
+\mathcal{L}_i^{\text{image}}
+=
+- \log
+\frac{\exp(S_{ii})}
+{\sum_{j=1}^{N} \exp(S_{ji})}.
+\]
+
+The final loss averages both directions.
+
+What is happening geometrically? For each pair $(T_i, I_i)$, we pull $t_i$ and $v_i$ together, while pushing them away from all other embeddings in the batch. The batch itself provides negative examples. No manual labels are required beyond the pairing.
+
+\bigskip
+\subsection{Geometric Intuition}
+\medskip
+
+It is helpful to visualize embeddings as points on a high-dimensional sphere. During training, matching text and image vectors are encouraged to align, meaning their cosine similarity is high. Non-matching pairs are encouraged to point in different directions.
+
+The loss is small when:
+\begin{itemize}
+    \item $t_i$ is close to $v_i$,
+    \item $t_i$ is far from $v_j$ for $j \neq i$.
+\end{itemize}
+
+This is exactly the same contrastive principle we saw in bi-encoder retrieval, now extended across modalities.
+
+\bigskip
+\subsection{Why This Is Powerful}
+\medskip
+
+After training, text and images share a single embedding space. This enables several capabilities:
+
+\begin{itemize}
+    \item Text-to-image search: embed a text query and retrieve nearest images.
+    \item Image-to-text search: embed an image and retrieve nearest captions.
+    \item Zero-shot classification: treat class names as text queries and select the closest label embedding.
+\end{itemize}
+
+Zero-shot classification is particularly striking. Instead of training a classifier for each dataset, we can embed candidate labels such as ``panda,'' ``tiger,'' or ``hedgehog'' and choose the one whose text embedding is closest to the image embedding. The model generalizes to categories it has never explicitly seen during supervised training.
+
+\bigskip
+\subsection{Connection to Earlier Ideas}
+\medskip
+
+Conceptually, CLIP combines ideas we have already encountered:
+
+\begin{itemize}
+    \item A bi-encoder architecture.
+    \item Contrastive learning via an InfoNCE-style loss.
+    \item Large-scale self-supervision using naturally occurring data.
+\end{itemize}
+
+The only difference is that the two encoders operate on different modalities. The objective remains the same: align related representations and separate unrelated ones.
+
+In this sense, CLIP extends embedding learning from text-only retrieval to multimodal retrieval. The geometry of the space becomes a shared semantic space, where images and language coexist.
+
+The central insight is simple but powerful: if two objects co-occur in the world, their embeddings should be close. Contrastive learning gives us the mathematical machinery to enforce this principle at scale.
+
+
+\bigskip
+

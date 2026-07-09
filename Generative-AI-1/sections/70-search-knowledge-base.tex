@@ -1,0 +1,171 @@
+\section{Search in a Knowledge Base}
+
+\medskip
+
+Consider a large knowledge base such as a collection of scientific journals containing thousands of technical articles published over decades. A user submits a query such as:
+
+\begin{quote}
+``What are the possible uses and also side effects of IL-23 inhibitor biologic Skyrizi?''
+\end{quote}
+
+The system returns a ranked list of documents. The central question is: \emph{is the result good?}. There is no single notion of a ``right'' answer. The quality of the result depends on the user's objective.
+
+\begin{itemize}
+    \item A clinician who wants a quick overview may prefer 1--2 highly relevant papers.
+    \item A researcher constructing a complete bibliography may want an extensive list of relevant articles.
+\end{itemize}
+
+Thus, search is not only about retrieving relevant documents. It is about retrieving and ranking them appropriately for the user's goal.
+
+\subsection{Relevance and Ranking}
+
+Formally, for a query $q$, the system returns a ranked list $d_1, d_2, \dots, d_K.$. Each document $d_i$ has an associated (possibly graded) relevance score $\text{rel}_i$ with respect to $q$. The evaluation of a search system depends both on:
+\begin{enumerate}
+    \item \textit{Which} relevant documents are retrieved.
+    \item \textit{Where} they appear in the ranking.
+\end{enumerate}
+
+\bigskip
+
+\subsubsection{Bag of Words}
+
+\medskip
+
+Before semantic embeddings, a standard approach to search and retrieval was the \emph{bag-of-words} (BoW) representation.
+
+In this model, a document is represented as a vector in $\mathbb{R}^{|V|}$, where $|V|$ is the size of the vocabulary. Each coordinate corresponds to a word, and the value is typically the count (or frequency) of that word in the document:
+\[
+d = (c_1, c_2, \dots, c_{|V|}),
+\]
+where $c_j$ is the number of times vocabulary word $j$ appears in the document. Crucially, this representation ignores word order and syntax. The document is treated as a multiset of words, hence the name ``bag'' of words.
+
+\bigskip
+
+\subsubsection{TF-IDF}
+
+\medskip
+
+A refinement of the raw bag-of-words representation is \emph{term frequency–inverse document frequency} (TF--IDF). The central idea is that not all words are equally informative. Common words such as ``the'' or ``and'' appear in almost every document and therefore carry little discriminative value, whereas rarer terms are often more indicative of content.
+
+For a word $w$ in document $d$, the TF--IDF weight is typically defined as
+\[
+\text{TF--IDF}(w,d) = \text{tf}(w,d) \cdot \text{idf}(w),
+\]
+where $\text{tf}(w,d)$ is the term frequency of $w$ in $d$, and $\text{idf}(w)$ downweights globally frequent terms, often defined as $\text{idf}(w) = \log \frac{N}{\text{df}(w)}$, with $N$ the total number of documents and $\text{df}(w)$ the number of documents containing $w$.
+
+Under this representation, each document remains a vector in $\mathbb{R}^{|V|}$, but coordinates are no longer raw counts. Instead, they reflect how important a word is to a document relative to the corpus. Retrieval then proceeds exactly as before by ranking documents according to cosine similarity or dot product with the query vector.
+
+TF--IDF substantially improves over plain counts by emphasizing discriminative terms. However, like bag-of-words, it still depends on exact token overlap and does not capture semantic similarity between distinct but related words.
+
+
+\medskip
+
+While simple and computationally efficient, bag-of-words has a fundamental limitation: it relies on exact token overlap. If a document contains the word ``bike'' and the query contains ``bicycle,'' there is no interaction between those coordinates in the vector space. The representation captures lexical overlap, not semantic similarity.
+
+This limitation motivates the transition to embedding-based retrieval, where similarity is computed in a low-dimensional semantic space rather than a sparse count-based space.
+
+\bigskip
+
+\subsubsection{Recall@K}
+
+\medskip
+
+For users who want comprehensive coverage, recall is a natural metric.
+
+\[
+\text{Recall@}K
+=
+\frac{\# \{\text{relevant documents in top } K\}}
+{\# \{\text{total relevant documents in the corpus}\}}.
+\]
+
+Recall@K measures coverage. If there are 5 relevant papers in total and 2 appear in the top 16 results, then:
+\[
+\text{Recall@16} = \frac{2}{5}.
+\]
+
+If all 5 relevant papers appear in the top 16, then:
+\[
+\text{Recall@16} = \frac{5}{5} = 1.
+\]
+
+Recall emphasizes completeness. It does not care about the internal ordering of the relevant items within the top $K$.
+
+\bigskip
+
+\subsubsection{DCG and NDCG}
+
+\medskip
+
+When ranking quality matters, we use position-sensitive metrics.
+
+The Discounted Cumulative Gain at $K$ is defined as:
+\[
+\text{DCG@}K
+=
+\sum_{i=1}^{K}
+\frac{\text{rel}_i}{\log_2(i+1)}.
+\]
+
+Higher-ranked documents contribute more because the denominator grows with position $i$. Early mistakes are penalized more heavily than later ones. To normalize across queries, we define the Ideal DCG:
+\[
+\text{IDCG@}K
+=
+\sum_{i=1}^{K}
+\frac{\text{rel}_i^{\text{(ideal)}}}{\log_2(i+1)},
+\]
+where documents are ordered by decreasing relevance. The normalized metric is:
+\[
+\text{NDCG@}K
+=
+\frac{\text{DCG@}K}{\text{IDCG@}K}.
+\]
+
+NDCG@K lies in $[0,1]$, with 1 corresponding to a perfect ranking.
+
+\bigskip
+
+\subsubsection{Tradeoffs}
+
+\medskip
+
+Different users induce different evaluation criteria:
+
+\begin{itemize}
+    \item A user wanting 1--2 strong articles cares more about high NDCG at small $K$.
+    \item A user building a bibliography cares more about Recall@K for larger $K$.
+\end{itemize}
+
+Thus, search quality is inherently task-dependent. The same ranked list can be good under one metric and suboptimal under another.
+
+\medskip
+
+In summary, search in a knowledge base consists of:
+\begin{enumerate}
+    \item Defining relevance with respect to a query.
+    \item Producing a ranked list of candidate documents.
+    \item Evaluating performance using metrics aligned with the user's objective, such as Recall@K or NDCG@K.
+\end{enumerate}
+
+\bigskip
+
+\subsection{Semantic Embeddings}
+
+\medskip
+
+We now move from sparse count-based representations to dense semantic embeddings for retrieval over a knowledge base. Instead of representing documents in $\mathbb{R}^{|V|}$ using bag-of-words or TF--IDF, we map pieces of text into a low-dimensional embedding space where geometric proximity reflects semantic similarity.
+
+Given a large knowledge base, such as a collection of research articles or course transcripts, we first partition the corpus into chunks, typically 300--500 words long. If the corpus is a complete transcript of a course, we convert it into a collection $\{\kappa_i\}$ of text chunks. This granularity ensures that retrieved units are small enough to be relevant, yet large enough to contain coherent information.
+
+Each chunk $\kappa_i$ is then passed through an embedding model, typically a large language model, to compute a vector representation $v_i \in \mathbb{R}^d$. These vectors are stored in an index. At query time, given a user query $Q$, we compute its embedding $v_Q$ and rank the chunks in decreasing order of similarity, usually via cosine similarity $\langle v_Q, v_i \rangle / (\|v_Q\| \|v_i\|)$.
+
+Retrieval therefore reduces to nearest-neighbor search in embedding space. Unlike bag-of-words methods, this approach does not rely on exact token overlap. A query about ``side effects of an IL-23 inhibitor'' can retrieve chunks that discuss ``adverse reactions'' even if the exact phrasing differs.
+
+This embedding-based retrieval forms the backbone of retrieval-augmented generation. The goal is to build a system that answers user questions using information grounded in a specific knowledge base, with responses tied to retrieved chunks. The retrieved text is supplied to the language model as context, allowing it to generate answers supported by the underlying documents.
+
+This framework has two key advantages. First, it allows the model to effectively access information from texts on which it was not originally trained, since the relevant chunks are provided at inference time. Second, it improves factual accuracy by constraining generation to retrieved evidence, thereby reducing hallucinations relative to purely parametric generation.
+
+\bigskip
+
+\bigskip
+

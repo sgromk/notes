@@ -1,0 +1,20 @@
+\section{The MLM Head and the Core Encoder}
+\medskip
+
+During pretraining, masked positions are mapped through a small prediction head:
+\[
+\text{Linear}(768 \rightarrow 768)
+\rightarrow
+\text{GELU}
+\rightarrow
+\text{LayerNorm}
+\rightarrow
+\text{Linear}(768 \rightarrow |\mathcal{V}|).
+\]
+
+This head converts contextual embeddings into vocabulary probabilities so that cross-entropy can be computed.
+
+Crucially, this prediction head is not the essence of the model. It is a training tool. Once pretraining is complete, we can discard it. The transformer encoder itself, which produces contextual embeddings, is what we keep.
+
+\bigskip
+

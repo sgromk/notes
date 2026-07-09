@@ -1,0 +1,21 @@
+\section{Sentence-Level Representations}
+\medskip
+
+The \texttt{[CLS]} token is prepended to every input. Through self-attention, its representation gathers information from all other tokens. The vector
+\[
+T_{\text{CLS}} \in \mathbb{R}^{768}
+\]
+can therefore serve as a global summary of the sequence.
+
+Alternatively, we can average token embeddings:
+\[
+v_\kappa
+=
+\frac{1}{K}
+\sum_{i=1}^{K} T_i.
+\]
+
+Both approaches transform variable-length text into a fixed-dimensional vector suitable for similarity computation or classification.
+
+\bigskip
+

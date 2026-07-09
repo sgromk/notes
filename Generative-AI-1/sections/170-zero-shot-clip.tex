@@ -1,0 +1,59 @@
+\section{Zero-Shot Classification with CLIP}
+\medskip
+
+Once text and images live in the same embedding space, classification can be reframed geometrically.
+
+Traditionally, image classification requires training a model with a fixed output layer whose dimensions correspond to predefined categories. If we want to recognize a new category, we must retrain or at least fine-tune the model.
+
+CLIP removes this restriction. Because text and images share a semantic space, labels themselves can be represented as text embeddings.
+
+Suppose we are given an image $I$ and a set of candidate labels such as:
+\[
+\{\text{``dog''}, \text{``cat''}, \text{``raccoon''}, \text{``panda''}\}.
+\]
+
+We convert each label into a textual prompt, for example:
+\[
+\text{``a photo of a dog''}, \quad
+\text{``a photo of a cat''}, \dots
+\]
+
+Each prompt is passed through the text encoder:
+\[
+t_k = f_\theta(\text{prompt}_k).
+\]
+
+The image is passed through the image encoder:
+\[
+v = g_\phi(I).
+\]
+
+We then compute similarities:
+\[
+s_k = \langle v, t_k \rangle.
+\]
+
+The predicted class is simply:
+\[
+\hat{k} = \arg\max_k s_k.
+\]
+
+No additional training is required. The model has never been explicitly trained on this specific classification task. It relies entirely on the shared embedding geometry learned during contrastive pretraining. This is what we mean by \emph{zero-shot} classification.
+
+\bigskip
+\subsection{One-Shot and Prompt-Based Labeling}
+\medskip
+
+The same idea extends naturally to one-shot labeling. Suppose we want to classify images into categories such as ``plane,'' ``car,'' ``dog,'' or ``bird.'' Instead of learning a new classifier, we embed the text descriptions of those categories.
+
+Often, performance improves when we use natural language templates rather than bare class names. For example:
+\[
+\text{``a photo of a \{object\}''}.
+\]
+
+Why does this help? Because CLIP was trained on natural captions, not isolated words. The embedding of ``dog'' alone may differ from ``a photo of a dog.'' Using a full sentence better matches the distribution seen during training.
+
+In practice, multiple prompt templates can be averaged to produce a more robust class embedding.
+
+\bigskip
+

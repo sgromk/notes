@@ -1,0 +1,164 @@
+\section{Neural Networks}
+
+\bigskip
+
+\subsection{Fully Connected Linear Layers}
+
+\medskip
+
+Also called a \textit{dense} layer, is a layer where every input neuron is connected to every output neuron. Then, for an input vector $x$, bias vector $b$, and weight matrix $A$, the output $y$ is simply calculated as:
+\[
+y = xA^T + b
+\]
+Which is an \textit{affine} transformation (a linear transformation followed by a translation). The number of trainable parameters at this layer is equal to the number ($n$) of edges between the input neurons and output neurons, plus the biases:
+\begin{center}
+    Trainable parameters = $n_{in} \times n_{out} + n_{out}$
+\end{center}
+
+\subsubsection{Activation Functions}
+
+By itself, a sequence of linear layers is mathematically equivalent to a single linear layer. To learn non-linear patterns, the output $y$ is typically passed through an \textit{activation function} $\sigma$ (such as ReLU or Sigmoid):
+\[
+z = \sigma(xA^T + b)
+\]
+
+\medskip
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{0.95\textwidth}{l l X}
+\toprule
+\textit{Function} 
+& \textit{Equation} 
+& \textit{Notes} \\
+\midrule
+ReLU 
+& $f(x) = \max(0, x)$ 
+& Standard for hidden layers. Efficient and reduces vanishing gradients, but can suffer from "dying neurons" where nodes become permanently inactive. \\
+
+Leaky ReLU 
+& $f(x) = \max(\alpha x, x)$ 
+& Addresses the dying ReLU problem by allowing a small, non-zero gradient $\alpha$ (e.g., $0.01$) for negative inputs. \\
+
+Sigmoid 
+& $\sigma(x) = \frac{1}{1 + e^{-x}}$ 
+& Squashes values to the range $(0, 1)$. Primarily used for binary classification outputs; prone to vanishing gradients in deep layers. \\
+
+Tanh 
+& $\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ 
+& Zero-centered output in the range $(-1, 1)$. Generally leads to faster convergence than sigmoid but remains susceptible to vanishing gradients. \\
+\bottomrule
+\end{tabularx}
+\caption*{Summary of common activation functions used in neural networks.}
+\end{table}
+
+\subsubsection{Universal Approximation Theorem}
+
+The non-linearity of the activation function allows the network to approximate any continuous function, a property known as the \textit{Universal Approximation Theorem}. We can think of this similar to a Riemann sum, where each neuron creates a piecewise linear approximation of a larger curve. As the width of the hidden layer increases, the interval becomes smaller (and the resolution of the approximation improves). 
+
+Although the theorem states that for any given problem, a perfect approximation exists, there is no guarantee that gradient descent will find the perfect parameters that define that approximation. Additionally, in practice it is more parameter-efficient to approximate complex functions using deep layers rather than a single wide one.
+
+\medskip
+
+\subsubsection{The Output Layer}
+
+While we are often afforded significant flexibility in the hidden layer dimensionality, the final output layer's dimension is highly dependent on the task. For a regression, there is typically a single output neuron with no activation. For a classification, there are as many output neurons as there are classes (except for binary classification, in which we can use a single neuron with a sigmoid activation). These outputs are called \textit{logits} (or log-odds), which can be processed through a softmax layer (normalized exponential) to convert them into probabilities for each class that sum to 1:
+\[
+\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{n} e^{z_j}}
+\]
+
+\subsubsection{The Input Layer}
+
+Although it is described as an ``input layer", it is not a layer of neurons performing a calculation. Therefore, there are no parameters like weights or biases with it. When drawing a network, we may attribute the edges as weights belonging to the input layer, but those weights actually belong to the ``receiving" nodes in the subsequent layer. 
+
+A final note is that if the input is a tensor (multi-dimensional matrix), such as for images, the data must be flattened into a one-dimensional vector before entering the linear layer. In modern deep learning frameworks, input tensors typically include a \textit{batch dimension} $N$, which represents the number of samples processed in parallel. 
+
+The flattening operation is applied only to the spatial/feature dimensions, while the batch dimension remains untouched to ensure each sample is processed independently. For a typical image tensor:
+\[
+X \in \mathbb{R}^{N \times C \times H \times W} \xrightarrow{\text{flatten}} X_{flat} \in \mathbb{R}^{N \times d}, \quad \text{where } d = C \times H \times W
+\]
+
+The resulting matrix dimensions must align with the weight matrix $A \in \mathbb{R}^{n_{out} \times d}$.
+
+\bigskip
+
+\subsection{Introduction to Gradient Descent}
+
+\medskip
+
+Since the error surface for neural networks is often complex and non-convex, no closed-form solution exists to solve for the weights directly. Weights are updated iteratively by calculating the current error and finding the \textit{gradient}, which is the vector of partial derivatives with respect to each weight $\theta$. We take a step in the direction of the negative gradient to minimize the loss.
+
+We define a loss function $L(\theta)$ to quantify error. The Mean Squared Error (MSE) is a common choice where $y$ is the target and $f_\theta(x)$ is the model prediction:
+
+$$L(\theta) = \frac{1}{n} \sum_{i=1}^n (y_i - f_\theta(x_i))^2$$
+
+In a non-convex landscape, the negative gradient points toward the steepest local decline. This can lead the model to get stuck in local minima or at saddle points. Strategies such as momentum, adaptive learning rates (like Adam), and mini-batch randomization are used to help the algorithm navigate these features and find a better global solution. An example of this calculating a gradient descent step is \hyperref[worked-gradient-descent]{here}.
+
+Gradient descent has limitations. For one, it depends entirely on the error surface, which itself is a function of the weights. If our choice of weights and features is insufficient for the problem, then we can never come up with a good solution. Consider the following data matrix and target vector for the XOR function:
+
+\[
+X = \begin{bmatrix} 0 & 0 \\ 0 & 1 \\ 1 & 0 \\ 1 & 1 \end{bmatrix}, \quad y = \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}
+\]
+
+There does not exist a set of weights for a purely linear layer that can solve the problem, because the problem itself is nonlinear. Using ReLU, we can create a model with 0 training error, seen \hyperref[worked-XOR-relu-model]{here}.
+
+\bigskip
+
+\subsection{Code Implementation with PyTorch}
+
+\medskip
+
+\noindent
+\begin{minipage}[t]{0.55\textwidth}
+\vspace{0pt}
+
+\begin{lstlisting}[language=Python]
+import torch
+import torch.nn as nn
+
+class MyNNet(nn.Module):
+    def __init__(self):
+        super(MyNNet, self).__init__()
+        self.fc1 = nn.Linear(2, 2)
+        self.fc2 = nn.Linear(2, 1)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        return x
+
+model = MyNNet()
+\end{lstlisting}
+
+\end{minipage}
+\hspace{1em}
+\begin{minipage}[t]{0.4\textwidth}
+\vspace{0pt}
+
+\textbf{Layer details}
+
+\begin{itemize}
+\item The output dimension of \texttt{fc1} must match the input dimension of \texttt{fc2}.  
+      Here both are $2$, so the hidden representation has width $2$.
+
+\item \texttt{nn.Linear(in, out)} automatically includes a bias term, so each layer learns both weights and offsets.
+
+\item \texttt{ReLU} is applied elementwise to the 2-dimensional hidden vector.
+
+\item The final layer has no activation. 
+\end{itemize}
+
+\end{minipage}
+
+\medskip
+
+\textbf{Why define \texttt{forward}?}
+
+In PyTorch, the \texttt{forward} method explicitly specifies how data flows through the network. When we call \texttt{model(x)}, PyTorch executes \texttt{forward(x)} and constructs a \emph{computation graph}, which is a record of the operations applied to the input and how they depend on one another. Each layer and activation becomes a node in this graph. During backpropagation, PyTorch follows this same graph in reverse to compute gradients using the chain rule. Some high-level TensorFlow APIs hide this step by assuming a fixed layer sequence, but PyTorch requires the forward pass to be written explicitly so the architecture is fully transparent.
+
+\bigskip
+

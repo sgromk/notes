@@ -1,0 +1,137 @@
+\section{Association Rules}
+
+\medskip
+
+Association rules (AR) describe patterns in which certain items tend to occur together in transactional data. Association rule learning discovers such co-occurrence patterns and evaluates their strength.
+
+Consider the rule
+\[
+\{bread, butter\} \implies \{milk\}.
+\]
+This means that transactions containing bread and butter are often associated with milk. An \emph{itemset} is simply a collection of items that appear together in a transaction.
+
+Association rule learning proceeds in two main steps:
+\begin{itemize}
+    \item Frequent itemset generation (identify itemsets that occur often enough in the data)
+    \item Rule generation (form rules from frequent itemsets and evaluate them using measures of strength)
+\end{itemize}
+
+\medskip
+
+We briefly recall some set operations. For two sets $A$ and $B$:
+\begin{itemize}
+    \item The union is $A \cup B$
+    \item The intersection is $A \cap B$
+\end{itemize}
+
+If we know the counts of $A$, $B$, and $A \cap B$, then the count of the union is
+\[
+|A \cup B| = |A| + |B| - |A \cap B|.
+\]
+This subtracts the double-counted intersection.
+
+\medskip
+
+The \emph{support} of an itemset $X$ is the proportion of transactions in which $X$ appears:
+\[
+\text{Support}(X) = \frac{\#\text{ transactions containing } X}{\#\text{ total transactions}}.
+\]
+Support can be interpreted as the unconditional probability $P(X)$.
+
+\medskip
+
+The \emph{confidence} of a rule $X \implies Y$ measures how often $Y$ appears in transactions that already contain $X$:
+\[
+\text{Confidence}(X \implies Y)
+=
+\frac{\#(X \cap Y)}{\#(X)}
+=
+P(Y \mid X).
+\]
+Confidence is a conditional probability. It is not symmetric: in general,
+\[
+P(Y \mid X) \neq P(X \mid Y).
+\]
+
+\medskip
+
+The \emph{lift} of a rule compares the observed co-occurrence of $X$ and $Y$ to what would be expected if they were independent:
+\[
+\text{Lift}(X \implies Y)
+=
+\frac{\text{Confidence}(X \implies Y)}{\text{Support}(Y)}
+=
+\frac{P(Y \mid X)}{P(Y)}.
+\]
+
+Lift measures departure from independence:
+\begin{itemize}
+    \item Lift $= 1$ $\longrightarrow$ $X$ and $Y$ are independent
+    \item Lift $> 1$ $\longrightarrow$ positive association
+    \item Lift $< 1$ $\longrightarrow$ negative association
+\end{itemize}
+
+Lift is always nonnegative. It measures relative increase in probability, not odds.
+
+\bigskip
+
+\subsection{apriori()}
+
+\medskip
+
+The \texttt{apriori()} algorithm is a classical method for association rule learning. Its goal is to efficiently identify \emph{frequent itemsets} and then generate strong rules from them. The key idea is the \textit{Apriori property}:
+\[
+\text{If an itemset is frequent, then all of its subsets must also be frequent.}
+\]
+Equivalently, if a subset of an itemset is infrequent, then the larger itemset cannot possibly be frequent. This allows the algorithm to aggressively prune the search space.
+
+\medskip
+
+The algorithm proceeds iteratively:
+\begin{itemize}
+    \item Start by finding all frequent 1-itemsets (items whose support exceeds the minimum threshold).
+    \item Use these to generate candidate 2-itemsets.
+    \item Prune any candidate whose subsets are not frequent.
+    \item Repeat for 3-itemsets, 4-itemsets, and so on, until no further frequent itemsets are found.
+\end{itemize}
+
+This is a breadth-first search over itemset size. At each stage, only candidates that satisfy the Apriori property are retained, dramatically reducing computation.
+
+\medskip
+
+The data must be in transactional form. Each row represents a transaction (e.g., a basket), and each transaction is a set of items. In R, this is typically stored as a \texttt{transactions} object from the \texttt{arules} package.
+
+\medskip
+
+\textbf{Key parameters in \texttt{apriori()}:}
+\begin{itemize}[label=$\circ$, itemsep=0.4em]
+    \item Support $\longrightarrow$ Minimum support threshold for an itemset to be considered frequent.
+    \item Confidence $\longrightarrow$ Minimum confidence threshold for a rule to be retained.
+    \item Lift $\longrightarrow$ Used to assess strength beyond random co-occurrence.
+\end{itemize}
+
+Support controls how common a pattern must be. Confidence controls how reliable the implication $X \implies Y$ must be. Lift evaluates whether the rule represents genuine association rather than chance.
+
+\medskip
+
+\textbf{Output and visualization.}
+
+The output consists of a set of association rules satisfying the specified thresholds. These can be visualized using the \texttt{arulesViz} package. Common visualizations include:
+\begin{itemize}[label=$\circ$, itemsep=0.4em]
+    \item Scatter plots $\longrightarrow$ Displaying support, confidence, and lift of rules.
+    \item Matrix plots $\longrightarrow$ Showing support relationships among itemsets.
+    \item Graph-based plots $\longrightarrow$ Representing rules as a network of items.
+\end{itemize}
+
+The central trade-off is computational: lower support thresholds increase rule discovery but dramatically expand the candidate search space.
+
+\bigskip
+
+\subsection{Advantages \& Disadvantages}
+
+\medskip
+
+The advantages of ARL are that it is easy to both understand and implement, the generated rules are easy to interpret, and that some algorithms (a priori) are efficient and can therefore be scaled for large datasets. 
+
+The disadvantages are that generating datasets of frequent items can be expensive, some generated rules can be redundant or uninteresting, and that the method is highly sensitive to the parameter choice (cut-offs for support and confidence thresholds).
+

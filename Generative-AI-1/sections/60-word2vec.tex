@@ -1,0 +1,92 @@
+\section{Word2Vec}
+
+\medskip
+
+Word2Vec is a concrete instantiation of the self-supervised framework described above. The objective is to learn semantic embeddings for words by training a simple neural network to predict local word co-occurrence patterns.
+
+\bigskip
+
+\subsection{Model Architecture}
+
+\medskip
+
+Consider again the skip-gram formulation. Given a center word $\alpha$, we model the probability of a context word $\beta$ within a fixed window:
+\[
+P(\beta \mid \alpha)
+=
+\frac{\exp(u_\beta^\top v_\alpha)}
+{\sum_{\beta' \in V} \exp(u_{\beta'}^\top v_\alpha)}.
+\]
+
+Here:
+\begin{itemize}
+    \item $V$ is the vocabulary,
+    \item $v_\alpha \in \mathbb{R}^d$ is the embedding of $\alpha$ when it appears as a center (preceding) word,
+    \item $u_\beta \in \mathbb{R}^d$ is the embedding of $\beta$ when it appears as a context (following) word.
+\end{itemize}
+
+Thus, Word2Vec learns \emph{two} embedding matrices:
+\[
+W_1 \in \mathbb{R}^{|V| \times d}, 
+\qquad
+W_2 \in \mathbb{R}^{|V| \times d}.
+\]
+The rows of $W_1$ are the vectors $\{v_w\}$ and the rows of $W_2$ are the vectors $\{u_w\}$.
+
+\medskip
+
+The neural network itself is shallow:
+\begin{itemize}
+    \item The input is a one-hot vector representing the center word.
+    \item Multiplication by $W_1$ selects the embedding $v_\alpha$.
+    \item A linear transformation via $W_2$ produces scores $u_{\beta}^\top v_\alpha$ for all $\beta \in V$.
+    \item A softmax layer converts these scores into probabilities.
+\end{itemize}
+
+There are no nonlinear hidden layers. The parameters of the network are precisely the embedding matrices $W_1$ and $W_2$.
+
+\bigskip
+
+\subsection{Training Objective}
+
+\medskip
+
+From the corpus, we compute empirical co-occurrence statistics $p_{\alpha\beta}$ for word pairs within the chosen window. We then optimize $W_1$ and $W_2$ to minimize the discrepancy between:
+\[
+p_{\alpha\beta}
+\quad \text{and} \quad
+P(\beta \mid \alpha).
+\]
+
+In practice, this corresponds to maximizing the log-likelihood of observed word-context pairs:
+\[
+\sum_{(\alpha,\beta) \in \mathcal{D}} 
+\log P(\beta \mid \alpha).
+\]
+
+Optimization is performed using stochastic gradient descent or related variants.
+
+\bigskip
+
+\subsection{Interpretation}
+
+\medskip
+
+After training:
+
+\begin{itemize}
+    \item Words that appear in similar contexts have similar vectors.
+    \item The dot product $u_\beta^\top v_\alpha$ reflects how strongly $\beta$ is predicted from $\alpha$.
+    \item The learned vectors $\{v_w\}$ and $\{u_w\}$ are the semantic embeddings.
+\end{itemize}
+
+In many applications, one uses either $v_w$, or $u_w$, or their average as the final word embedding.
+
+\medskip
+
+In summary, Word2Vec turns the abstract goal of learning semantic meaning into a concrete and trainable prediction problem. We train a simple neural network to predict which words co-occur in a local context. This prediction task is not the ultimate objective. It is a proxy task that forces the model to learn useful structure from raw text.
+
+The parameters of the network are the word embeddings themselves. By optimizing the co-occurrence prediction objective, we shape the geometry of the embedding space so that words appearing in similar contexts obtain similar vectors. Once training is complete, we discard the prediction layer and keep the embeddings, which can then be used for search, retrieval, and other downstream applications.
+
+\bigskip
+

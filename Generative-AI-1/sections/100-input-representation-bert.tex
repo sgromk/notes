@@ -1,0 +1,28 @@
+\section{Input Representation in BERT}
+\medskip
+
+Before entering the transformer layers, each token position is represented as the sum of three learned vectors:
+\[
+\text{Input embedding}
+=
+E_{\text{token}}
++
+E_{\text{position}}
++
+E_{\text{segment}}.
+\]
+
+Token embeddings map vocabulary items to 768-dimensional vectors. These are static at the input layer. Contextualization occurs only after self-attention layers.
+
+Positional embeddings encode order information. Since attention itself does not know whether a word appears first or last, positional vectors provide this structure.
+
+Segment embeddings indicate whether a token belongs to Sentence~1 or Sentence~2. RoBERTa removes this component.
+
+The summed embeddings are passed through 12 transformer layers in BERT-base. The output is a sequence of contextual token representations:
+\[
+T_{\text{CLS}}, T_1, \dots, T_K,
+\]
+each in $\mathbb{R}^{768}$.
+
+\bigskip
+

@@ -1,0 +1,18 @@
+\section{Supervised Fine-Tuning}
+\medskip
+
+After pretraining, we adapt the encoder to specific tasks.
+
+For binary classification, we use the standard input format
+\[
+\texttt{[CLS]} \; S_1 \; \texttt{[SEP]} \; S_2 \; \texttt{[SEP]},
+\]
+extract $T_{\text{CLS}}$, and apply a linear layer:
+\[
+\hat{y} = \sigma(W T_{\text{CLS}} + b).
+\]
+
+The transformer layers may be fine-tuned jointly with this head. Conceptually, this is transfer learning: broad linguistic knowledge learned from MLM is specialized to a downstream task.
+
+\bigskip
+

@@ -1,0 +1,377 @@
+\section{Multidimensional Scaling (MDS)}
+
+\medskip
+
+MDS represents complex similarity information in a low-dimensional geometric space. The algorithm takes the $n\times p$ matrix of data and calculates an $n\times n$ matrix of distances of each point to each other point. MDS does not seek to cluster similar data into groups, instead it only attempts to plot the data. Then the problem is how it can take high-dimensional data and plot is so that the Euclidean distance on the 2D or 3D plot is similar to the original distances (at least proportionally). The result is called a \textit{perceptual map}. Importantly, the axes do not have an intrinsic interpretation although we may impose one as an analyst.
+
+\bigskip
+
+\subsection{Mathematical Foundation of Classical MDS}
+
+\medskip
+
+Multidimensional scaling (MDS) can be used to create low-dimensional visualizations
+of data, such as in two or three dimensions. To keep the discussion simple, we
+will focus on the two-dimensional case. Extending the ideas to three dimensions
+(or higher) follows the same steps.
+
+\medskip
+
+Suppose we are given an $n \times n$ matrix of dissimilarities,
+\[
+\Delta = (\delta_{ij}),
+\]
+where $\delta_{ij}$ measures how different objects $i$ and $j$ are. In classical
+MDS, we assume that these dissimilarities behave like Euclidean distances between
+points, even though we do not yet know where those points are located.
+
+Because Euclidean distances are easier to work with algebraically when they are
+squared, we define the \emph{squared dissimilarity matrix} $\Delta^2$, whose entries
+are
+\[
+(\Delta^2)_{ij} = \delta_{ij}^2.
+\]
+
+The goal of classical MDS is to construct points
+\[
+x_1, x_2, \dots, x_n \in \mathbb{R}^2
+\]
+so that the distances between these points are as close as possible to the
+original dissimilarities. More precisely, we want
+\[
+\|x_i - x_j\|^2 \approx \delta_{ij}^2
+\quad \text{for all } i,j.
+\]
+In this sense, MDS is trying to \emph{reconstruct} a geometric picture of the data
+using only information about how far objects are from one another.
+
+\medskip
+
+Let $\mathbf{X}$ denote the $n \times 2$ matrix whose rows contain the coordinates
+of the points produced by MDS. The $i$th row, written as $\mathbf{x}_i^T$, represents
+the two-dimensional location of object $i$. (The transpose appears because vectors
+are usually written as columns in linear algebra.)
+
+From this matrix, we can form the \emph{inner-product matrix}, also called the
+\emph{Gram matrix},
+\[
+\mathbf{B} = \mathbf{X}\mathbf{X}^T.
+\]
+Each entry $b_{ij}$ of this matrix is the dot product between points $i$ and $j$:
+\[
+b_{ij} = \langle x_i, x_j \rangle.
+\]
+This matrix does not store distances directly. Instead, it stores information about
+angles and lengths, from which distances can be recovered.
+
+\medskip
+
+The key connection between distances and inner products is the identity
+\[
+\|\mathbf{x}_i - \mathbf{x}_j\|^2
+= b_{ii} + b_{jj} - 2b_{ij}.
+\]
+Here, $b_{ii}$ and $b_{jj}$ are simply the squared lengths of the vectors
+$x_i$ and $x_j$, while $b_{ij} = \langle x_i, x_j \rangle$ is their inner product.
+The inner product measures how aligned two vectors are, not how far apart they are.
+Although it is sometimes informally interpreted as a measure of similarity,
+it is important to emphasize that it is \emph{not} a distance.
+
+This identity shows that if we know all pairwise inner products between points,
+then we can compute all squared distances. Classical MDS works in the opposite
+direction: starting from squared dissimilarities, it constructs an inner-product
+(Gram) matrix $\mathbf{B}$ that is consistent with those distances.
+
+\medskip
+
+Once the Gram matrix $\mathbf{B}$ has been constructed, the remaining task
+is to find a matrix $\mathbf{X}$ such that
+\[
+\mathbf{B} = \mathbf{X}\mathbf{X}^T.
+\]
+In other words, we need a kind of “matrix square root’’ of $\mathbf{B}$.
+
+Because $\mathbf{B}$ is symmetric, linear algebra tells us that it can be
+written in the form
+\[
+\mathbf{B} = \mathbf{V}\mathbf{\Lambda}\mathbf{V}^T,
+\]
+where $\mathbf{V}$ contains orthonormal eigenvectors and
+$\mathbf{\Lambda}$ is a diagonal matrix of eigenvalues.
+This decomposition does not change $\mathbf{B}$, it simply expresses it
+in terms of its principal directions.
+
+If the eigenvalues are nonnegative, we can define
+\[
+\mathbf{X} = \mathbf{V}\mathbf{\Lambda}^{1/2},
+\]
+where $\mathbf{\Lambda}^{1/2}$ is obtained by taking the square root of
+each eigenvalue on the diagonal.
+Then
+\[
+\mathbf{X}\mathbf{X}^T
+=
+\mathbf{V}\mathbf{\Lambda}^{1/2}
+\mathbf{\Lambda}^{1/2}\mathbf{V}^T
+=
+\mathbf{V}\mathbf{\Lambda}\mathbf{V}^T
+=
+\mathbf{B}.
+\]
+
+Thus, $\mathbf{X}$ provides coordinates whose inner products reproduce
+the Gram matrix $\mathbf{B}$. In this sense, once $\mathbf{B}$ is known,
+the configuration of points can be recovered by taking a matrix square root
+via eigenvalue decomposition.
+
+
+However, this configuration is not unique. If $\mathbf{Q}$ is any orthogonal
+matrix satisfying $\mathbf{Q}^T \mathbf{Q} = \mathbf{I}$, then
+\[
+(\mathbf{X}\mathbf{Q})(\mathbf{X}\mathbf{Q})^T
+= \mathbf{X}\mathbf{X}^T
+= \mathbf{B}.
+\]
+Multiplying by $\mathbf{Q}$ corresponds geometrically to rotating or reflecting
+the configuration. These transformations preserve all pairwise distances.
+Therefore, the coordinates recovered from classical MDS are determined only
+up to rigid transformations such as rotation and reflection. This ambiguity
+is unavoidable because distances alone do not contain orientation information.
+
+\medskip
+
+It is also common to assume that the configuration is \emph{centered}, meaning
+\[
+\sum_{i=1}^n x_i = 0.
+\]
+Geometrically, this places the centroid of the points at the origin. Centering removes translational ambiguity and makes the algebra cleaner. When the configuration is centered, the matrix
+\[
+\frac{1}{n} \mathbf{X}\mathbf{X}^T
+\]
+behaves similarly to a covariance matrix. The important distinction is that,
+in this setting, we are considering relationships among \emph{points}
+(observations), not among variables. In standard statistics, covariance matrices
+are formed as $\mathbf{X}^T\mathbf{X}$ and describe relationships between
+features. In classical MDS, the Gram matrix $\mathbf{X}\mathbf{X}^T$
+describes relationships between observations instead.
+
+\medskip
+
+Finally, it is helpful to compare classical MDS with principal component
+analysis (PCA). Both methods rely on the eigendecomposition of a symmetric
+matrix and use leading eigenvalues and eigenvectors to determine coordinates.
+In PCA, the matrix being diagonalized is a covariance matrix of features.
+In classical MDS, the matrix being diagonalized is a Gram matrix reconstructed
+from pairwise distances between observations.
+
+Thus, while the linear algebra tools are the same, the starting point and
+interpretation differ. PCA begins with raw data and studies variance.
+Classical MDS begins with distances and reconstructs geometry.
+
+\bigskip
+
+\subsection{Double Centering}
+
+\medskip
+
+Classical MDS reconstructs the Gram matrix $\mathbf{B}$ from the squared
+distance matrix using a procedure called \emph{double centering}.
+The idea is to transform squared distances into inner products.
+
+\medskip
+
+Define the matrix
+\[
+\mathbf{J} = \mathbf{I}_n - \frac{1}{n}\mathbf{1}\mathbf{1}^T,
+\]
+where:
+\begin{itemize}
+\item $\mathbf{I}_n$ is the $n \times n$ identity matrix,
+\item $\mathbf{1}$ is the $n$-vector of all ones.
+\end{itemize}
+
+The matrix $\mathbf{J}$ is called the \emph{centering matrix}.
+It has the form
+{
+\renewcommand{\arraystretch}{1.5}
+\[
+\mathbf{J}
+=
+\begin{pmatrix}
+1 - \frac{1}{n} & -\frac{1}{n} & -\frac{1}{n} & \cdots & -\frac{1}{n} \\
+-\frac{1}{n} & 1 - \frac{1}{n} & -\frac{1}{n} & \cdots & -\frac{1}{n} \\
+-\frac{1}{n} & -\frac{1}{n} & 1 - \frac{1}{n} & \cdots & -\frac{1}{n} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+-\frac{1}{n} & -\frac{1}{n} & -\frac{1}{n} & \cdots & 1 - \frac{1}{n}
+\end{pmatrix}.
+\]
+}
+
+To make the structure clear, the entries are:
+\[
+J_{ij}
+=
+\begin{cases}
+1 - \frac{1}{n}, & \text{if } i = j, \\
+-\frac{1}{n}, & \text{if } i \neq j.
+\end{cases}
+\]
+
+\medskip
+
+Intuitively, $\mathbf{J}$ subtracts averages.
+Multiplying a matrix by $\mathbf{J}$ centers it.
+
+\medskip
+
+Let $\mathbf{A}$ be any $n \times n$ matrix.
+
+\begin{itemize}
+\item Pre-multiplying by $\mathbf{J}$, that is $\mathbf{J}\mathbf{A}$,
+subtracts the mean of each column from that column.
+\item Post-multiplying by $\mathbf{J}$, that is $\mathbf{A}\mathbf{J}$,
+subtracts the mean of each row from that row.
+\end{itemize}
+
+If we do both operations,
+\[
+\mathbf{J}\mathbf{A}\mathbf{J},
+\]
+then each entry $a_{ij}$ is replaced by
+\[
+a_{ij}
+- \bar{a}_{i\cdot}
+- \bar{a}_{\cdot j}
++ \bar{a}_{\cdot\cdot},
+\]
+where:
+\begin{itemize}
+\item $\bar{a}_{i\cdot}$ is the mean of row $i$,
+\item $\bar{a}_{\cdot j}$ is the mean of column $j$,
+\item $\bar{a}_{\cdot\cdot}$ is the overall mean of all entries.
+\end{itemize}
+
+So double centering subtracts the row mean and column mean,
+then adds back the overall mean.
+
+\medskip
+
+Geometrically, this operation places the configuration at the origin.
+After double centering, the rows and columns both have mean zero.
+This corresponds to centering the recovered points so that their centroid
+lies at the origin.
+
+\medskip
+
+In classical MDS, we apply this operation to the squared
+distance matrix $\mathbf{\Delta}^{(2)}$:
+\[
+\mathbf{B}
+=
+-\frac{1}{2}
+\mathbf{J}
+\mathbf{\Delta}^{(2)}
+\mathbf{J}.
+\]
+
+This formula converts squared distances into inner products.
+The matrix $\mathbf{B}$ produced in this way is the Gram matrix
+of the centered configuration. Once $\mathbf{B}$ is obtained,
+the coordinates can be recovered through eigenvalue decomposition, as described earlier. The entire process is shown in an example \hyperref[worked-mds]{here}.
+
+\bigskip
+
+\subsection{Relationship to PCA}
+
+\medskip
+
+Classical MDS and PCA are closely related
+methods for producing low-dimensional representations of data. Both rely
+on eigenvalues and eigenvectors of a symmetric matrix to determine the
+main geometric directions in which the data vary.
+
+\medskip
+
+If we begin with a data matrix whose rows represent observations and whose
+columns represent variables, and if the data have been centered so that the
+overall mean is zero, then the Euclidean distances between observations
+contain the same geometric information as the original data matrix.
+
+In this special case, applying classical MDS to the Euclidean distance
+matrix recovers exactly the same principal coordinate system that PCA
+would find. In practical terms, plotting the first two or three MDS
+dimensions gives the same configuration as plotting the first two or
+three principal components, up to rotation or reflection.
+
+\medskip
+
+The key difference is how the two methods begin. PCA starts from a data
+matrix and looks for directions that maximize variance. Classical MDS
+starts from a matrix of pairwise dissimilarities and reconstructs a
+geometric configuration consistent with those distances.
+
+When the dissimilarities are Euclidean distances computed from centered
+data, the two procedures coincide. Outside this special setting, classical
+MDS is more general: it can be applied whenever a symmetric dissimilarity
+matrix is available, even when no original feature matrix exists.
+
+\bigskip
+
+\subsection{Metric vs. Non-metric MDS}
+
+\medskip
+
+Classical (metric) MDS treats observed dissimilarities as meaningful
+numerical distances and attempts to reproduce their magnitudes with
+Euclidean distances in a low-dimensional space. The goal is to match
+the actual size of the gaps between objects as closely as possible.
+This approach is appropriate when the dissimilarities are measured on
+a scale where numerical differences are reliable and interpretable.
+
+\medskip
+
+Non-metric MDS relaxes this assumption. Instead of trying to match
+the numerical values of the dissimilarities, it seeks a configuration
+whose fitted distances preserve only their rank order. In other words,
+if object A is more similar to B than to C in the original data,
+the embedding should reflect that same ordering, even if the exact
+distances differ. This makes non-metric MDS more flexible and often
+more appropriate when dissimilarities are subjective, ordinal, or
+derived from perceptual judgments rather than precise measurements.
+
+\medskip
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{0.9\textwidth}{l X X}
+\toprule
+\textit{Feature} 
+& \textit{Metric MDS} 
+& \textit{Non-metric MDS} \\
+\midrule
+What is preserved 
+& Numerical magnitudes of dissimilarities 
+& Rank order of dissimilarities \\
+
+Assumption 
+& Distances are meaningful quantities 
+& Only ordering of distances is reliable \\
+
+When to use 
+& Measured, quantitative distances 
+& Subjective or ordinal dissimilarities \\
+
+Robustness 
+& Sensitive to scaling distortions 
+& More robust when metric assumptions are weak \\
+
+Geometry 
+& Attempts to match exact spacing 
+& Allows local stretching or compression \\
+\bottomrule
+\end{tabularx}
+\caption*{Metric vs. Non-metric Multidimensional Scaling}
+\end{table}
+

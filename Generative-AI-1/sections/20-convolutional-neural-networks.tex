@@ -1,0 +1,124 @@
+\section{Convolutional Neural Networks}
+
+\medskip
+
+Unlike tabular data, images have spatial structure. Nearby pixels are related, and meaningful patterns such as edges, textures, or object parts appear locally. A fully connected network ignores this structure and treats every pixel independently.
+
+In a fully connected layer, every hidden neuron receives input from every pixel. If the input has $n$ features and the hidden layer has $m$ neurons, the layer learns $n \times m$ weights. As images grow larger, this quickly becomes impractical. More importantly, the model does not respect locality. A pixel in one corner of the image is treated no differently from a pixel in the center.
+
+Convolutional Neural Networks (CNNs) impose two structural constraints: local connectivity and weight sharing. Each neuron only looks at a small window of the input rather than the entire image. For example, a $3 \times 3$ filter examines only nine neighboring pixels at a time. This reflects the fact that useful visual patterns are local. The small matrix of learnable weights that defines a filter is called the \textit{kernel}. Since we apply the kernel elementwise and take the sum, the neuron activation will be highest over a region that most ``looks like" the kernel. 
+
+The second idea is weight sharing. The same set of filter weights is reused at every spatial location. Although a convolutional layer may produce many output neurons, they do not each learn independent parameters. If a filter has $k$ parameters, then the entire layer uses those same $k$ parameters everywhere it is applied. The filter slides across the image, but its weights remain fixed.
+
+These constraints dramatically reduce the number of parameters and encode an important prior: patterns such as edges or textures can appear anywhere in the image. A convolutional layer therefore learns what pattern to detect, not where it occurs.
+
+\bigskip
+
+\subsection{Multiple Channels}
+
+\medskip
+
+So far we have treated a convolution as a single 2D filter producing one feature map. Real images, however, have multiple channels. An RGB image has three channels, so a filter must span all of them. Instead of an $M \times M$ matrix, each filter is an $M \times M \times 3$ tensor. The spatial footprint is still local, but the filter now combines information across color channels at every location.
+
+Moreover, we typically learn not just one filter, but many. Each filter produces its own feature map, and these maps are stacked along a new channel dimension. This is how a layer can detect multiple types of patterns simultaneously.
+
+\medskip
+
+In PyTorch, this is specified as
+
+\[
+\texttt{nn.Conv2d(in\_channels, out\_channels, kernel\_size, stride, padding)}.
+\]
+
+\begin{itemize}[itemsep=0.3em]
+\item \texttt{in\_channels}: Number of input channels. For an RGB image, this is 3. In deeper layers, it equals the number of feature maps from the previous layer.
+
+\item \texttt{out\_channels}: Number of filters the layer learns. Each filter produces one output feature map.
+
+\item \texttt{kernel\_size}: Spatial size of the filter (e.g., $3$ for a $3 \times 3$ kernel).
+
+\item \texttt{stride}: Step size of the filter as it moves across the image. Larger stride reduces spatial resolution.
+
+\item \texttt{padding}: Number of pixels added around the border of the input (typically zeros), which controls whether spatial dimensions shrink or are preserved.
+\end{itemize}
+
+Together, these arguments determine both how many pattern detectors the layer learns and how the spatial dimensions evolve from one layer to the next.
+
+\subsection{Counting Parameters and Output Size}
+
+\medskip
+
+\textbf{Number of weights in a convolutional layer.}
+
+For a convolutional layer defined as
+\[
+\texttt{nn.Conv2d}(C_{\text{in}}, C_{\text{out}}, K, s, p),
+\]
+the total number of learnable weights is
+
+\[
+n_{\text{weights}}
+=
+C_{\text{out}}
+\times
+C_{\text{in}}
+\times
+K
+\times
+K.
+\]
+
+If a bias term is used (default in PyTorch), then we add $+ \; C_{\text{out}}$.
+
+\medskip
+
+As a note, stride $s$ and padding $p$ do \textit{not} affect the number of parameters, because they change how many times the filter is applied and the spatial size of the output, but the same weights are reused at every location.
+
+\bigskip
+
+\textbf{Output spatial size of the next layer.}
+
+If the input has spatial size $H \times W$, kernel size $K$, stride $s$, and padding $p$, then the output height and width are
+
+\[
+H_{\text{out}}
+=
+\left\lfloor
+\frac{H - K + 2p}{s}
+\right\rfloor
++ 1,
+\qquad
+W_{\text{out}}
+=
+\left\lfloor
+\frac{W - K + 2p}{s}
+\right\rfloor
++ 1.
+\]
+
+\begin{itemize}[label=$\circ$, itemsep=0.3em]
+\item $H - K$: once a $K \times K$ filter is placed on the image, it cannot extend past the boundary. Subtracting $K$ accounts for the size of the window.
+
+\item $+\,2p$: padding adds $p$ pixels on both sides of the image, effectively increasing the usable spatial dimension by $2p$.
+
+\item $\div\, s$: stride determines how far the filter moves each step. Dividing by $s$ counts how many valid positions the filter can occupy.
+
+\item $+\,1$: accounts for the initial placement of the filter at the first valid position.
+\end{itemize}
+
+The floor function ensures the result is an integer if the division is not exact.  
+The number of output channels is simply $C_{\text{out}}$, since each learned filter produces one output feature map.  
+
+Therefore, the full output volume has shape
+$H_{\text{out}} \times W_{\text{out}} \times C_{\text{out}}$.
+
+If we really want to be pedantic, in PyTorch, tensors are stored in the order $(\text{batch size},\, C_{\text{out}},\, H_{\text{out}},\, W_{\text{out}})$.
+
+\medskip
+
+Lastly, we can consider \textit{pooling layer}. Pooling layers reduce spatial resolution without introducing additional learnable parameters. Instead of learning weights, they apply a fixed operation over local windows. Max pooling keeps the strongest activation in each region, emphasizing the most prominent feature, while average pooling smooths the region by taking the mean value. In both cases, the spatial dimensions shrink, which lowers computational cost and makes the representation more robust to small translations in the input.
+
+If we wanted to implement average pooling in a \textit{forward} function, we could add the line \texttt{x = x.mean(dim=(2,3))}, where 2 and 3 are the height and width dimensions in the input tensor.
+
+\bigskip
+

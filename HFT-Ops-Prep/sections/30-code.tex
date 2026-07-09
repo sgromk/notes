@@ -1,0 +1,45 @@
+% ============================================================
+\section{Code}
+% ============================================================
+
+\subsection{Paradigms and Notes}
+
+Quick reference before the practice log. Fill this out as patterns recur.
+
+\begin{itemize}
+  \item \textbf{Hashing:} trade space for $O(1)$ lookup. First reach for it on ``find a pair / count occurrences / seen-before'' problems.
+  \item \textbf{Two pointers:} sorted array or linked list, converging or fast/slow. Turns many $O(n^2)$ scans into $O(n)$.
+  \item \textbf{Sliding window:} contiguous subarray/substring under a constraint. Expand right, shrink left.
+  \item \textbf{Binary search on the answer:} monotone feasibility predicate over a numeric range.
+  \item \textbf{SQL:} window functions (\texttt{ROW\_NUMBER}, \texttt{RANK}, \texttt{SUM() OVER}) and CTEs cover most DataLemur mediums.
+\end{itemize}
+
+\subsection{Practice log}
+
+\paragraph{Two Sum (LeetCode 1).} Return indices of the two numbers summing to a target.
+
+\noindent\textbf{Approach.} One pass with a hash map from value to index. For each element check whether its complement was already seen.
+
+\complexity{O(n)}{O(n)}
+
+\begin{lstlisting}[style=python, caption={Two Sum, single-pass hash map}]
+def two_sum(nums, target):
+    seen = {}                       # value -> index
+    for i, x in enumerate(nums):
+        if target - x in seen:
+            return [seen[target - x], i]
+        seen[x] = i
+    return []
+\end{lstlisting}
+
+\paragraph{Second highest salary (DataLemur).} Return the second-highest distinct salary, or NULL if none.
+
+\begin{lstlisting}[style=sql, caption={Second highest salary via DENSE\_RANK}]
+SELECT MAX(salary) AS second_highest
+FROM (
+    SELECT salary,
+           DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+    FROM employees
+) ranked
+WHERE rnk = 2;
+\end{lstlisting}

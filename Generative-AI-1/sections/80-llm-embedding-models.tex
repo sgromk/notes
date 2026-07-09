@@ -1,0 +1,43 @@
+\section{LLM Embedding Models}
+\medskip
+
+Modern embedding models built from large language models solve a central weakness of earlier approaches such as Word2Vec. Word2Vec assigns a single vector $v_w$ to each word type $w$. This works surprisingly well for capturing general semantic similarity, but it cannot adapt to context. The word ``bank'' has one embedding whether we are talking about rivers or finance. The model has no mechanism for dynamically adjusting meaning.
+
+Transformer-based language models change this completely. Instead of learning one vector per word type, they produce a representation for each \emph{token in context}. The embedding of a word is recomputed every time it appears. In effect, meaning is no longer stored statically in a dictionary. It is constructed dynamically from surrounding words.
+
+You can think of Word2Vec as storing a fixed definition, while a transformer rewrites that definition each time the word appears, using the rest of the sentence as evidence.
+
+\bigskip
+\subsection{How Self-Attention Produces Context}
+\medskip
+
+The mechanism that enables contextual embeddings is self-attention. In each transformer layer, every input token embedding is linearly projected into three vectors: a query, a key, and a value. The queries are compared to keys using scaled dot products. These dot products determine attention weights, which specify how much each token should incorporate information from every other token.
+
+The output for a token is a weighted combination of value vectors across the entire sequence. Because this process is repeated across multiple layers, information flows globally. Formally, in an encoder we can write
+\[
+h_t = f(x_1, \dots, x_T).
+\]
+The representation at position $t$ depends on the full input sequence.
+
+This global interaction is what allows the embedding of ``wind'' in ``strong wind'' to differ from ``wind the clock.'' The surrounding words directly shape the vector representation.
+
+\bigskip
+\subsection{Encoders and Decoders}
+\medskip
+
+Transformer architectures differ primarily in how attention is structured.
+
+In a decoder-only model, attention is causal. A token at position $t$ can only attend to positions $1, \dots, t$. Future tokens are masked:
+\[
+h_t = f(x_1, \dots, x_t).
+\]
+This structure enables next-word prediction and autoregressive generation. Models such as GPT are optimized for producing coherent text one token at a time.
+
+In an encoder model, attention is non-causal. Every token can attend to every other token:
+\[
+h_t = f(x_1, \dots, x_T).
+\]
+Because each representation incorporates both left and right context, encoders are especially well suited for building embeddings that summarize entire inputs. For retrieval, semantic similarity, and classification, encoder-style models are typically preferred.
+
+\bigskip
+

@@ -1,0 +1,101 @@
+\section{DBSCAN Advanced Cluster Analysis}
+
+\medskip
+
+Some key R commands are:
+\begin{itemize}
+    \item \texttt{db <- dbscan(data, eps = eps, minPts = minPts)}: the main function call. Here, \texttt{eps} (epsilon) is the fixed radius of the neighborhoods in which DBSCAN searches for dense regions, and \texttt{minPts} is the minimum number of points required within that radius (including the point itself) for a point to be considered a core point.
+
+    \item \texttt{kNNdistplot(data, k = k)}: produces a $k$-nearest neighbor distance plot. For each point, the distance to its $k$th nearest neighbor is computed and plotted in sorted order. This is commonly used to help choose a reasonable value for \texttt{eps}. A sharp change or ``elbow'' in the plot often suggests a good cutoff for the neighborhood radius.
+
+    \item \texttt{table(db\$cluster)}: tabulates the number of points assigned to each cluster. In the output, cluster labels are given as integers, and points labeled as \texttt{0} correspond to noise (points not assigned to any cluster).
+\end{itemize}
+
+\medskip
+
+
+Density-Based Spatial Clustering of Applications with Noise (DBSCAN) is a clustering method based on the idea that clusters are regions of high point density separated by regions of low density. Unlike methods such as $k$-means, DBSCAN can explicitly classify observations as:
+
+\begin{itemize}[label=--]
+    \item Core: points whose $\epsilon$-neighborhood (including the point itself) contains at least \texttt{minPts} points.
+    \item Boundary: points that are not core points but lie within the $\epsilon$-neighborhood of a core point.
+    \item Noise: points that are neither core nor boundary, and therefore do not belong to any cluster.
+\end{itemize}
+
+DBSCAN does not assume any underlying probability distribution. Instead, it identifies clusters purely through geometric density, using $\epsilon$ as a distance threshold and \texttt{minPts} as a minimum local density requirement.
+
+
+\bigskip
+
+\subsection{How the Algorithm Works}
+
+\medskip
+
+\begin{enumerate}[itemsep=0.5em]
+    \item A data point is selected and the number of points within $\epsilon$ of it is counted. If its $\epsilon$-neighborhood (including the point itself) contains at least \texttt{minPts} points, it is classified as a ``core'' point and used as a seed for a new cluster. Otherwise, it is temporarily labeled as noise.
+    
+    \item The cluster is expanded by adding all points within $\epsilon$ of the seed (these points are density-reachable from the seed).
+    
+    \item For each point added to the cluster, if it is also a core point, then all of its $\epsilon$-neighbors are added as well. This process continues until no new density-reachable points can be added.
+    
+    \item Once the cluster stops growing, a new unvisited point is selected and tested to determine whether it can start another cluster.
+    
+    \item After all points have been processed, any point not assigned to a cluster is labeled as noise.
+\end{enumerate}
+
+This allows DBSCAN to form clusters with complex shapes by chaining together regions of high density. Compared to $k$-means, DBSCAN does not penalize points that are far apart in the same cluster, as long as there is a sufficiently dense ``path'' of points connecting them.
+
+\bigskip
+
+\subsection{Advantages, Applications, \& Limitations}
+
+\medskip
+
+The key advantages of DBSCAN are the flexibility it provides in defining density requirements through \texttt{eps} and \texttt{minPts}, its ability to explicitly identify noise points, and its capacity to recover clusters with arbitrary, non-convex shapes. Unlike $k$-means, it does not require specifying the number of clusters in advance. DBSCAN has wide applications in geospatial analysis, image processing, anomaly detection, and customer segmentation.
+
+Key limitations of DBSCAN are its sensitivity to the choice of parameters, particularly \texttt{eps}. Small changes in \texttt{eps} can substantially alter the clustering structure. In addition, DBSCAN uses a single global $\epsilon$ value, which makes it difficult to correctly identify clusters that have different densities or widths within the same dataset. In high-dimensional settings, distance measures become less informative due to the curse of dimensionality, which can make density-based neighborhood definitions unreliable. Finally, DBSCAN can struggle when clusters are very close together, as it may incorrectly merge them if their high-density regions connect.
+
+\bigskip
+
+\subsection{Choosing Parameter Values}
+
+\medskip
+
+Since the choice for the parameters significantly affects the output, we should consider some rules of thumb:
+\begin{itemize}[label=--, itemsep=0.7em]
+    \item \texttt{minPts} = $p + 1$, where $p$ is the number of features. 
+    \begin{itemize}[label=$\circ$, itemsep=0.3em]
+        \item This is a theoretical lower bound: in $p$-dimensional space, at least $p+1$ points are required to form a full-dimensional simplex (the smallest set of points that spans the entire $p$-dimensional space rather than lying in a lower-dimensional subspace). 
+        \item With fewer than $p+1$ points, observations can lie on a lower-dimensional manifold and spuriously appear dense, so DBSCAN may identify unstable or degenerate clusters. Thus $p+1$ is the smallest value that meaningfully defines local density in $p$-space, but it is rarely sufficient in practice.
+    \end{itemize}
+    
+    \item \texttt{minPts} = $2p$
+    \begin{itemize}[label=$\circ$, itemsep=0.3em]
+        \item This is a common heuristic that increases the minimum neighborhood size to make density estimates more stable and less sensitive to noise. However, it is not theoretically justified: the appropriate value depends on the intrinsic dimensionality, the noise level, and the actual spatial distribution of the data.
+        \item In higher dimensions or noisy datasets, substantially larger values may be required.
+    \end{itemize}
+    \item Experiment with a range of $\epsilon$ and \texttt{minPts} (grid search)
+    \item Use relevant domain knowledge for the subject
+    \item Use a \textit{k-distance graph}.
+\end{itemize}
+
+\medskip
+
+\subsubsection{k-distance Graphs}
+
+\medskip
+
+This is used to \textit{refine} $\epsilon$ once we already have a tentative value for \texttt{minPts}. The idea is as follows:
+
+\begin{enumerate}
+    \item For each data point, compute the distance to its $k$th nearest neighbor, where $k$ is the chosen value for \texttt{minPts}. We record only this $k$th distance, since it represents the smallest radius needed for the point to have at least \texttt{minPts} neighbors. Distances to closer points are not needed for this diagnostic.
+
+    \item Collect all of these $k$-nearest neighbor distances and sort them from smallest to largest.
+    
+    \item Plot the ordered distances against their index (from $1$ to $n$). The resulting curve will be non-decreasing (monotonically increasing).
+\end{enumerate}
+
+\medskip
+
+To choose $\epsilon$, look for a noticeable ``elbow'' in the curve. The distance value at this elbow is often a good choice for $\epsilon$. Intuitively, the elbow marks the transition between points in dense regions (small $k$-distances) and points in sparser regions or noise (rapidly increasing $k$-distances).
+

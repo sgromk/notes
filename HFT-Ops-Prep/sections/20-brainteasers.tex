@@ -1,0 +1,73 @@
+% ============================================================
+\section{Brainteasers}
+% ============================================================
+
+\begin{problem}[Easy]
+Five pirates need to divide 100 Gold Coins. Pirates have a hierarchy, from Level 1 to level 5. The highest level pirate is the leader. The leader proposes a plan to distribute the gold and all the pirates vote on it (including the leader). If at least 50\% of the pirates agree on the plan, the gold is split according to the proposal. If not, level-5 pirate is kicked from the ship, and the level-4 pirate now proposes a new plan. This process continues until a proposal is accepted. All pirates are extremely smart and extremely greedy. How does level-5 Pirate divide the treasure?
+\end{problem}
+
+\begin{solution}
+We approach this problem game-theoretically and dynamically:
+\begin{itemize}[label=$\circ$]
+    \item 2 pirates $\rightarrow$ Pirate 2 proposes 100 coins for themself and zero for Pirate 1
+    \item 3 pirates $\rightarrow$ Pirate 3 bribes Pirate 1 with one coin and keeps 99 for themself, which they accept because they get zero coins if Pirate 3 is booted off.
+    \item 4 pirates $\rightarrow$ Pirate 4 bribes Pirate 2 with one coin and keeps 99 for themself, in the same manner as the 3-pirate case.
+    \item 5 pirates $\rightarrow$ Pirate 5 bribes pirates 1 and 3 with one coin each, keeping 98 for themself.
+\end{itemize}
+
+\begin{center}
+Thus, the final division is [98, 0, 1, 0 ,1].
+\end{center}
+
+\end{solution}
+
+
+\begin{problem}[Easy]
+An explorer travels 1 mile South, 1 mile East, then 1 mile North, and finds themselves back at the starting point. The explorer spots a bear, what is the color of the bear?
+\end{problem}
+
+\begin{solution}
+The bear must be white. There are a few relevant scenarios that could have resulted in the explorer starting back where they began. In the first case, they started at the North pole, then travelling South equates to travelling directly away from the Pole. They can then travel \textit{any} distance East or West, the following mile back North will return them to their destination. There are no bears in the South Pole so we omit this, though the same logic applies (with the Eastward movement equivalent to spinning in place or not moving at all).
+
+There are other solutions near the South Pole. If the traveler's initial one-mile journey South ends on a latitude circle with a circumference of $\frac{1}{n}\  (n \in \mathbb{Z}^+)$ miles, walking one mile East will complete $n$ full rotations around the pole and leave them exactly where they started walking East, meaning the following mile North would place them in the same starting position.
+\end{solution}
+
+\begin{problem}[Easy]
+There is a light bulb inside a room and three switches outside. All switches are currently in off state and only one switch controls the light bulb. You may turn any number of switches on or off any number of times you want. How many times do you need to go into the room to figure out which switch controls the light bulb?
+\end{problem}
+
+\begin{solution}
+We only need to enter the room once. The first switch is flipped and left on for enough time that the bulb become hot. It is then flipped off and the second switch is flipped, we then immediately enter the room. This leads the three cases:
+\begin{enumerate}
+    \item Bulb is hot $\rightarrow$ the light must be off and the first switch controls the light
+    \item Bulb is on $\rightarrow$ the second switch controls the light
+    \item Bulb is off and cold $\rightarrow$ the third switch controls the light
+\end{enumerate}
+
+\medskip
+
+If there were four switches, we can still infer the switch in one entry by turning on both switches 1 and 2 for a long time, then switching off switch 2 and turning on switch 3 before entering the room. This results in the following cases:
+\begin{enumerate}
+    \item Bulb is on and hot $\rightarrow$ Switch 1 controls the light
+    \item Bulb is on and cool $\rightarrow$ Switch 3 controls the light
+    \item Bulb is off and hot $\rightarrow$ Switch 2 controls the light
+    \item Bulb is off and cool $\rightarrow$ Switch 4 controls the light
+\end{enumerate}
+\end{solution}
+
+The extension to four bulbs worked because we had two binary variables (illumination and bulb temperature) which creates 4 dinstinct states, of which we were only using 3 in the 3-bulb case.
+
+\medskip
+
+\begin{problem}[Easy]
+How do you place 50 good candies and 50 rotten candies in two boxes such that if you choose a box at random and take out a candy at random, it better be good!
+
+We need to maximize the probability of getting a good candy when selecting a random box and a random candy from it.
+\end{problem}
+
+\begin{solution}
+On one extreme, we can place all of the good candies in one box with all of the bad candies in another. This gives us $\mathbb{E}[G] = 0.5$. Thus, we should find solutions that better than 50\%. We can beat this rather simply, by placing one good candy in one box and the other 49 in the other box with all of the bad candies. This results in:
+\[
+\mathbb{E}[G] = 0.5 * \frac{1}{1} + 0.5 * \frac{49}{99} \approx 0.747
+\]
+\end{solution}

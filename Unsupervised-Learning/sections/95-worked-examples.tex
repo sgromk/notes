@@ -1,0 +1,593 @@
+\section{Worked Examples}
+
+\bigskip
+
+\subsection{PCA with Two Variables}
+\label{worked-pca-two-variables}
+
+This example illustrates the transition from original variables to principal components using a bivariate dataset.
+
+\medskip
+
+\begin{enumerate}
+    \setlength{\itemsep}{1em}
+    
+    \item \textit{Original Data}: Suppose we have the following observations for variables $X_1$ and $X_2$:
+
+    \[
+    \mathbf{X} =
+    \begin{bmatrix}
+    2 & 3 \\
+    4 & 5 \\
+    5 & 7 \\
+    3 & 4
+    \end{bmatrix}
+    \]
+
+    \item \textit{Standardizing the Data}: Standardize each variable to have mean 0 and standard deviation 1:
+
+    \[
+    Z_1 = \frac{X_1 - \bar{X}_1}{s_{X_1}}, \quad
+    Z_2 = \frac{X_2 - \bar{X}_2}{s_{X_2}}
+    \]
+
+    Compute means and standard deviations:
+
+    \[
+    \bar{X}_1 = \frac{2+4+5+3}{4} = 3.5, \quad
+    \bar{X}_2 = \frac{3+5+7+4}{4} = 4.75
+    \]
+    
+    \[
+    s_{X_1} = \sqrt{\frac{(2-3.5)^2 + (4-3.5)^2 + (5-3.5)^2 + (3-3.5)^2}{4-1}} \approx 1.29
+    \]
+    
+    \[
+    s_{X_2} = \sqrt{\frac{(3-4.75)^2 + (5-4.75)^2 + (7-4.75)^2 + (4-4.75)^2}{3}} \approx 1.71
+    \]
+
+    Standardized matrix:
+
+    \[
+    \mathbf{Z} =
+    \begin{bmatrix}
+    -1.16 & -1.03 \\
+     0.39 & 0.15 \\
+     1.16 & 1.31 \\
+    -0.39 & -0.22
+    \end{bmatrix}
+    \]
+
+    Total variance of standardized variables: $1+1=2$.
+
+    \item \textit{Correlation Matrix}: Compute the correlation (equivalent to covariance for standardized data):
+    
+    The correlation between $Z_1$ and $Z_2$ is
+    
+    \[
+    r_{12} = \frac{1}{n-1} \sum_{i=1}^{n} Z_{1i} Z_{2i}
+    \]
+    
+    Step by step multiplication:
+    
+    \[
+    Z_1 Z_2 =
+    \begin{bmatrix}
+    (-1.16)(-1.03) = 1.1948 \\
+    (0.39)(0.15) = 0.0585 \\
+    (1.16)(1.31) = 1.5196 \\
+    (-0.39)(-0.43) = 0.1677
+    \end{bmatrix}
+    \]
+    
+    Sum:
+    
+    \[
+    1.1948 + 0.0585 + 1.5196 + 0.1677 \approx 2.9406
+    \]
+    
+    Divide by $n-1 = 3$:
+    
+    \[
+    r_{12} = \frac{2.9406}{3} \approx 0.9802
+    \]
+    
+    Correlations of variables with themselves are 1, so the correlation matrix is
+    
+    \[
+    \mathbf{R} =
+    \begin{bmatrix}
+    1 & 0.980 \\
+    0.980 & 1
+    \end{bmatrix}
+    \]
+    
+    \item \textit{Eigenvalues and Eigenvectors}:
+    
+    Solve the characteristic equation
+    
+    \[
+    \det(\mathbf{R} - \lambda \mathbf{I}) = 0
+    \]
+    
+    Step by step:
+    
+    \[
+    \begin{vmatrix}
+    1-\lambda & 0.980 \\
+    0.980 & 1-\lambda
+    \end{vmatrix} = (1-\lambda)(1-\lambda) - (0.980)^2 = 0
+    \]
+    
+    \[
+    (1-\lambda)^2 - 0.9604 = 0
+    \]
+    
+    \[
+    (1-\lambda)^2 = 0.9604 \implies 1-\lambda = \pm 0.980
+    \]
+    
+    \[
+    \lambda_1 = 1 + 0.980 = 1.980, \quad \lambda_2 = 1 - 0.980 = 0.020
+    \]
+    
+    Eigenvectors:
+    
+    For $\lambda_1 = 1.980$:
+    
+    \[
+    (\mathbf{R} - \lambda_1 \mathbf{I})\mathbf{v}_1 =
+    \begin{bmatrix}
+    1-1.980 & 0.980 \\
+    0.980 & 1-1.980
+    \end{bmatrix} 
+    \begin{bmatrix} v_{11} \\ v_{12} \end{bmatrix} =
+    \begin{bmatrix}
+    -0.980 & 0.980 \\
+    0.980 & -0.980
+    \end{bmatrix}
+    \begin{bmatrix} v_{11} \\ v_{12} \end{bmatrix} = 0
+    \]
+    
+    Solving $-0.980 v_{11} + 0.980 v_{12} = 0 \implies v_{11} = v_{12}$. Normalize:
+    
+    \[
+    \mathbf{v}_1 = \frac{1}{\sqrt{2}}
+    \begin{bmatrix} 1 \\ 1 \end{bmatrix} =
+    \begin{bmatrix} 0.707 \\ 0.707 \end{bmatrix}
+    \]
+    
+    For $\lambda_2 = 0.020$:
+    
+    \[
+    v_{21} = -v_{22} \implies
+    \mathbf{v}_2 = \frac{1}{\sqrt{2}}
+    \begin{bmatrix} 1 \\ -1 \end{bmatrix} =
+    \begin{bmatrix} 0.707 \\ -0.707 \end{bmatrix}
+    \]
+
+
+    Eigenvectors (normalized):
+
+    \[
+    \mathbf{v}_1 = 
+    \begin{bmatrix}
+    0.707 \\
+    0.707
+    \end{bmatrix}, \quad
+    \mathbf{v}_2 =
+    \begin{bmatrix}
+    0.707 \\
+    -0.707
+    \end{bmatrix}
+    \]
+
+    \item \textit{Forming Principal Components}: Each component is a linear combination of standardized variables:
+
+    \[
+    \xi_1 = 0.707 Z_1 + 0.707 Z_2, \quad
+    \xi_2 = 0.707 Z_1 - 0.707 Z_2
+    \]
+
+    The first component explains $\frac{1.981}{2} \approx 99\%$ of the total variance.
+
+    \item \textit{Verifying Orthonormality}:
+
+    \[
+    0.707^2 + 0.707^2 \approx 0.5 + 0.5 = 1
+    \]
+
+    \item \textit{Calculating Component Scores} (coordinates of the original data in the new PC space):
+
+    \[
+    \mathbf{\Xi} = \mathbf{Z} \mathbf{V} =
+    \begin{bmatrix}
+    -1.46 & -0.09 \\
+     0.38 & -0.04 \\
+     1.82 & 0.07 \\
+    -0.74 & 0.05
+    \end{bmatrix}
+    \]
+
+    Here, the first column is $\xi_1$, the second is $\xi_2$.
+
+    \item \textit{Reconstructing Original Variables}:
+
+    Using the first component only:
+
+    \[
+    Z_1 \approx 0.707 \xi_1, \quad Z_2 \approx 0.707 \xi_1
+    \]
+
+    Including both components:
+
+    \[
+    \mathbf{Z} = \xi_1 \mathbf{v}_1^\top + \xi_2 \mathbf{v}_2^\top
+    \]
+
+\end{enumerate}
+
+
+
+\newpage
+
+
+\subsection{MDS Example}
+\label{worked-mds}
+
+\medskip
+
+Consider four objects with distance matrix
+\[
+\mathbf{\Delta}
+=
+\begin{pmatrix}
+0 & 3 & 4 & 5 \\
+3 & 0 & 5 & 6 \\
+4 & 5 & 0 & 7 \\
+5 & 6 & 7 & 0
+\end{pmatrix}.
+\]
+
+\medskip
+\noindent
+\textbf{Step 1: Square the distances}
+
+\medskip
+
+Squaring each entry gives
+\[
+\mathbf{\Delta}^{(2)}
+=
+\begin{pmatrix}
+0 & 9 & 16 & 25 \\
+9 & 0 & 25 & 36 \\
+16 & 25 & 0 & 49 \\
+25 & 36 & 49 & 0
+\end{pmatrix}.
+\]
+
+\medskip
+\noindent
+\textbf{Step 2: Construct the centering matrix}
+
+\medskip
+
+Since $n = 4$,
+\[
+\mathbf{J}
+=
+\mathbf{I}_4 - \frac{1}{4}\mathbf{1}\mathbf{1}^T.
+\]
+
+Because $\frac{1}{4}\mathbf{1}\mathbf{1}^T$ is a matrix of all $1/4$'s, we obtain
+{
+\renewcommand{\arraystretch}{1.5}
+\[
+\mathbf{J}
+=
+\begin{pmatrix}
+\frac{3}{4} & -\frac{1}{4} & -\frac{1}{4} & -\frac{1}{4} \\
+-\frac{1}{4} & \frac{3}{4} & -\frac{1}{4} & -\frac{1}{4} \\
+-\frac{1}{4} & -\frac{1}{4} & \frac{3}{4} & -\frac{1}{4} \\
+-\frac{1}{4} & -\frac{1}{4} & -\frac{1}{4} & \frac{3}{4}
+\end{pmatrix}.
+\]}
+
+\medskip
+\noindent
+\textbf{Step 3: Compute row means, column means, and the grand mean}
+
+\medskip
+
+Row means of $\mathbf{\Delta}^{(2)}$:
+
+\[
+\bar{a}_{1\cdot} = \frac{0+9+16+25}{4} = 12.5
+\]
+\[
+\bar{a}_{2\cdot} = \frac{9+0+25+36}{4} = 17.5
+\]
+\[
+\bar{a}_{3\cdot} = \frac{16+25+0+49}{4} = 22.5
+\]
+\[
+\bar{a}_{4\cdot} = \frac{25+36+49+0}{4} = 27.5
+\]
+
+Because the matrix is symmetric, the column means are the same.
+
+The grand mean is
+\[
+\bar{a}_{\cdot\cdot}
+=
+\frac{1}{16}
+\sum_{i,j} a_{ij}
+=
+\frac{80}{4}
+=
+20.
+\]
+
+\medskip
+\noindent
+\textbf{Step 4: Apply double centering and rescaling}
+
+\medskip
+
+Recall that
+\[
+b_{ij}
+=
+-\frac{1}{2}
+\left(
+a_{ij}
+-
+\bar{a}_{i\cdot}
+-
+\bar{a}_{\cdot j}
++
+\bar{a}_{\cdot\cdot}
+\right).
+\]
+
+We compute a few entries explicitly.
+
+\medskip
+
+Entry $(1,1)$:
+\[
+b_{11}
+=
+-\frac{1}{2}
+\left(
+0 - 12.5 - 12.5 + 20
+\right)
+=
+-\frac{1}{2}(-5)
+=
+2.5.
+\]
+
+\medskip
+
+Entry $(1,2)$:
+\[
+b_{12}
+=
+-\frac{1}{2}
+\left(
+9 - 12.5 - 17.5 + 20
+\right)
+=
+-\frac{1}{2}(-1)
+=
+0.5.
+\]
+
+\medskip
+
+Entry $(1,4)$:
+\[
+b_{14}
+=
+-\frac{1}{2}
+\left(
+25 - 12.5 - 27.5 + 20
+\right)
+=
+-\frac{1}{2}(5)
+=
+-2.5.
+\]
+
+Carrying this out for all entries yields
+\[
+\mathbf{B}
+=
+\begin{pmatrix}
+2.5 & 0.5 & -0.5 & -2.5 \\
+0.5 & 7.5 & -2.5 & -5.5 \\
+-0.5 & -2.5 & 12.5 & -9.5 \\
+-2.5 & -5.5 & -9.5 & 17.5
+\end{pmatrix}.
+\]
+
+\medskip
+\noindent
+\textbf{Step 5: Full eigen-decomposition of $\mathbf{B}$}
+
+\medskip
+
+The eigenvalues of $\mathbf{B}$ are approximately
+\[
+\lambda_1 = 25.4573, \quad
+\lambda_2 = 11.6406, \quad
+\lambda_3 = 2.9021, \quad
+\lambda_4 \approx 0.
+\]
+
+Thus the diagonal matrix of eigenvalues is
+
+\[
+\mathbf{\Lambda}
+=
+\begin{pmatrix}
+25.4573 & 0 & 0 & 0 \\
+0 & 11.6406 & 0 & 0 \\
+0 & 0 & 2.9021 & 0 \\
+0 & 0 & 0 & 0
+\end{pmatrix}.
+\]
+
+A corresponding orthonormal eigenvector matrix is
+
+\[
+\mathbf{V}
+=
+\begin{pmatrix}
+-0.0621 & 0.1435 & -0.9445 & 0.2887 \\
+-0.2334 & 0.8202 & 0.3365 & -0.4082 \\
+-0.5738 & -0.5204 & 0.0031 & -0.5774 \\
+0.7833 & -0.1869 & 0.0008 & -0.5774
+\end{pmatrix}.
+\]
+
+\medskip
+\noindent
+\textbf{Step 6: Constructing the 2D configuration}
+
+\medskip
+
+We retain the first two eigenvalues and eigenvectors:
+
+\[
+\mathbf{\Lambda}_2
+=
+\begin{pmatrix}
+25.4573 & 0 \\
+0 & 11.6406
+\end{pmatrix},
+\qquad
+\mathbf{V}_2
+=
+\begin{pmatrix}
+-0.0621 & 0.1435 \\
+-0.2334 & 0.8202 \\
+-0.5738 & -0.5204 \\
+0.7833 & -0.1869
+\end{pmatrix}.
+\]
+
+Taking square roots of the eigenvalues,
+
+\[
+\mathbf{\Lambda}_2^{1/2}
+=
+\begin{pmatrix}
+\sqrt{25.4573} & 0 \\
+0 & \sqrt{11.6406}
+\end{pmatrix}
+=
+\begin{pmatrix}
+5.0455 & 0 \\
+0 & 3.4118
+\end{pmatrix}.
+\]
+
+The coordinate matrix is
+
+\[
+\mathbf{X}
+=
+\mathbf{V}_2 \mathbf{\Lambda}_2^{1/2}.
+\]
+
+Carrying out the multiplication yields
+
+\[
+\mathbf{X}
+=
+\begin{pmatrix}
+-0.402 & 0.490 \\
+-0.870 & 2.490 \\
+-2.808 & -2.108 \\
+4.081 & -0.872
+\end{pmatrix}.
+\]
+
+\medskip
+\noindent
+\textbf{Recomputing Euclidean distances}
+
+\medskip
+
+We now verify that these coordinates reproduce the original distances.
+
+\medskip
+
+Distance between objects 1 and 2:
+\[
+\sqrt{
+(-0.402 + 0.870)^2
++
+(0.490 - 2.490)^2
+}
+=
+\sqrt{
+(0.468)^2 + (-2.000)^2
+}
+=
+\sqrt{0.219 + 4}
+=
+\sqrt{4.219}
+\approx 2.054.
+\]
+
+\medskip
+
+Distance between objects 1 and 3:
+\[
+\sqrt{
+(-0.402 + 2.808)^2
++
+(0.490 + 2.108)^2
+}
+=
+\sqrt{
+(2.406)^2 + (2.598)^2
+}
+=
+\sqrt{5.791 + 6.752}
+=
+\sqrt{12.543}
+\approx 3.543.
+\]
+This does not exactly match the original distance of 4.
+The discrepancy is not merely rounding error. It arises because we
+retained only the first two eigenvalues when constructing the
+configuration.
+
+Recall that $\mathbf{B}$ had a third positive eigenvalue
+($\lambda_3 \approx 2.9021$) that we discarded in order to obtain
+a two-dimensional representation. By omitting this third dimension,
+we are approximating the full geometry in a lower-dimensional space.
+As a result, some distances are distorted.
+
+\medskip
+
+In other words, classical MDS with $p=2$ does not reproduce the
+original distance matrix exactly because the data are not perfectly
+two-dimensional. The two largest eigenvalues dominate, which is why
+the reconstruction is reasonably accurate, but information contained
+in the third eigenvalue is lost.
+
+\medskip
+
+The reconstructed distance matrix is therefore only approximately
+equal to the original distance matrix. If we retained all positive
+eigenvalues (that is, used a three-dimensional configuration),
+the original distances would be recovered exactly up to numerical
+precision.
+
+

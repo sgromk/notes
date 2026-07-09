@@ -1,0 +1,49 @@
+\section{Self-Supervised Training}
+\medskip
+
+Training a large encoder requires enormous amounts of data. Instead of relying on manually labeled examples, we create prediction tasks directly from raw text. This approach is called self-supervision.
+
+In standard supervised learning, we observe labeled pairs
+\[
+(X_1, y_1), \dots, (X_n, y_n),
+\]
+and learn to predict $y$ from $X$. For language models, we generate these labels automatically from the text itself. The model learns by solving prediction problems that require understanding language structure.
+
+\bigskip
+\subsection{Masked Language Modeling}
+\medskip
+
+Masked Language Modeling (MLM) is the primary pretraining objective for BERT-style encoders.
+
+A subset of tokens, 15\% of the sequence, is selected. Of those:
+\begin{itemize}
+    \item 80\% are replaced with \texttt{[MASK]},
+    \item 10\% are replaced with a random token,
+    \item 10\% are left unchanged.
+\end{itemize}
+
+The model sees the corrupted sequence and must recover the original tokens at the selected positions. If $\mathcal{M}$ denotes masked indices, the loss is
+\[
+\mathcal{L}_{\text{MLM}}(\theta)
+=
+-\sum_{i \in \mathcal{M}}
+\log p_\theta(y_i \mid \text{context}).
+\]
+
+Why does this work? Because predicting missing words forces the model to capture both syntax and semantics. To predict ``Paris'' in ``The capital of France is [MASK],'' the model must understand geography and sentence structure. The hidden states therefore encode meaningful linguistic information.
+
+\bigskip
+\subsection{Next Sentence Prediction}
+\medskip
+
+BERT originally included a second objective: Next Sentence Prediction (NSP). Given two sentences $(S_1, S_2)$, the model predicts whether $S_2$ truly follows $S_1$ in the corpus.
+
+The input format is
+\[
+\texttt{[CLS]} \; S_1 \; \texttt{[SEP]} \; S_2 \; \texttt{[SEP]}.
+\]
+
+Although this objective was intended to encourage discourse-level understanding, later work such as RoBERTa showed that strong performance could be achieved without it.
+
+\bigskip
+

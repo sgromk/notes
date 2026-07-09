@@ -1,0 +1,238 @@
+\section{Cluster Analysis}
+
+\medskip
+
+Cluster analysis (CA) uncovers structure in a dataset by aggregating similar rows into groups called clusters. Contrasting with PCA which reduces the number of columns, CA does not actually reduce the number of rows. Grouping can be based on measures of similarity \textit{or} dissimilarity among the rows. The two major problems are determining the number of clusters and how to assign rows to clusters. 
+
+We can view classification problems as supervised clustering, where the number of clusters (classes) is known and we have a training set of rows that is already correctly classified from which to learn classification rules from. 
+
+When calculating similarity between rows to be clustered, we often consider two quantities: correlation and distance. Correlation has a few issues, some of which include confusing units or questions of how to weight variables (or assume all variables have equal weight as in standardization). Distance measures are much more common to use. 
+
+When treating a cluster as a single entity for interpretation, we typically use the cluster's centroid and member counts of each cluster.
+
+We identify five ways to cluster:
+\begin{enumerate}
+    \item Single linkage (nearest neighbor)
+    \item Complete linkage (farthest neighbor)
+    \item Average linkage (average neighbor)
+    \item Centroid method
+    \item Ward's method
+\end{enumerate}
+
+Of which Ward's method is the default for the R package \texttt{hclust}. Ward's method attempts to minimize the within-cluster sum of squares:
+\[
+\sum_{k=1}^p \sum_{i=1}^c \sum_{l=1}^{n_i} (X_{ikl} - \overline{X}_{ik})^2
+\]
+
+\medskip
+
+The total sum of squares, that is the variability of the data, can be written as the sum of the (weighted) deviations of the cluster means from the grand mean (between-cluster sum of squares) plus the deviations of the data from the cluster means (within-cluster sum of squares):
+\[
+TSS = BSS + WSS
+\]
+
+Once we have a given dataset of size $n$, the TSS is fixed. At the maximum number of clusters, $n$, the BSS equals the TSS and WSS is zero. As we decrease the number of clusters, the BSS decreases and the WSS increases until the BSS is zero and the WSS equals the TSS (at one cluster).
+
+We can measure how much of the $X$ variables can be explained by the clustering of the cases by regressing the $X$'s on the clustering. This $R^2$ turns out to be equal to $\frac{BSS}{TSS}$. Then, BSS is the sum of square for the regression, and WSS is the sum of squares for the \textit{error}. 
+
+As a note, the regression of the $X$'s on cluster indicator variables is equivalent to ANOVA, analysis of variance (or when done over multiple $p$ response variables, MANOVA). 
+
+\bigskip
+
+
+\subsection{K-means CA}
+
+\medskip
+
+Some key R commands are: \texttt{kmeans, pairs, plot3d, scale, set.seed}.
+
+With \texttt{kmeans} sub-objects: \texttt{\$cluster, \$centers, \$tot.withinss, \$betweenss, \$size}.
+
+\medskip
+
+$K$-means cluster analysis works by \textit{iterative partitioning} (IP). IP begins by choosing a set of $K$ initial cluster seeds, often choosing actual cases (observations) themselves as the initial seeds. At each generation, each cluster produces a seed for the next generation, often the centroid (mean vector) is chosen. 
+
+In K-means clustering, for each generation each case is reassigned to the nearest centroid. The seeds are then recalculated and points are reassigned, in a cycle. The cycle continues until either: Data points are no longer reassigned to different clusters or we reach some pre-specified limit of number of passes. K-means is sensitive to the initial partition, and a poor initial seed can lead to poor performance. To deal with this, the clustering is often performed multiple times with different initial seeds. Additionally, we typically repeat this entire process for multiple values of $K$.
+
+\bigskip
+
+\subsection{Hierarchical Agglomerative Clustering}
+
+\medskip
+
+Some key R commands are: \texttt{hclust, cutree, scale, rect.hclust, aggregate} and the \texttt{hclust} sub-object \texttt{\$height}.
+
+Ward's method works hierarchically (clusters organized into tree with parent-child relationships) and agglomeratively (bottom-up, individal data points merge into larger clusters). In contrast, K-means works iteratively, repeatedly reassigning points to find the best fit. 
+
+\medskip
+
+    \begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{0.9\textwidth}{l X X}
+\toprule
+\textit{Feature} 
+& \textit{Ward's Method} 
+& \textit{K-means Clustering} \\
+\midrule
+Mathematical objective 
+& Minimize within-cluster sum of squares (WSS) 
+& Minimize within-cluster sum of squares (WSS) \\
+
+Operational logic 
+& Hierarchical and agglomerative 
+& Iterative refinement \\
+
+Cluster count 
+& Produces solutions for all possible numbers of clusters 
+& Produces a solution for a single specified number ($k$) \\
+
+Starting point 
+& Starts with $n$ singleton clusters (bottom-up) 
+& Starts with $k$ initial centroids \\
+
+Process 
+& Successively merges closest pairs of clusters 
+& Repeatedly reassigns cases to the nearest centroid \\
+
+Flexibility 
+& Membership is fixed once clusters are merged 
+& Membership changes until convergence \\
+\bottomrule
+\end{tabularx}
+\caption*{Comparison of Ward's Method and K-means Clustering}
+\end{table}
+
+\medskip
+
+As with any model, we need to balance explanatory power with interpretability. We have a few choices for when to end the agglomeration:
+\begin{itemize}
+    \item Visually: examine the dendrogram and cut the tree as close to the leaves (terminal nodes) without creating too many branches
+    \item Quantitatively: we choose a hierarchy level ($k$) as close to the end as possible that still retains a high $R^2$. 
+\end{itemize}
+
+\bigskip
+
+\subsection{Cluster Model Selection}
+
+\medskip
+
+Some key R commands are:
+\begin{itemize}
+    \item \texttt{fviz\_cluster}: plots PC2 vs PC1 for a proposed $k$
+    \item \texttt{fviz\_nbclust}: scree plot for Elbow method
+    \item \texttt{clusGap}: computes Gap statistic for range of $k$’s
+    \item \texttt{fviz\_gap\_stat}: plots Gap statistic for range of $k$’s
+\end{itemize}
+
+\medskip
+
+There are a few heuristics for choosing the number of clusters as well as the clustering method:
+\begin{enumerate}
+    \setlength{\itemsep}{1em}
+    \item Domain knowledge: if there is some conventional wisdom for your field about a "natural" number of clusters then it should be included in the set of possible $k$'s to try. 
+    \item Elbow method: similar to a scree plot. Plot WSS by number of clusters, if an "elbow" exists then choose the $k$ immediately preceding the plateau. Note that this method is subjective and there may in fact be no elbow.
+    \begin{itemize}[label=--]
+        \item WSS(k) is the variability of the clustering variables that is unexplained by the k clusters, and BSS(k) is the explained variability
+        \item Therefore the plot of WWS($k$) by $k$ shows how unexplained variance decreases with complexity
+    \end{itemize}
+    \item For any promising $k$, also try values nearby such as $k\pm 1, k\pm 2$ and distinguish them based on differences in $R^2$, AIC (Akaike Information Criterion), or BIC (Bayesian Information Criterion).
+    \item Cubic clustering criterion (CCC). Possible $k$'s will be local peaks in the plot of CCC against number of clusters. The CCC evaluates the optimal number of clusters by comparing the observed $R^2$ of a dataset against the expected $R^2$ under the null hypothesis that the data follows a random uniform distribution within the volume of the feature space.
+    \item Hierarchical methods do not need to pre-specify a $k$. Further, since we produce a complete genealogy, every cluster for one $k$ is related to every other $k$. If the relationship between $k$'s does not matter, then $K$-means may be appropriate.
+    \item We can examine the \textit{silhouette}, which is a measure of how similar a case is to the other cases in its own cluster, relative to how dissimilar the case is to cases in all other clusters. The average silhouette for a clustering $k$ is the mean of the silhouette of all cases. We can then plot the average silhouette against the number of clusters, and we can choose the $k$ with the maximum average silhouette. 
+    \item The Gap Statistic Method. This suggests the $k$ that tries to maximize the gap between the expected value of WSS(k) if there were no clusters and the observed value of WSS(k). This requires us to define a \textit{reference distribution} which is uniform along each variable (similar to the assumption in CCC). We then take $B$ samples from the reference distribution and cluster on them with each candidate $k$. For each sample $B$ with $k$ clusters we will then get a WSS, which we take the log of and save for later. The averages of all of the resultant log(WSS) are saved and used as the expected WSS for the gap calculation. Then, we find the observed WSS(k) for our actual dataset and log that as well. We finally choose the the $k$ with the greatest gap.
+\end{enumerate}
+
+\subsubsection{Silhouette}
+
+To find the silhouette for a single case, we first calculate two quantities, $a_i$ and $b_i$. $a_i$ is mean distance of case i to all other cases in its cluster, and $b_i$ is the mean distance to all cases in the \textit{next best} cluster (i.e., the cluster that the point would be reassigned to if it \textit{must} be reassigned). We then take the difference between the two and scale it by the larger of the quantities:
+\[
+s_i = \frac{b_i - a_i}{\max(a_i, b_i)}
+\]
+So, the silhouette score evaluates if a point is a strong member of its current group or if it is a ``borderline case" that could just as easily belong elsewhere. The average silhouette is the mean silhouette of all cases $i$ in the dataset. A larger average silhouette indicates a stronger clustering, and since any individual silhouette must lie between -1 and 1, the average is between -1 and 1. 
+
+\bigskip
+
+\subsubsection{Gap Statistic Method}
+
+\medskip
+
+As previously stated, the gap statistic method compares actual WSS($k$) to the value expected for WSS($k$) if there are no clusters. 
+
+For each candidate $k$, we calculate the $WSS$ for all $B$ samples from the reference distribution and average their logarithms to find the ``expected" value. For example, with $k \in \{1, \dots, 5\}$ and $B=100$, we perform 100 separate clusterings for every value of $k$. This yields five final reference values, each representing the average log-error we would expect to see by pure chance for that specific number of clusters. We then find the WSS($k$) for our own real data and choose the $k$ with the largest gap.
+
+Since adding more clusters will almost always improve the error metrics, another way to choose a $k$ is to use the 1-standard-error rule. For any $k$, we find $s_{k+1}$, which is the standard error of the $k+1$ simulated results, adjusted for the simulation error. If $sd_{k+1}$ is the standard deviation of the 100 logged WSS($k+1$) values then:
+\[
+s_{k+1} = sd_{k+1}\cdot\sqrt{1+1/B}
+\]
+
+Then, we find the $k$ such that adding more clusters no longer provides a statistically significant gain in the gap. So we find the smallest $k$ such that the following inequality still holds:
+\[
+Gap(k) \geq Gap(k+1) - s_{k+1}
+\]
+
+\bigskip
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{0.9\textwidth}{l X X X X}
+\toprule
+\textit{Feature} 
+& \textit{Elbow (WSS)} 
+& \textit{CCC} 
+& \textit{Silhouette} 
+& \textit{Gap Statistic} \\
+\midrule
+Primary quantity 
+& Within-cluster sum of squares 
+& $R^2$ 
+& Intra vs inter-cluster distances 
+& $\log(\text{WSS})$ \\
+
+Selection rule 
+& Visual elbow detection 
+& Local maxima 
+& Maximize average silhouette 
+& Maximize gap value \\
+
+Reference / null model 
+& None 
+& Uniform distribution in feature space 
+& None 
+& Uniform reference distribution \\
+
+Statistical nature 
+& Heuristic 
+& Formal criterion 
+& Internal validation index 
+& Null-based statistical method \\
+
+Computation cost 
+& Very low 
+& Low 
+& Moderate 
+& High (resampling) \\
+
+Typical failure mode 
+& No clear elbow 
+& Assumption mismatch 
+& Overfavors convex clusters 
+& Sensitive to reference choice \\
+\bottomrule
+\end{tabularx}
+\caption*{Comparison of Methods for Selecting the Number of Clusters $k$}
+\end{table}
+
+\bigskip
+
+\subsubsection{Principal Component Cluster Overlap}
+
+\medskip
+
+We can use \texttt{fviz\_cluster(cluster\_assignments, data)}. There are several more arguments we could use, one of which is \texttt{geom=c("point", "text")} to show both the data points and their labels. 
+
+If we assume that the PCs are the data dimensions that matter the most, then visually distinct clusters suggest a good value of $k$, while clusters with overlap on the first two PCs suggest a poor value for $k$. There are several caveats to this, for example, apparently overlapping clusters may actually be distinct on higher order PCs (e.g., PC$_3$, PC$_4$). That said, the converse can never be true, if clusters are visually distinct on lower order PCs then they can never be overlapped on higher order ones (since each PC is orthogonal to all others). 
+

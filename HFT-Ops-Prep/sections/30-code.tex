@@ -2,44 +2,882 @@
 \section{Code}
 % ============================================================
 
-\subsection{Paradigms and Notes}
+% ============================================================
+\subsection{SQL Patterns (PostgreSQL)}
+% ============================================================
 
-Quick reference before the practice log. Fill this out as patterns recur.
+Reference for recurring query shapes. Each entry states when to reach for
+it and the mechanism that makes it work.
 
-\begin{itemize}
-  \item \textbf{Hashing:} trade space for $O(1)$ lookup. First reach for it on ``find a pair / count occurrences / seen-before'' problems.
-  \item \textbf{Two pointers:} sorted array or linked list, converging or fast/slow. Turns many $O(n^2)$ scans into $O(n)$.
-  \item \textbf{Sliding window:} contiguous subarray/substring under a constraint. Expand right, shrink left.
-  \item \textbf{Binary search on the answer:} monotone feasibility predicate over a numeric range.
-  \item \textbf{SQL:} window functions (\texttt{ROW\_NUMBER}, \texttt{RANK}, \texttt{SUM() OVER}) and CTEs cover most DataLemur mediums.
+\begin{keybox}[Logical processing order]
+A query is evaluated in this order, regardless of written order:
+\[
+  \texttt{FROM/JOIN} \to \texttt{WHERE} \to \texttt{GROUP BY} \to
+  \texttt{HAVING} \to \texttt{SELECT} \to \texttt{DISTINCT} \to
+  \texttt{ORDER BY} \to \texttt{LIMIT}.
+\]
+Two consequences drive most of the patterns below. \texttt{WHERE} runs
+before aggregation, so it cannot see aggregates or \texttt{SELECT} aliases.
+Window functions are computed at the \texttt{SELECT} step, so they also
+cannot appear in \texttt{WHERE} and must be wrapped in a subquery or CTE
+to filter on.
+\end{keybox}
+
+\paragraph{WHERE vs HAVING.} \texttt{WHERE} filters individual rows before
+grouping. \texttt{HAVING} filters whole groups after aggregation and is the
+only place an aggregate predicate is legal. A filter on a plain
+(non-aggregated) column belongs in \texttt{WHERE} so rows are dropped before
+the grouping work happens. Reserve \texttt{HAVING} for conditions like
+\texttt{COUNT(*) > 5}.
+
+\vspace{1.5ex}
+
+\begin{lstlisting}[style=sql, caption={WHERE prunes rows, HAVING prunes groups}]
+SELECT department, COUNT(*) AS headcount
+FROM employees
+WHERE active = true          -- row filter, before grouping
+GROUP BY department
+HAVING COUNT(*) > 5;         -- group filter, on an aggregate
+\end{lstlisting}
+
+\vspace{-2ex}
+
+\paragraph{Joins.}
+\begin{itemize}[label=$\circ$]
+  \item \textbf{INNER:} rows with a match on both sides.
+  \item \textbf{LEFT / RIGHT:} keep all rows from one side, \texttt{NULL}-fill the other.
+  \item \textbf{FULL OUTER:} keep unmatched rows from both sides.
+  \item \textbf{CROSS:} Cartesian product, every left row against every right row.
+  \item \textbf{SELF:} a table joined to itself under an alias (employee to manager, row to prior row).
+  \item \textbf{Semi-join} (\texttt{EXISTS}, \texttt{IN}): keep left rows with at least one match. No row duplication, no right-side columns.
+  \item \textbf{Anti-join} (\texttt{NOT EXISTS}, or \texttt{LEFT JOIN ... WHERE right.key IS NULL}): keep left rows with no match.
 \end{itemize}
 
-\subsection{Practice log}
+\paragraph{Rank-then-filter with ROW\_NUMBER().} Use this for top-$N$ per
+group when you need to keep the full row. \texttt{GROUP BY} would collapse the
+other columns away. Number rows inside each partition, then filter on that
+number in an outer query, since the window function cannot live in
+\texttt{WHERE}.
 
-\paragraph{Two Sum (LeetCode 1).} Return indices of the two numbers summing to a target.
+Choose the ranker by tie policy: \texttt{ROW\_NUMBER} assigns distinct numbers
+and breaks ties arbitrarily, \texttt{RANK} repeats a rank and leaves gaps,
+\texttt{DENSE\_RANK} repeats with no gaps.
 
-\noindent\textbf{Approach.} One pass with a hash map from value to index. For each element check whether its complement was already seen.
-
-\complexity{O(n)}{O(n)}
-
-\begin{lstlisting}[style=python, caption={Two Sum, single-pass hash map}]
-def two_sum(nums, target):
-    seen = {}                       # value -> index
-    for i, x in enumerate(nums):
-        if target - x in seen:
-            return [seen[target - x], i]
-        seen[x] = i
-    return []
-\end{lstlisting}
-
-\paragraph{Second highest salary (DataLemur).} Return the second-highest distinct salary, or NULL if none.
-
-\begin{lstlisting}[style=sql, caption={Second highest salary via DENSE\_RANK}]
-SELECT MAX(salary) AS second_highest
+\begin{lstlisting}[style=sql, caption={Highest-paid employee per department}]
+SELECT department, name, salary
 FROM (
-    SELECT salary,
-           DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+    SELECT department, name, salary,
+           ROW_NUMBER() OVER (PARTITION BY department
+                              ORDER BY salary DESC) AS rn
     FROM employees
 ) ranked
-WHERE rnk = 2;
+WHERE rn = 1;
 \end{lstlisting}
+
+\paragraph{Gaps and islands.} An \emph{island} is a maximal run of consecutive
+values. The trick: subtract a dense row number from the value. Across a
+consecutive run both sides increase by one per step, so the difference stays
+constant, and it jumps exactly at a gap. Group by the difference to collapse
+each run.
+
+\begin{lstlisting}[style=sql, caption={Islands of consecutive ids}]
+WITH numbered AS (
+    -- DISTINCT first so duplicate ids do not desync the row number
+    SELECT DISTINCT log_id,
+           ROW_NUMBER() OVER (ORDER BY log_id) AS rn
+    FROM logs
+)
+SELECT MIN(log_id) AS island_start,
+       MAX(log_id) AS island_end,
+       COUNT(*)    AS length
+FROM numbered
+GROUP BY log_id - rn
+ORDER BY island_start;
+\end{lstlisting}
+
+The \texttt{DISTINCT} is load-bearing. If \texttt{log\_id} repeats, \texttt{rn}
+still advances on the duplicate while the value does not, so
+\texttt{log\_id - rn} shifts and splits an island that should stay whole. For
+consecutive \emph{dates} rather than integers, offset by an interval:
+\texttt{log\_date - rn * INTERVAL `1 day'} is constant within a run.
+
+\begin{lstlisting}[style=sql, caption={Gaps via LEAD}]
+SELECT log_id + 1  AS missing_from,
+       next_id - 1 AS missing_to
+FROM (
+    SELECT log_id,
+           LEAD(log_id) OVER (ORDER BY log_id) AS next_id
+    FROM logs
+) t
+WHERE next_id - log_id > 1;   -- values missing between the two present ids
+\end{lstlisting}
+
+\newpage
+
+\paragraph{Conditional aggregation (pivot).} Fold a categorical column into one
+row of counts by wrapping a \texttt{CASE} in an aggregate. Rows the
+\texttt{CASE} does not match contribute 0 to \texttt{SUM}. In Postgres the
+\texttt{FILTER} clause does the same thing and reads more cleanly.
+
+\begin{lstlisting}[style=sql, caption={Pivot risk categories to columns}]
+SELECT
+    inspection_type,
+    COUNT(*) FILTER (WHERE risk_category IS NULL)           AS no_risk,
+    COUNT(*) FILTER (WHERE risk_category = 'Low Risk')      AS low_risk,
+    COUNT(*) FILTER (WHERE risk_category = 'Moderate Risk') AS moderate_risk,
+    COUNT(*) FILTER (WHERE risk_category = 'High Risk')     AS high_risk,
+    COUNT(*)                                                AS total
+FROM sf_restaurant_health_violations
+GROUP BY inspection_type
+ORDER BY total DESC;
+\end{lstlisting}
+
+The \texttt{SUM(CASE WHEN ... THEN 1 ELSE 0 END)} form is equivalent and
+portable across engines. \texttt{COUNT} ignores \texttt{NULL}, so
+\texttt{COUNT(CASE WHEN cond THEN 1 END)} (no \texttt{ELSE}) also counts only
+the matches.
+
+\paragraph{Gotchas.}
+\begin{itemize}
+  \item \textbf{\texttt{NOT IN} with NULLs:} if the subquery returns any
+  \texttt{NULL}, \texttt{x NOT IN (...)} is never true and the query returns
+  zero rows. \texttt{x NOT IN (1, NULL)} expands to
+  \texttt{NOT (x=1 OR x=NULL)}, and the \texttt{NULL} comparison poisons the
+  result to unknown. Use \texttt{NOT EXISTS}, which is null-safe.
+  \item \textbf{Integer division truncates:} \texttt{5 / 2} yields \texttt{2}
+  because the fractional part is discarded. Cast one operand:
+  \texttt{5::numeric / 2} or \texttt{5.0 / 2}. Bites hardest in ratio and
+  percentage columns.
+  \item \textbf{\texttt{COUNT(col)} vs \texttt{COUNT(*)}:} the former skips
+  \texttt{NULL}s in \texttt{col}, the latter counts every row. A common source
+  of off-by-$N$ errors.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\newpage
+
+
+% ============================================================
+\subsection{Python Patterns}
+% ============================================================
+
+Good solutions to interview problems are often determined by the choice of container and knowledge of which built-in primitives express the required operation.
+
+% ------------------------------------------------------------
+\subsubsection*{Containers and cost profiles}
+
+Selecting a container is selecting a cost profile. That decision precedes the
+algorithm and frequently dominates the runtime.
+
+\begin{center}
+\begin{tabular}{lllll}
+\toprule
+& \textbf{Ordered} & \textbf{Mutable} & \textbf{Lookup} & \textbf{Use} \\
+\midrule
+\texttt{list}  & yes & yes & $O(n)$ & ordered sequence, duplicates permitted \\
+\texttt{tuple} & yes & no  & $O(n)$ & fixed record, or a dictionary key \\
+\texttt{set}   & no  & yes & $O(1)$ & membership, deduplication \\
+\texttt{dict}  & insertion & yes & $O(1)$ & mapping from key to value \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+
+\begin{keybox}[Membership cost]
+\texttt{x in some\_list} is $O(n)$. \texttt{x in some\_set} is $O(1)$ on
+average. A membership test inside a loop over $n$ elements is therefore
+$O(n^2)$ against a list and $O(n)$ against a set. Converting the list to a set
+once, before the loop, removes a factor of $n$. This substitution accounts for
+a large share of naive-to-optimal improvements.
+\end{keybox}
+
+\paragraph{Hashability.} Set elements and dictionary keys must be hashable,
+which in practice requires immutability. A \texttt{tuple} is a valid key. A
+\texttt{list} is not, since mutation would invalidate its position in the hash
+table. Converting a list to a tuple to form a composite key is therefore a
+standard construction, as in grouping anagrams by their sorted letters.
+
+\begin{lstlisting}[style=python, caption={Tuple as a composite key}]
+seen = set()
+seen.add((row, col))              # legal, tuple is hashable
+# seen.add([row, col])            # TypeError: unhashable type
+\end{lstlisting}
+
+\paragraph{Dictionary access.} Counting, grouping, and seen-before problems
+reduce to a dictionary. Three access forms differ in their treatment of a
+missing key.
+
+\begin{lstlisting}[style=python, caption={Dictionary access}]
+d[k]                  # raises KeyError if k is absent
+d.get(k, default)     # returns default instead of raising
+d.setdefault(k, [])   # inserts default if absent, then returns it
+
+for k in d:                    # iterates over keys
+for k, v in d.items():         # iterates over pairs
+\end{lstlisting}
+
+% ------------------------------------------------------------
+\newpage
+\subsubsection*{Built-in functions}
+
+An accumulator loop is often a built-in written out longhand. The following
+cover most cases.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Built-in} & \textbf{Expresses} \\
+\midrule
+\texttt{len, sum, min, max} & size and aggregation \\
+\texttt{sorted} & ordering, parameterized by \texttt{key} and \texttt{reverse} \\
+\texttt{any(...)} & existential quantifier: at least one element satisfies $p$ \\
+\texttt{all(...)} & universal quantifier: every element satisfies $p$ \\
+\texttt{enumerate} & index paired with value \\
+\texttt{zip} & parallel iteration over several sequences \\
+\texttt{reversed, range} & traversal order \\
+\texttt{abs, round, divmod} & numeric utilities \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{any} and \texttt{all} short-circuit. The expression
+\texttt{any(x < 0 for x in xs)} terminates at the first negative value.
+
+\paragraph{The \texttt{key} argument.} \texttt{sorted}, \texttt{min}, and
+\texttt{max} accept a \texttt{key} function applied to each element. Ranking
+is performed on the image of that function while the original element is
+returned. The consequence is that a record can be ranked on one of its fields
+and recovered whole.
+
+\begin{lstlisting}[style=python, caption={Ranking on a field, returning the record}]
+min(scores)                            # returns a number
+min(records, key=lambda r: r[1])       # returns the full record
+
+sorted(words, key=len)                        # rank by length
+sorted(records, key=lambda r: (-r[1], r[0]))  # score desc, name asc
+\end{lstlisting}
+
+A tuple key is the analogue of a multi-column \texttt{ORDER BY}. Negating a
+single numeric field reverses that field alone. \texttt{reverse=True} cannot
+express this, since it inverts every field simultaneously.
+
+% ------------------------------------------------------------
+\subsubsection*{Comprehensions}
+
+A comprehension expresses selection and projection in one expression. The form
+\texttt{[f(x) for x in xs if p(x)]} corresponds to selecting $f(x)$ over the
+elements for which $p(x)$ holds. Four bracket types produce four containers.
+
+\begin{lstlisting}[style=python, caption={The four forms}]
+[x*x for x in xs if x > 0]        # list
+{x*x for x in xs}                 # set, deduplicates
+{k: v for k, v in pairs}          # dict
+(x*x for x in xs)      # generator, lazy, builds no intermediate list
+\end{lstlisting}
+
+The generator form is appropriate when the result is consumed once, for
+example inside \texttt{sum(...)} or \texttt{max(...)}, since it avoids
+materializing a list. Nesting beyond two levels is generally less readable
+than an explicit loop.
+
+% ------------------------------------------------------------
+
+\newpage
+\subsubsection*{Sorting}
+
+\begin{itemize}[itemsep=-0.5ex]
+  \item \texttt{sorted(xs)} returns a new list. \texttt{xs.sort()} sorts in
+        place and returns \texttt{None}. The assignment \texttt{xs = xs.sort()}
+        binds \texttt{None} and fails silently.
+  \item Python's sort is \textbf{stable}. Elements comparing equal retain
+        their original relative order. Stability licenses sorting in multiple
+        passes: sorting by the secondary field first and by the primary field
+        second preserves the secondary ordering within each group.
+  \item Sorting a sequence of lists or tuples compares elementwise from the
+        left. The result depends on field order, so an explicit \texttt{key}
+        should be supplied whenever the intent is nonobvious.
+  \item Sorting costs $O(n \log n)$, which is negligible at the input sizes
+        these problems use.
+\end{itemize}
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\subsubsection*{The \texttt{collections} module}
+
+Four types cover nearly every use. Three are specializations of the
+dictionary that eliminate the same recurring boilerplate: the check for
+whether a key already exists before writing to it. The fourth replaces the
+list when insertion or removal happens at the front.
+
+\medskip
+
+\noindent\textbf{\texttt{Counter}: frequency.}
+A \texttt{Counter} is a dictionary from element to count. It is constructed in
+one pass over any iterable and answers the question ``how many times does each
+value occur.'' Frequency is the most common intermediate object in string and
+array problems, and constructing one by hand requires an existence check on
+every element.
+
+\begin{lstlisting}[style=python, caption={Counter}]
+from collections import Counter
+
+c = Counter("mississippi")  # Counter({'i': 4, 's': 4, 'p': 2, 'm': 1})
+c['s']                         # 4
+c['z']              # 0, a missing key reads as zero and does NOT raise
+
+c.most_common(2)               # [('i', 4), ('s', 4)], top 2 by count
+c.most_common()             # every pair, ordered by count descending
+c.total()                      # sum of all counts
+\end{lstlisting}
+
+\vspace{-2ex}
+
+A missing key evaluates to \texttt{0} rather than raising \texttt{KeyError},
+which is what permits \texttt{c[x] += 1} to be written unconditionally. The
+read does not insert the key, so the counter does not grow through inspection.
+
+\texttt{most\_common(k)} selects the top $k$ with a heap in $O(n \log k)$.
+Calling \texttt{most\_common()} with no argument sorts the whole counter at
+$O(n \log n)$, so the argument should be supplied whenever $k$ is known.
+
+Counters support multiset arithmetic, which expresses several problems
+directly.
+
+\begin{lstlisting}[style=python, caption={Counter arithmetic}]
+a, b = Counter("aabbc"), Counter("abbbd")
+
+a + b        # counts added
+a - b        # counts subtracted, results <= 0 are dropped
+a & b        # intersection: elementwise minimum
+a | b        # union: elementwise maximum
+\end{lstlisting}
+
+\begin{keybox}[Two canonical Counter identities]
+\textbf{Anagram test.} Two strings are anagrams if and only if their counters
+are equal, so \texttt{Counter(s) == Counter(t)} settles the question in $O(n)$.
+Sorting both strings answers the same question in $O(n \log n)$.
+
+\medskip
+
+\textbf{Sliding-window matching.} To locate every permutation of a pattern $p$
+inside a text $t$, maintain a counter over a window of length $|p|$ and
+compare it against \texttt{Counter(p)} after each shift. Incrementing the
+entering character and decrementing the leaving one updates the window in
+$O(1)$.
+\end{keybox}
+
+\medskip
+
+\noindent\textbf{\texttt{defaultdict}: grouping.}
+A \texttt{defaultdict} is constructed with a zero-argument factory. Accessing
+a missing key calls that factory, inserts the result, and returns it. The
+effect is to remove the initialization branch from every accumulation loop.
+
+\begin{lstlisting}[style=python, caption={defaultdict}]
+from collections import defaultdict
+
+groups = defaultdict(list)          # missing key -> []
+for name, dept in employees:
+    groups[dept].append(name)       # no existence check required
+
+counts = defaultdict(int)           # missing key -> 0
+adj    = defaultdict(set)           # missing key -> set(), an adjacency list
+grid   = defaultdict(lambda: defaultdict(int))   # a nested, sparse 2D table
+\end{lstlisting}
+
+The factory is any callable taking no arguments. \texttt{int()} returns
+\texttt{0}, \texttt{list()} returns \texttt{[]}, and \texttt{set()} returns an
+empty set, which is why the bare type name is passed rather than a call to it.
+A nested default requires a \texttt{lambda}, since
+\texttt{defaultdict(defaultdict(int))} would pass an instance where a factory
+is expected.
+
+\texttt{defaultdict(list)} performs a \texttt{GROUP BY} that omits the
+aggregation step. Every member of each group survives, which is the property
+that \texttt{ROW\_NUMBER() OVER (PARTITION BY ...)} supplies in SQL. Building a
+graph's adjacency list is the same operation applied to edges.
+
+\begin{keybox}[Reading a \texttt{defaultdict} mutates it]
+Any access to a missing key inserts it. The expression \texttt{if d[k]:}
+therefore creates \texttt{k} with an empty default and the dictionary grows
+through inspection alone. This corrupts a subsequent iteration over
+\texttt{d.items()} and inflates \texttt{len(d)}.
+
+For a read that must not write, use \texttt{k in d} or \texttt{d.get(k)}.
+Neither triggers the factory.
+\end{keybox}
+
+The alternative to a \texttt{defaultdict} is
+\texttt{d.setdefault(k, []).append(x)} on an ordinary dictionary. It produces
+the same result and constructs a fresh empty list on every call, including the
+calls where the key is already present. The \texttt{defaultdict} factory runs
+only on a miss.
+
+\medskip
+
+\noindent\textbf{\texttt{deque}: a queue.}
+A \texttt{deque} is a double-ended queue backed by a doubly linked list of
+fixed-size blocks. Appending and popping at either end is $O(1)$. The relevant
+comparison is against a \texttt{list}, which stores its elements contiguously,
+so removing the front element requires shifting every remaining element left by
+one position.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Operation} & \textbf{\texttt{list}} & \textbf{\texttt{deque}} \\
+\midrule
+Append or pop at the right & $O(1)$ & $O(1)$ \\
+Append or pop at the left  & $O(n)$ & $O(1)$ \\
+Index at position $i$      & $O(1)$ & $O(n)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The costs are complementary. A \texttt{list} is the correct stack, since a
+stack only touches the right end. A \texttt{deque} is the correct queue.
+Random access into a \texttt{deque} is a sign that the wrong container was
+chosen.
+
+\begin{lstlisting}[style=python, caption={deque}]
+from collections import deque
+
+q = deque([1, 2, 3])
+q.append(4)        # right
+q.appendleft(0)    # left
+q.pop()            # from the right
+q.popleft()        # from the left, O(1) where list.pop(0) is O(n)
+q.rotate(1)        # shift every element right by one, cyclically
+\end{lstlisting}
+
+Breadth-first search is the standard application. The frontier is processed in
+insertion order, which requires removal from the front on every iteration of
+the main loop.
+
+\begin{lstlisting}[style=python, caption={BFS frontier}]
+q = deque([start])
+seen = {start}
+while q:
+    node = q.popleft()        # FIFO, so nodes are visited by distance
+    for nxt in adj[node]:
+        if nxt not in seen:
+            seen.add(nxt)
+            q.append(nxt)
+\end{lstlisting}
+
+\paragraph{Bounded length.} A \texttt{deque} constructed with \texttt{maxlen=k}
+discards an element from the opposite end whenever a full deque is appended to.
+This maintains a rolling window over the last $k$ items with no explicit
+eviction logic, which is useful for moving averages and for any statistic over
+a fixed lookback.
+
+\begin{lstlisting}[style=python, caption={A rolling window of the last 3 values}]
+w = deque(maxlen=3)
+for x in stream:
+    w.append(x)          # the oldest element is evicted automatically
+    if len(w) == 3:
+        print(sum(w) / 3)
+\end{lstlisting}
+
+\medskip
+
+\noindent\textbf{\texttt{namedtuple}: a labeled record.}
+A tuple carries no information about what its positions mean, so \texttt{r[1]}
+requires the reader to remember the field order. A \texttt{namedtuple} attaches
+names while remaining a tuple, so it stays immutable, hashable, unpackable, and
+usable as a dictionary key or a set element.
+
+\begin{lstlisting}[style=python, caption={namedtuple}]
+from collections import namedtuple
+
+Student = namedtuple("Student", ["name", "score"])
+s = Student("Ada", 92.0)
+
+s.score            # 92.0, and s[1] still works
+name, score = s    # unpacking is unchanged
+min(students, key=lambda s: s.score)     # the key function reads clearly
+\end{lstlisting}
+
+The cost over a plain tuple is negligible and the gain is that a \texttt{key}
+function or a sort becomes self-documenting. When mutability is required,
+\texttt{dataclasses.dataclass} provides the equivalent with assignable fields.
+
+% ------------------------------------------------------------
+\subsubsection*{Iteration}
+
+The following forms eliminate manual index arithmetic, which is the usual
+source of off-by-one errors.
+
+\begin{lstlisting}[style=python, caption={Iteration forms}]
+for i, x in enumerate(xs):        # index and value together
+for a, b in zip(xs, ys):          # parallel, halts at the shorter sequence
+for a, b in zip(xs, xs[1:]):      # consecutive pairs
+for x in reversed(xs):            # reverse traversal without index arithmetic
+
+name, score = record              # tuple unpacking
+first, *rest = xs                 # starred unpacking
+\end{lstlisting}
+
+\vspace{-2ex}
+
+The construction \texttt{zip(xs, xs[1:])} yields every adjacent pair and
+underlies run detection, difference sequences, and monotonicity checks. It is
+the analogue of \texttt{LAG} in SQL.
+
+% ------------------------------------------------------------
+\subsubsection*{Problem structure}
+
+\begin{keybox}[The four-move skeleton]
+A typical warm-up problem decomposes into four steps.
+\begin{enumerate}
+  \item \textbf{Parse} the input into a list of records.
+  \item \textbf{Reduce} the records to a target key: a minimum, a maximum, a
+        count, or the $k$-th distinct value.
+  \item \textbf{Filter} the records against that key.
+  \item \textbf{Order and format} the output.
+\end{enumerate}
+Step 2 accounts for most errors. The characteristic failure is fusing steps 2
+and 3 into a single pass that mishandles an edge case.
+\end{keybox}
+
+\paragraph{Ranking and ties.} The most frequent error in step 2 concerns
+ties. Whether tied elements share a rank or consume one is the same decision
+in Python as in SQL.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Tie policy} & \textbf{Python} & \textbf{SQL} \\
+\midrule
+Ties consume a rank & \texttt{sorted(xs)[k-1]}       & \texttt{ROW\_NUMBER() = k} \\
+Ties share a rank   & \texttt{sorted(set(xs))[k-1]}  & \texttt{DENSE\_RANK() = k} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For scores \texttt{[20, 20, 30]}, the second lowest is \texttt{30}. Both
+elements equal to \texttt{20} hold rank 1 and neither occupies rank 2, so
+\texttt{sorted(xs)[1]} evaluates to \texttt{20} and is incorrect. The
+\texttt{set} converts \texttt{ROW\_NUMBER} semantics into \texttt{DENSE\_RANK}
+semantics.
+
+\paragraph{Rank then filter.} Once the key is identified, it is computed in
+one pass and the records are filtered against it in a second. The structure
+mirrors the necessity of wrapping a window function in a CTE, since a window
+function cannot appear in \texttt{WHERE}.
+
+\begin{lstlisting}[style=python, caption={Rank then filter}]
+target  = sorted({score for _, score in records})[1]   # rank
+winners = sorted(name for name, score in records if score == target)
+                                            # filter, then order
+\end{lstlisting}
+
+% ------------------------------------------------------------
+\subsubsection*{Common errors}
+
+\begin{itemize}
+  \item \texttt{sorted(set(xs))[1]} raises \texttt{IndexError} when all values
+        are identical.
+  \item Slicing copies. \texttt{xs[a:b]} costs $O(b-a)$, so a slice inside a
+        loop makes the loop quadratic.
+  \item \texttt{list.insert(0, x)} and \texttt{list.pop(0)} are $O(n)$, since
+        every subsequent element shifts. A \texttt{deque} provides $O(1)$
+        operations at both ends.
+  \item Integer division \texttt{//} floors toward negative infinity, so
+        \texttt{-7 // 2} evaluates to \texttt{-4}. \texttt{int(-7 / 2)}
+        truncates toward zero.
+  \item A mutable default argument (\texttt{def f(xs=[])}) is created once at
+        definition time and persists across calls. The default should be
+        \texttt{None}, with the container constructed inside the function body.
+  \item Strings are immutable. Accumulating with \texttt{s += c} in a loop is
+        $O(n^2)$. Collect the pieces in a list and apply
+        \texttt{''.join(parts)}.
+\end{itemize}
+
+% ============================================================
+\subsection{Algorithmic Paradigms}
+% ============================================================
+
+Each paradigm is identified by a recognition cue in the problem statement.
+
+\begin{itemize}
+  \item \textbf{Hashing.} Cue: find a pair, count occurrences, seen before,
+        contains a duplicate. Space is traded for $O(1)$ lookup. The canonical
+        construction tests whether the complement of the current element
+        already appears in a map of previously visited elements.
+
+  \item \textbf{Two pointers.} Cue: a sorted sequence, or a pairing problem.
+        Pointers converging from both ends solve ``two elements summing to
+        $t$'' in $O(n)$ with constant extra space. Fast and slow pointers
+        detect a cycle in a linked list.
+
+  \item \textbf{Sliding window.} Cue: a contiguous subarray or substring
+        subject to a constraint. The right edge expands to admit elements and
+        the left edge contracts while the constraint is violated. Each element
+        enters and leaves once, giving $O(n)$.
+
+  \item \textbf{Prefix sums.} Cue: repeated range-sum queries over a static
+        array. Cumulative sums are precomputed once, after which any range
+        query is a difference of two entries. This is the array analogue of
+        \texttt{SUM() OVER}.
+
+  \item \textbf{Binary search on the answer.} Cue: the smallest $x$ such that
+        a condition is feasible. Requires a monotone predicate, meaning that
+        feasibility at $x$ implies feasibility at every larger $x$. The search
+        ranges over the answer space rather than the input.
+
+  \item \textbf{Sorting as preprocessing.} Cue: intervals, scheduling, or
+        grouping equal elements. Sorting converts a global problem into a local
+        one in which each element need only be compared against its neighbor.
+\end{itemize}
+
+\begin{keybox}[Complexity anchors]
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Operation} & \textbf{Cost} \\
+\midrule
+\texttt{x in set}, \texttt{x in dict}   & $O(1)$ average \\
+\texttt{x in list}                      & $O(n)$ \\
+\texttt{list.append}                    & $O(1)$ amortized \\
+\texttt{list.insert(0,x)}, \texttt{list.pop(0)} & $O(n)$ \\
+\texttt{deque.appendleft}, \texttt{deque.popleft} & $O(1)$ \\
+\texttt{sorted(xs)}                     & $O(n \log n)$ \\
+\texttt{xs[a:b]}                        & $O(b-a)$, copies \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{keybox}
+
+% ============================================================
+\newpage
+\subsection{Recursion and Memoization}
+% ============================================================
+
+A recursive function is defined by three obligations. Omitting any one of them
+produces either a wrong answer or a stack overflow.
+
+\begin{keybox}[The recursion contract]
+\begin{enumerate}
+  \item \textbf{Base case.} At least one input for which the answer is
+        returned without a recursive call.
+  \item \textbf{Recursive case.} The answer for input $n$ expressed in terms
+        of the answers for strictly smaller inputs.
+  \item \textbf{Progress.} Every recursive call moves the argument closer to a
+        base case, so the recursion terminates.
+\end{enumerate}
+Correctness follows by induction. Assuming the recursive call returns the
+correct answer on the smaller input, verify only that the combination step is
+correct. Tracing the full call tree by hand is unnecessary and is the main
+reason recursion feels harder than it is.
+\end{keybox}
+
+\paragraph{The call stack.} Each pending call occupies a stack frame, so the
+space cost of a recursion is $O(d)$ where $d$ is the maximum depth. Python
+imposes a default recursion limit of 1000 frames and raises
+\texttt{RecursionError} beyond it. A recursion whose depth scales with $n$ is
+therefore unsafe for large $n$ unless it is rewritten as a loop with an
+explicit stack.
+
+\paragraph{Overlapping subproblems.} Naive recursion recomputes identical
+subproblems. The Fibonacci recurrence $F(n) = F(n-1) + F(n-2)$ generates a
+call tree with $O(\varphi^n)$ nodes, since $F(n-2)$ is evaluated once by the
+$F(n-1)$ branch and again directly. Caching each result by its argument
+collapses the tree to $O(n)$ distinct evaluations.
+
+\begin{lstlisting}[style=python, caption={Memoization by decorator}]
+from functools import lru_cache
+
+@lru_cache(maxsize=None)          # or @cache in Python 3.9+
+def fib(n):
+    if n < 2:                     # base case
+        return n
+    return fib(n-1) + fib(n-2)    # recursive case
+\end{lstlisting}
+
+Arguments to a memoized function must be hashable, which is the reason
+memoized state is passed as an integer, a string, or a tuple rather than as a
+list or a set.
+
+\paragraph{Top-down and bottom-up.} Memoized recursion is the top-down form.
+It computes only the states that are reachable, at the cost of a call stack.
+Tabulation is the bottom-up form. It fills an array in an order that
+guarantees every dependency is already resolved, using no stack and no
+recursion.
+
+\begin{lstlisting}[style=python, caption={The same recurrence, tabulated}]
+def fib(n):
+    if n < 2:
+        return n
+    prev, curr = 0, 1
+    for _ in range(n - 1):
+        prev, curr = curr, prev + curr    # only two states are ever live
+    return curr
+\end{lstlisting}
+
+The final line illustrates a general reduction. When a recurrence depends only
+on the previous $k$ states, the table collapses from $O(n)$ space to $O(k)$.
+
+% ------------------------------------------------------------
+\subsubsection*{Dynamic programming}
+
+Dynamic programming applies when a problem has \textbf{optimal substructure},
+meaning the optimal solution is composed of optimal solutions to subproblems,
+together with \textbf{overlapping subproblems}, meaning those subproblems recur.
+Absent overlap, plain divide and conquer suffices. Absent optimal substructure,
+a greedy or exhaustive method is required.
+
+\begin{keybox}[Formulating a DP]
+Five questions, answered in order, before any code is written.
+\begin{enumerate}
+  \item \textbf{State.} What arguments fully determine a subproblem? This is
+        the signature of the function or the index set of the table.
+  \item \textbf{Recurrence.} How is a state's value expressed in terms of
+        smaller states?
+  \item \textbf{Base cases.} Which states are known outright?
+  \item \textbf{Order.} In what order can states be evaluated so that
+        dependencies are resolved first? Top-down recursion answers this
+        automatically.
+  \item \textbf{Answer.} Which state holds the final result?
+\end{enumerate}
+The complexity is the number of states multiplied by the cost of evaluating
+one state.
+\end{keybox}
+
+\paragraph{Canonical state definitions.} Most problems reuse a small number of
+state shapes.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{State} & \textbf{Meaning} & \textbf{Typical problem} \\
+\midrule
+\texttt{dp[i]}    & best over the prefix ending at $i$ & maximum subarray, house robber \\
+\texttt{dp[i][j]} & best over two prefixes             & edit distance, longest common subsequence \\
+\texttt{dp[i][w]} & first $i$ items, capacity $w$      & 0/1 knapsack \\
+\texttt{dp[i][j]} & best over the interval $[i,j]$     & matrix chain, palindrome partition \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ------------------------------------------------------------
+\subsubsection*{Backtracking}
+
+Backtracking is recursion over a search tree with an explicit undo step. It
+enumerates permutations, subsets, and combinations, and prunes branches that
+cannot yield a valid solution.
+
+\begin{lstlisting}[style=python, caption={Backtracking skeleton}]
+def solve(path, choices, results):
+    if is_complete(path):
+        results.append(path[:])        # copy, since path is mutated in place
+        return
+    for c in choices:
+        if not is_valid(path, c):
+            continue                   # prune
+        path.append(c)                 # choose
+        solve(path, remaining(choices, c), results)
+        path.pop()                     # undo
+\end{lstlisting}
+
+The \texttt{path[:]} copy is mandatory. Appending \texttt{path} itself stores a
+reference to a list that subsequent mutation will alter, so every recorded
+result ends up identical.
+
+For unconstrained enumeration, the standard library is preferable to a
+hand-written recursion.
+
+\begin{lstlisting}[style=python, caption={Enumeration without recursion}]
+from itertools import permutations, combinations, product
+
+permutations(xs, r)     # ordered arrangements of length r
+combinations(xs, r)     # unordered selections of length r
+product(xs, repeat=r)   # r-tuples with repetition, the r-fold Cartesian power
+\end{lstlisting}
+
+These correspond exactly to the counting formulas $P(n,r) = n!/(n-r)!$,
+$\binom{n}{r}$, and $n^r$.
+
+% ============================================================
+\subsection{Heaps and Priority Queues}
+% ============================================================
+
+A binary heap maintains the minimum of a collection under insertion and
+deletion at logarithmic cost. Python's \texttt{heapq} operates on an ordinary
+list interpreted as a heap, so no dedicated type is involved.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Operation} & \textbf{Call} & \textbf{Cost} \\
+\midrule
+Convert a list in place & \texttt{heapify(xs)}     & $O(n)$ \\
+Insert                  & \texttt{heappush(h, x)}  & $O(\log n)$ \\
+Remove the minimum      & \texttt{heappop(h)}      & $O(\log n)$ \\
+Inspect the minimum     & \texttt{h[0]}            & $O(1)$ \\
+Push then pop           & \texttt{heappushpop(h, x)} & $O(\log n)$, one pass \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A heap provides no ordering beyond its root. Iterating over the underlying
+list does not produce sorted output.
+
+\paragraph{Minimum only.} \texttt{heapq} implements a min-heap exclusively. A
+max-heap is obtained by negating the keys on insertion and negating again on
+extraction. For records, push the tuple \texttt{(-priority, item)}, since
+tuples compare lexicographically and the first field dominates.
+
+\begin{keybox}[Top-$k$ under a stream]
+To retain the $k$ largest of $n$ elements, maintain a min-heap of size $k$.
+Each new element is compared against the root, which is the smallest of the
+current $k$. If the element is larger, the root is evicted and the element
+inserted.
+
+The cost is $O(n \log k)$ and the memory is $O(k)$. Sorting the full input
+costs $O(n \log n)$ and requires all $n$ elements in memory at once, so the
+heap is superior when $k \ll n$ and is the only option when the input arrives
+as a stream of unknown length.
+\end{keybox}
+
+\begin{lstlisting}[style=python, caption={The k largest elements}]
+import heapq
+
+def top_k(stream, k):
+    h = []                              # min-heap holding the k best so far
+    for x in stream:
+        if len(h) < k:
+            heapq.heappush(h, x)
+        elif x > h[0]:                  # h[0] is the weakest survivor
+            heapq.heapreplace(h, x)     # pop the root, then push x
+    return sorted(h, reverse=True)
+\end{lstlisting}
+
+When the whole input already fits in memory, the library provides this
+directly as \texttt{heapq.nlargest(k, xs)} and \texttt{heapq.nsmallest(k, xs)},
+both of which accept a \texttt{key} argument.
+
+\paragraph{Two heaps for a running median.} Maintain a max-heap over the lower
+half of the values and a min-heap over the upper half, rebalancing after each
+insertion so their sizes differ by at most one. The median is then read from
+the root of the larger heap, or is the mean of the two roots when the sizes
+are equal. Insertion costs $O(\log n)$ and the median query is $O(1)$.
+
+\todo{\textbf{TODO:} Add graph traversal (BFS, DFS, and the
+\texttt{deque}-based queue) alongside the heap entry, since Dijkstra composes
+the two. Add a string-processing section covering \texttt{split},
+\texttt{join}, and sliding windows over characters.}

@@ -26,6 +26,8 @@
 \usepackage{mathtools}            % superset of amsmath (\coloneqq, \DeclarePairedDelimiter, etc.)
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
 \usepackage{listings}
 \usepackage[most]{tcolorbox}
 \usepackage{comment}             % used to drop solution blocks when hidden
@@ -34,7 +36,11 @@
 \usepackage[colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black,citecolor=blue!55!black]{hyperref}
 \setlength{\marginparwidth}{2cm}            % avoids a todonotes load-time warning
 \usepackage[colorinlistoftodos]{todonotes}  % \todo{revisit this} to flag weak spots
-\setuptodonotes{inline}                     % full-width inline banners, never clip off the page
+\setuptodonotes{inline,
+  backgroundcolor=orange!40!cream,
+  bordercolor=orange!70!black,
+  linecolor=orange!70!black}
+% full-width inline banners, never clip off the page
 
 % ---------- theorem-like environments ----------
 \theoremstyle{plain}
@@ -61,12 +67,16 @@
 \newcommand{\indep}{\perp\!\!\!\perp}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
+\DeclarePairedDelimiter{\set}{\{}{\}}
 
 % ---------- key-result highlight box (math section) ----------
 \newtcolorbox{keybox}[1][Key result]{%
-  breakable, colback=blue!4, colframe=blue!55!black, coltitle=white,
-  fonttitle=\bfseries, title=#1, boxrule=0.6pt, arc=2pt,
-  left=6pt, right=6pt, top=4pt, bottom=4pt}
+  breakable, enhanced,
+  colback=blue!6, opacityback=0.5,
+  frame hidden, borderline west={2pt}{0pt}{blue!45!black},
+  coltitle=black, colbacktitle=blue!10, opacitybacktitle=0.5,
+  fonttitle=\bfseries\normalsize, title=#1,
+  left=8pt, right=6pt, top=4pt, bottom=4pt}
 
 % ---------- numbered problem environment (brainteasers) ----------
 % Optional argument holds metadata, e.g. \begin{problem}[Brainstellar, Medium]
@@ -105,7 +115,9 @@
   stringstyle=\color{lstst}, numbers=left, numberstyle=\tiny\color{gray},
   numbersep=8pt, showstringspaces=false, breaklines=true, frame=single,
   framerule=0.3pt, rulecolor=\color{gray!40}, tabsize=4, captionpos=b,
-  xleftmargin=16pt, aboveskip=1em, belowskip=1em}
+  xleftmargin=12pt, framexleftmargin=20pt,
+  xrightmargin=-8pt, framexrightmargin=0pt,
+  aboveskip=1em, belowskip=1em}
 \lstdefinestyle{python}{style=common, language=Python}
 \lstdefinestyle{sql}{style=common, language=SQL}
 \lstset{style=common}

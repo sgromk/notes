@@ -1,0 +1,451 @@
+% ============================================================
+\subsection{Distributions}
+% ============================================================
+
+A named distribution is a compressed description of a random process. What makes the catalogue useful is not the formulas in isolation but the mapping from a verbal cue in the problem statement to a process, and from that process to a mean, a variance, and a tail. The organizing question for any problem is therefore which process generated the randomness rather than which formula to apply.
+
+\begin{definition}[Random variable and distribution]
+A random variable $X$ is a function assigning a number to each outcome in the sample space $\Omega$. Its distribution specifies how probability is spread across the values $X$ can take, and it is described by one of three equivalent objects:
+\begin{itemize}[itemsep=-1ex, label=--]
+  \item the probability mass function (PMF) $P(X = x)$ in the discrete case, with $\sum_x P(X=x) = 1$
+  \item the probability density function (PDF) $f(x)$ in the continuous case, with $\int_{-\infty}^{\infty} f(x)\,dx = 1$
+  \item the cumulative distribution function (CDF) $F(x) = P(X \leq x)$, defined in both cases
+\end{itemize}
+The set of values with nonzero probability is the support.
+\end{definition}
+
+In the continuous case $P(X = x) = 0$ for every single point, so density is not probability. Only integrals of the density over an interval carry probability, which is why continuous questions are answered through the CDF as $P(a < X \leq b) = F(b) - F(a)$.
+
+\vspace{1em}
+
+\begin{keybox}[Recognize the process first]
+A named distribution (Bernoulli, Binomial, Geometric, Poisson, and so on) is a family arising from a common underlying random process, indexed by one or more parameters such as $n$ and $p$ for the Binomial. Once a problem is matched to its process, the PMF or PDF, mean, and variance follow immediately from the known formulas for the family. Three cues carry most of the discrete cases:
+\begin{itemize}[itemsep=0.5ex, label=--]
+  \item a \textit{fixed} number of trials with a counted number of successes points to the Binomial
+  \item a \textit{fixed} number of successes with a counted number of trials points to the Geometric or Negative Binomial
+  \item a count over a window of time or space with no natural trial count points to the Poisson
+\end{itemize}
+\end{keybox}
+
+\begin{definition}[Moment]
+The $n$-th moment of a random variable $X$ is $\E[X^n]$, and its $n$-th central moment is $\E[(X - \mu)^n]$, taken about the mean $\mu = \E[X]$. A moment exists only when the defining expectation converges absolutely, meaning $\E[|X|^n] < \infty$.
+\end{definition}
+
+Moments are summary numbers describing the shape of a distribution, each one weighting outcomes by a higher power and so responding more strongly to values far from the center. The first four carry standard names and interpretations:
+\begin{itemize}[itemsep=-1ex, label=--]
+  \item the first moment $\E[X]$ is the mean, locating the distribution
+  \item the second central moment $\E[(X-\mu)^2]$ is the variance, measuring spread
+  \item the third standardized moment is the skewness, measuring asymmetry
+  \item the fourth standardized moment is the kurtosis, measuring tail weight
+\end{itemize}
+Standardizing divides the central moment by $\sigma^n$, which makes skewness and kurtosis dimensionless and therefore comparable across distributions. A distribution is not guaranteed to possess any given moment, since sufficiently heavy tails make the integral diverge, and moments fail from the top down in the sense that a finite $n$-th moment forces every lower moment to be finite as well.
+
+% ============================================================
+\subsubsection{Bernoulli Distribution}
+% ============================================================
+
+\begin{definition}[Bernoulli]
+A random variable $X$ follows a Bernoulli distribution with parameter $p \in [0,1]$, written $X \sim \text{Bernoulli}(p)$, if it takes exactly two values:
+\[
+P(X = 1) = p, \qquad P(X = 0) = 1 - p.
+\]
+It models a single trial with two outcomes, conventionally labeled success ($1$) and failure ($0$).
+\[
+\mu = p \hspace{5em} \sigma^2 = p(1-p)
+\]
+\end{definition}
+
+Both moments follow in one line. Since $X$ only takes the values $0$ and $1$, the identity $X^2 = X$ holds pointwise, so $\E[X^2] = \E[X] = p$ and
+\[
+\Var(X) = \E[X^2] - \E[X]^2 = p - p^2 = p(1-p).
+\]
+The variance is largest at $p = \tfrac{1}{2}$, where the outcome is most uncertain, and shrinks to zero as $p$ approaches $0$ or $1$, where the result becomes nearly certain.
+
+\vspace{1em}
+
+\begin{keybox}[Building block for other distributions]
+The Bernoulli is rarely the distribution of interest on its own. It is the atomic unit that other named distributions are built from. A Binomial random variable is a sum of $n$ i.i.d.\ Bernoulli$(p)$ trials, and a Geometric random variable counts trials until the first Bernoulli success. Recognizing a Bernoulli inside a larger problem, often through an indicator variable $\ind\{\cdot\}$, is frequently the first step in applying linearity of expectation to more complex sums.
+\end{keybox}
+
+% ============================================================
+\subsubsection{Binomial Distribution}
+% ============================================================
+
+\begin{definition}[Binomial]
+$X \sim \text{Binomial}(n,p)$ counts the number of successes in $n$ independent trials, each succeeding with the same probability $p$. Its PMF is
+\[
+P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}, \qquad k = 0, 1, \dots, n.
+\]
+\end{definition}
+
+\begin{proof}
+Fix one particular sequence of outcomes with $k$ successes and $n-k$ failures. Independence makes its probability the product $p^k (1-p)^{n-k}$, and that value depends only on the counts, not on the positions. The number of distinct sequences with $k$ successes is the number of ways to choose which trials succeed, namely $\binom{n}{k}$. Summing the common probability over those disjoint sequences gives the stated PMF.
+\end{proof}
+\[
+\mu = np \hspace{5em} \sigma^2 = np(1-p)
+\]
+
+Writing $X = \sum_{i=1}^n X_i$ as a sum of i.i.d.\ Bernoulli$(p)$ variables gives both moments without touching the PMF. Linearity of expectation yields $\E[X] = np$ with no independence needed. Variance requires independence, which zeroes every covariance cross term and leaves $\Var(X) = n \cdot p(1-p)$.
+
+\newpage
+
+\begin{keybox}[Sampling with replacement against without]
+The Binomial requires that $p$ stay constant across trials, which holds when sampling with replacement. Sampling without replacement changes the composition of the pool after each draw and produces the Hypergeometric distribution instead. When the population is large relative to the sample, the shift in $p$ is negligible and the Binomial is the standard approximation.
+\end{keybox}
+
+\begin{definition}[Hypergeometric]
+Drawing $n$ items without replacement from a population of $N$ containing $K$ successes, the number of successes drawn has PMF
+\[
+P(X = k) = \frac{\binom{K}{k}\binom{N-K}{n-k}}{\binom{N}{n}}.
+\]
+Its mean is $\mu = n\frac{K}{N}$, matching the Binomial with $p = K/N$, and its variance is
+\[
+\sigma^2 = np(1-p)\,\frac{N-n}{N-1},
+\]
+where the factor $\frac{N-n}{N-1}$ is the finite population correction.
+\end{definition}
+
+The mean is unchanged because linearity of expectation ignores the dependence between draws. The variance is lower because the draws are negatively correlated: each draw removes an item from the pool, so a success on one draw leaves fewer successes available and makes a success on the next slightly less likely. That downward pull is exactly the correction factor, which is below 1, so sampling without replacement is strictly less variable than sampling with replacement. It collapses to 1 as $N$ grows relative to $n$, which recovers the Binomial.
+
+% ============================================================
+\subsubsection{Geometric Distribution}
+% ============================================================
+
+\begin{definition}[Geometric]
+$X \sim \text{Geometric}(p)$ counts the number of independent trials up to and including the first success, where each trial succeeds with probability $p$. Its PMF is
+\[
+P(X = k) = (1-p)^{k-1} p, \qquad k = 1, 2, 3, \dots
+\]
+\end{definition}
+
+The PMF is a direct product. Reaching the first success on trial $k$ requires $k-1$ failures followed by one success, and independence multiplies those probabilities. The tail probability is equally compact, since needing more than $k$ trials means the first $k$ all failed:
+\[
+P(X > k) = (1-p)^k.
+\]
+
+\[
+\mu = \frac{1}{p} \hspace{5em} \sigma^2 = \frac{1-p}{p^2}
+\]
+
+\begin{keybox}[Two conventions]
+Some texts define the Geometric as the number of \textit{failures before} the first success, with support $k = 0, 1, 2, \dots$ and PMF $(1-p)^k p$. That version has mean $\frac{1-p}{p}$, exactly one less, while the variance $\frac{1-p}{p^2}$ is identical since shifting a variable by a constant does not change its spread. The two differ by the single trial on which the success occurs, so the convention in force must be established before any numerical comparison. The trials convention with mean $\frac{1}{p}$ is the one used throughout these notes.
+\end{keybox}
+
+\begin{theorem}[Memorylessness]
+The Geometric is the only discrete distribution with the memoryless property:
+\[
+P(X > m + n \mid X > m) = P(X > n).
+\]
+Past failures carry no information about how many further trials are required.
+\end{theorem}
+
+\begin{proof}
+Apply the definition of conditional probability. The event $\{X > m+n\}$ is contained in $\{X > m\}$, so their intersection is the former:
+\[
+P(X > m+n \mid X > m) = \frac{P(X > m+n)}{P(X > m)} = \frac{(1-p)^{m+n}}{(1-p)^m} = (1-p)^n = P(X > n). \qedhere
+\]
+\end{proof}
+
+Memorylessness is the reason the recursive expectation argument works. A coin that has landed tails ten times in a row still needs $\frac{1}{p}$ further flips in expectation, so conditioning on the first trial reproduces the original problem and gives $\E[X] = 1 + (1-p)\E[X]$, which solves to $\frac{1}{p}$.
+
+% ============================================================
+\subsubsection{Negative Binomial Distribution}
+% ============================================================
+
+\begin{definition}[Negative Binomial]
+$X \sim \text{NegBin}(r,p)$ counts the number of independent trials up to and including the $r$-th success. Its PMF is
+\[
+P(X = k) = \binom{k-1}{r-1} p^r (1-p)^{k-r}, \qquad k = r, r+1, \dots
+\]
+\end{definition}
+
+The binomial coefficient counts the arrangements of the first $r-1$ successes among the first $k-1$ trials. Trial $k$ is forced to be a success, which is what pins the $r$-th success to the final position rather than anywhere in the sequence.
+
+\[
+\mu = \frac{r}{p} \hspace{5em} \sigma^2 = \frac{r(1-p)}{p^2}
+\]
+
+Both follow from writing $X = G_1 + G_2 + \cdots + G_r$, a sum of $r$ independent Geometric$(p)$ waiting times. Memorylessness is what guarantees each waiting period restarts fresh after a success, so the $G_i$ are i.i.d. The mean is $r$ times the Geometric mean by linearity of expectation. The variance is $r$ times the Geometric variance by \textit{independence}, not by linearity, since variances add only when covariance terms vanish.
+
+% ============================================================
+\subsubsection{Poisson Distribution}
+% ============================================================
+
+\begin{definition}[Poisson]
+$X \sim \text{Poisson}(\lambda)$ counts discrete events occurring in a fixed window of time or space, when events arrive independently at a constant average rate $\lambda$ per window. Its PMF is
+\[
+P(X = k) = e^{-\lambda}\frac{\lambda^k}{k!}, \qquad k = 0, 1, 2, \dots
+\]
+\end{definition}
+
+\[
+\mu = \lambda \hspace{5em} \sigma^2 = \lambda
+\]
+
+The equality of mean and variance serves as a diagnostic. Count data whose sample variance materially exceeds its mean is overdispersed and is not Poisson. This occurs routinely in market data, where order arrivals cluster rather than arriving at a constant rate, and it motivates the mixture and doubly stochastic models that generalize the Poisson.
+
+\begin{theorem}[Poisson limit of the Binomial]
+Fix $\lambda > 0$ and let $n \to \infty$ with $p = \lambda/n$, so that the expected count $np = \lambda$ stays constant. Then
+\[
+\binom{n}{k} p^k (1-p)^{n-k} \longrightarrow e^{-\lambda}\frac{\lambda^k}{k!}.
+\]
+\end{theorem}
+
+\begin{proof}
+Substitute $p = \lambda/n$ and split the expression into three factors:
+\[
+\underbrace{\frac{n(n-1)\cdots(n-k+1)}{n^k}}_{\to\, 1}
+\cdot \frac{\lambda^k}{k!}
+\cdot \underbrace{\left(1 - \frac{\lambda}{n}\right)^{n}}_{\to\, e^{-\lambda}}
+\cdot \underbrace{\left(1 - \frac{\lambda}{n}\right)^{-k}}_{\to\, 1}.
+\]
+The first factor is a ratio of $k$ terms each approaching $n$, the third is the standard limit defining $e^{-\lambda}$, and the fourth has a fixed exponent with a base approaching 1. The surviving product is the Poisson PMF.
+\end{proof}
+
+The interpretation matters more than the algebra. The Poisson is the law of rare events, meaning many opportunities for an event to occur with a small probability at each one. This is why it models message counts, quote updates, and defaults, where no natural trial count exists but a rate does.
+
+\vspace{1ex}
+
+\begin{keybox}[Superposition and thinning]
+\textbf{Superposition.} Independent Poisson streams merge into a Poisson stream with the summed rate, so $X \sim \text{Poisson}(\lambda_1)$ and $Y \sim \text{Poisson}(\lambda_2)$ independent give $X + Y \sim \text{Poisson}(\lambda_1 + \lambda_2)$. Combining order flow across venues is the standard application.
+
+\vspace{2ex}
+
+\textbf{Thinning.} If each event in a Poisson$(\lambda)$ stream is independently retained with probability $q$, the retained events form a Poisson$(\lambda q)$ stream, and the discarded ones form an independent Poisson$(\lambda(1-q))$ stream. Filtering a stream to buy orders only is the standard application.
+\end{keybox}
+
+% ============================================================
+\subsubsection{Exponential Distribution}
+% ============================================================
+
+\begin{definition}[Exponential]
+$X \sim \text{Exponential}(\lambda)$ is the continuous waiting time until the next event in a Poisson process of rate $\lambda$. Its density and CDF are
+\[
+f(x) = \lambda e^{-\lambda x}, \qquad F(x) = 1 - e^{-\lambda x}, \qquad x \geq 0.
+\]
+\end{definition}
+
+\[
+\mu = \frac{1}{\lambda} \hspace{5em} \sigma^2 = \frac{1}{\lambda^2}
+\]
+
+The Exponential is the continuous counterpart of the Geometric, and the pairing runs deep. The Geometric counts discrete trials until a success while the Exponential measures continuous time until an arrival, and each is the unique memoryless distribution on its domain:
+\[
+P(X > s + t \mid X > s) = P(X > t).
+\]
+The proof is the same cancellation as before, using the tail $P(X > x) = e^{-\lambda x}$. The consequence is that the expected remaining wait is $\frac{1}{\lambda}$ regardless of how long the wait has already lasted, so elapsed time carries no information about the time still to come.
+
+\begin{keybox}[Counts against waiting times]
+Poisson and Exponential describe one process from two directions. If events arrive at rate $\lambda$, the \textit{count} in a unit window is Poisson$(\lambda)$ and the \textit{gap} between consecutive events is Exponential$(\lambda)$. The identity linking them is that zero arrivals in $[0,t]$ is the same event as a wait longer than $t$:
+\[
+P(N_t = 0) = e^{-\lambda t} = P(X > t).
+\]
+\textbf{Minimum of exponentials.} If $X_i \sim \text{Exponential}(\lambda_i)$ independently, then $\min_i X_i \sim \text{Exponential}\!\left(\sum_i \lambda_i\right)$, and the probability that stream $j$ arrives first is $\lambda_j / \sum_i \lambda_i$. This is the central result for competing arrivals, such as determining which of several order flows reaches the book first.
+\end{keybox}
+
+% ============================================================
+\subsubsection{Uniform Distribution}
+% ============================================================
+
+\begin{definition}[Continuous Uniform]
+$X \sim \text{Uniform}(a,b)$ places equal density across an interval:
+\[
+f(x) = \frac{1}{b-a}, \qquad F(x) = \frac{x-a}{b-a}, \qquad a \leq x \leq b.
+\]
+\end{definition}
+
+\[
+\mu = \frac{a+b}{2} \hspace{5em} \sigma^2 = \frac{(b-a)^2}{12}
+\]
+
+Probability for a continuous Uniform is proportional to length, so $P(c < X < d) = \frac{d-c}{b-a}$ for any subinterval. The variance depends only on the width $b-a$ and not on the location, which is the general behavior of variance under a shift.
+
+\begin{keybox}[Do not mix the discrete and continuous forms]
+The discrete Uniform on $\{1, 2, \dots, n\}$ has mean $\frac{n+1}{2}$ and variance $\frac{n^2 - 1}{12}$, which is not the continuous formula with $a=1$ and $b=n$. A fair die has $\mu = 3.5$ and $\sigma^2 = \frac{35}{12} \approx 2.92$. Substituting into $\frac{(b-a)^2}{12}$ would give $\frac{25}{12}$, which is wrong.
+\end{keybox}
+
+\begin{keybox}[Universality of the uniform]
+For any continuous random variable $X$ with CDF $F$, the transformed variable $F(X)$ is Uniform$(0,1)$. Running this backwards, $F^{-1}(U)$ with $U \sim \text{Uniform}(0,1)$ has distribution $F$. This inverse transform is the basis for generating arbitrary distributions from a uniform random number generator, which is the foundation of Monte Carlo simulation. For the Exponential it gives the explicit sampler $X = -\frac{1}{\lambda}\ln(U)$.
+\end{keybox}
+
+% ============================================================
+\subsubsection{Normal (Gaussian) Distribution}
+% ============================================================
+
+\begin{definition}[Normal]
+$X \sim \mathcal{N}(\mu, \sigma^2)$ has density
+\[
+f(x) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{(x-\mu)^2}{2\sigma^2}\right).
+\]
+The two parameters are exactly its mean and its variance, so the distribution is fully specified by its first two moments.
+\end{definition}
+
+Two structural properties account for most applications.
+
+\textbf{Standardization.} Any Normal reduces to the standard Normal through $Z = \frac{X - \mu}{\sigma} \sim \mathcal{N}(0,1)$, which is why a single table of $Z$ values suffices for every Normal question.
+
+\textbf{Closure under addition.} A sum of independent Normals is Normal, with means and variances adding:
+\[
+X_1 \sim \mathcal{N}(\mu_1, \sigma_1^2), \; X_2 \sim \mathcal{N}(\mu_2, \sigma_2^2) \implies X_1 + X_2 \sim \mathcal{N}(\mu_1 + \mu_2, \, \sigma_1^2 + \sigma_2^2).
+\]
+Standard deviations do not add. This is the source of the $\sqrt{T}$ scaling of volatility, since variance grows linearly in time while volatility grows with the square root.
+
+\vspace{1em}
+
+\begin{keybox}[Standard tail masses]
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Range} & \textbf{Mass inside} & \textbf{Mass outside} \\
+\midrule
+$\mu \pm 1\sigma$      & $68.3\%$ & $\approx 1$ in $3$ \\
+$\mu \pm 1.645\sigma$  & $90\%$   & $5\%$ per tail \\
+$\mu \pm 1.96\sigma$   & $95\%$   & $2.5\%$ per tail \\
+$\mu \pm 2\sigma$      & $95.4\%$ & $\approx 1$ in $22$ \\
+$\mu \pm 2.576\sigma$  & $99\%$   & $0.5\%$ per tail \\
+$\mu \pm 3\sigma$      & $99.7\%$ & $\approx 1$ in $370$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{2ex}
+
+The one-tailed values $1.645$ and $2.326$ correspond to the $95$th and $99$th percentiles and are the multipliers underlying standard value-at-risk calculations.
+\end{keybox}
+
+\vspace{1ex}
+
+\begin{remark}[Why the Normal is the default]
+The Normal is the maximum entropy distribution among all distributions on the real line with a given mean and variance. Constraining only the first two moments and otherwise assuming as little as possible produces the Normal, which is the formal version of the claim that it encodes minimal structural assumptions. The Central Limit Theorem gives the second, more operational reason for its ubiquity.
+\end{remark}
+
+\begin{theorem}[Central Limit Theorem]
+Let $X_1, \dots, X_n$ be i.i.d.\ with finite mean $\mu$ and finite variance $\sigma^2$. Then the standardized sample mean converges in distribution to a standard Normal:
+\[
+\frac{\bar{X}_n - \mu}{\sigma/\sqrt{n}} \xrightarrow{\;d\;} \mathcal{N}(0,1)
+\]
+\end{theorem}
+
+The standardization is essential to the statement. The sample mean $\bar{X}_n$ on its own converges to the constant $\mu$ by the law of large numbers, and its variance $\sigma^2/n$ shrinks to zero, so it is the rescaled deviation that stabilizes into a Normal shape rather than the mean itself.
+
+\vspace{1ex}
+
+\begin{keybox}[Where the CLT fails]
+The common rule that $n \geq 30$ suffices is a heuristic, not a theorem, and it breaks in three ways that matter for trading:
+\begin{itemize}[itemsep=1ex, label=--]
+  \item \textbf{Finite variance is required.} Heavy-tailed distributions with infinite variance, such as the Cauchy, never converge. The sample mean of Cauchy draws has the same Cauchy distribution as a single draw, so averaging buys nothing.
+  \item \textbf{Skewness slows convergence.} Strongly asymmetric or rare-event distributions may need $n$ in the thousands before the Normal approximation is usable in the tails, which is exactly where risk questions live.
+  \item \textbf{Independence is required.} Financial returns are volatility clustered and serially dependent, so effective sample size is far below nominal sample size.
+\end{itemize}
+
+\vspace{1ex}
+
+Empirical asset returns are leptokurtic, meaning excess kurtosis above the Normal value of 3, so extreme moves occur far more often than a Gaussian model predicts.
+\end{keybox}
+
+% ============================================================
+\subsubsection{Lognormal Distribution}
+% ============================================================
+
+\begin{definition}[Lognormal]
+$X$ is lognormal when $\ln X \sim \mathcal{N}(\mu, \sigma^2)$, so $X = e^{Y}$ for a Normal $Y$. Its support is $x > 0$, and
+\[
+\E[X] = e^{\mu + \sigma^2/2}, \qquad \text{median}(X) = e^{\mu}, \qquad \Var(X) = \left(e^{\sigma^2} - 1\right)e^{2\mu + \sigma^2}.
+\]
+\end{definition}
+
+The lognormal is the standard model for asset prices, for two structural reasons. Prices are bounded below by zero while a Normal would assign positive probability to negative prices, and returns compound multiplicatively, so the logarithm of the price is a sum of log returns and therefore Normal by the same CLT argument.
+
+The mean sits above the median because the distribution is right-skewed. Exponentiating a Normal stretches the upper values far more than the lower ones, producing a long right tail. The median only tracks the middle draw, which is $e^{\mu}$, but the mean is dragged upward by that tail to $e^{\mu + \sigma^2/2}$. The two differ by the factor $e^{\sigma^2/2}$, which sits at 1 when there is no variability and grows as the volatility $\sigma$ increases. More spread in the log means a heavier right tail and a wider gap between the average outcome and the typical one.
+
+This gap is a concrete case of a general rule: averaging after applying a curved function is not the same as applying the function to the average. Here the function is $e^x$, which curves upward, so $\E[e^Y]$ comes out larger than $e^{\E[Y]}$. The excess is exactly the $e^{\sigma^2/2}$ term. The same correction reappears in the drift of geometric Brownian motion, the standard continuous-time price model, for the same reason.
+
+% ============================================================
+\subsubsection{Reference Tables}
+% ============================================================
+
+\begin{keybox}[Discrete distributions]
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lllccl@{}}
+\toprule
+\textbf{Distribution} & \textbf{Cue in the problem} & \textbf{PMF} & \textbf{Mean} & \textbf{Variance} & \textbf{Support} \\
+\midrule
+Bernoulli$(p)$ & one trial, success or failure & $p^x(1-p)^{1-x}$ & $p$ & $p(1-p)$ & $\{0,1\}$ \\[0.35em]
+Binomial$(n,p)$ & successes in $n$ fixed trials & $\binom{n}{k}p^k(1-p)^{n-k}$ & $np$ & $np(1-p)$ & $0,\dots,n$ \\[0.35em]
+Hypergeom. & successes, no replacement & $\dfrac{\binom{K}{k}\binom{N-K}{n-k}}{\binom{N}{n}}$ & $np$ & $np(1-p)\frac{N-n}{N-1}$ & $0,\dots,n$ \\[0.5em]
+Geometric$(p)$ & trials until 1st success & $(1-p)^{k-1}p$ & $\dfrac{1}{p}$ & $\dfrac{1-p}{p^2}$ & $1,2,\dots$ \\[0.5em]
+NegBin$(r,p)$ & trials until $r$-th success & $\binom{k-1}{r-1}p^r(1-p)^{k-r}$ & $\dfrac{r}{p}$ & $\dfrac{r(1-p)}{p^2}$ & $r, r+1,\dots$ \\[0.5em]
+Poisson$(\lambda)$ & count at a rate, no trial count & $e^{-\lambda}\dfrac{\lambda^k}{k!}$ & $\lambda$ & $\lambda$ & $0,1,2,\dots$ \\[0.35em]
+Uniform$\{1,n\}$ & equally likely integers & $\dfrac{1}{n}$ & $\dfrac{n+1}{2}$ & $\dfrac{n^2-1}{12}$ & $1,\dots,n$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{keybox}
+
+\vspace{2ex}
+
+\begin{keybox}[Continuous distributions]
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lllccl@{}}
+\toprule
+\textbf{Distribution} & \textbf{Cue in the problem} & \textbf{PDF} & \textbf{Mean} & \textbf{Variance} & \textbf{Support} \\
+\midrule
+Uniform$(a,b)$ & equally likely over a range & $\dfrac{1}{b-a}$ & $\dfrac{a+b}{2}$ & $\dfrac{(b-a)^2}{12}$ & $[a,b]$ \\[0.5em]
+Exponential$(\lambda)$ & wait until next arrival & $\lambda e^{-\lambda x}$ & $\dfrac{1}{\lambda}$ & $\dfrac{1}{\lambda^2}$ & $x \geq 0$ \\[0.5em]
+Normal$(\mu,\sigma^2)$ & sum of many small effects & $\frac{1}{\sqrt{2\pi\sigma^2}}e^{-(x-\mu)^2/2\sigma^2}$ & $\mu$ & $\sigma^2$ & $\mathbb{R}$ \\[0.5em]
+Lognormal$(\mu,\sigma^2)$ & multiplicative growth & $\frac{1}{x\sqrt{2\pi\sigma^2}}e^{-(\ln x-\mu)^2/2\sigma^2}$ & $e^{\mu+\sigma^2/2}$ & $(e^{\sigma^2}\!-\!1)e^{2\mu+\sigma^2}$ & $x > 0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{keybox}
+
+\begin{keybox}[Moment generating functions]
+The MGF is $M_X(t) = \E[e^{tX}]$. It determines the distribution uniquely, generates moments through $\E[X^n] = M_X^{(n)}(0)$, and multiplies across independent sums, which is the fastest proof that Binomials and Poissons and Normals are each closed under addition.
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}ll@{\hskip 3em}ll@{}}
+\toprule
+\textbf{Distribution} & $M_X(t)$ & \textbf{Distribution} & $M_X(t)$ \\
+\midrule
+Bernoulli$(p)$ & $1-p+pe^t$ & Poisson$(\lambda)$ & $e^{\lambda(e^t-1)}$ \\[0.4em]
+Binomial$(n,p)$ & $(1-p+pe^t)^n$ & Exponential$(\lambda)$ & $\dfrac{\lambda}{\lambda-t}, \; t<\lambda$ \\[0.5em]
+Geometric$(p)$ & $\dfrac{pe^t}{1-(1-p)e^t}$ & Normal$(\mu,\sigma^2)$ & $e^{\mu t + \sigma^2 t^2/2}$ \\[0.5em]
+NegBin$(r,p)$ & $\left(\dfrac{pe^t}{1-(1-p)e^t}\right)^{\!r}$ & Lognormal & undefined for $t>0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+The lognormal entry is not an oversight. Its right tail is heavy enough that $\E[e^{tX}]$ diverges for every $t > 0$, which is a compact example of a distribution that has all moments yet no MGF.
+\end{keybox}
+
+\vspace{2ex}
+
+\begin{keybox}[How the families connect]
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{From} & \textbf{Relationship} & \textbf{To} \\
+\midrule
+Bernoulli & sum of $n$ i.i.d.\ trials & Binomial \\[0.3em]
+Bernoulli & count trials to 1st success & Geometric \\[0.3em]
+Geometric & sum of $r$ i.i.d.\ waits & Negative Binomial \\[0.3em]
+Binomial & $n \to \infty$, $p \to 0$, $np = \lambda$ fixed & Poisson \\[0.3em]
+Binomial & $n$ large, $np(1-p)$ large & Normal \\[0.3em]
+Poisson & gap between arrivals & Exponential \\[0.3em]
+Geometric & continuous time limit & Exponential \\[0.3em]
+Exponential & minimum of independent draws & Exponential (rates add) \\[0.3em]
+Normal & exponentiate & Lognormal \\[0.3em]
+Any distribution & standardized mean, finite variance & Normal (CLT) \\[0.3em]
+Any continuous & apply own CDF & Uniform$(0,1)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{2ex}
+
+Memorylessness is the thread through the waiting-time column. The Geometric and the Exponential are the unique discrete and continuous distributions with that property, which is why both admit one-line recursive expectation arguments.
+\end{keybox}

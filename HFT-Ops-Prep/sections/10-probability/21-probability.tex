@@ -1,0 +1,45 @@
+\subsection{Probability}
+
+\begin{definition}[Sample Space]
+The sample space $\Omega$ is the set of all possible outcomes of an experiment.
+\end{definition}
+
+Most problems begin by fixing the sample space and then identifying the subset of outcomes that count as favourable. Getting the sample space right, which means choosing the correct unit of observation and the correct notion of ``equally likely'', settles most of the difficulty before any arithmetic starts.
+
+\begin{definition}[Event]
+An event is a subset of the sample space, the collection of outcomes of interest. Its probability is the total weight of the outcomes it contains.
+\end{definition}
+
+\subsubsection{Complement}
+
+\begin{keybox}[Complement]
+For any event $A$,
+\[
+P(A) = 1 - P(A^c),
+\]
+where $A^c$ is the event that $A$ does not occur.
+\end{keybox}
+
+The complement is the first move whenever the direct event splits into many cases while its negation is a single clean case. ``At least one'' is the signature cue: the direct count runs over one, two, three or more successes, while the negation is the single event of zero successes. The birthday and ``at least one head'' problems below both collapse this way.
+
+\subsubsection{Independence}
+
+\begin{definition}[Independence]
+Two events are independent when the occurrence of one leaves the probability of the other unchanged. Formally,
+\[
+P(A \cap B) = P(A)\,P(B).
+\]
+\end{definition}
+
+The multiplication rule is the practical test. Drawing \textit{with} replacement keeps every draw independent because the pool is restored each time. Drawing without replacement makes the draws dependent, since removing an item changes both the size and the composition of the pool for the next draw. Independence is a statement about probabilities and is a separate idea from mutual exclusivity, which is a statement about outcomes.
+
+\subsubsection{Mutual Exclusivity}
+
+\begin{definition}[Mutual exclusivity]
+Two events are mutually exclusive when they cannot both occur, so $A \cap B = \emptyset$. For such events the union probability adds:
+\[
+P(A \cup B) = P(A) + P(B).
+\]
+\end{definition}
+
+This is the special case of inclusion-exclusion where the intersection is empty. The general identity $P(A \cup B) = P(A) + P(B) - P(A \cap B)$ carries the overlap term $P(A \cap B)$, and mutual exclusivity sets that term to zero. A common error is to add probabilities for events that can co-occur, which double counts the overlap.

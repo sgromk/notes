@@ -1,0 +1,133 @@
+\subsubsection{Select Worked Problems}
+
+\begin{problem}
+A game costs \$1. You flip a coin: heads you win \$3, tails you win nothing. What's $\mathbb{E}[\text{Profit}]$?
+\end{problem}
+
+\begin{solution}
+$EV = 0.5 \cdot 2 + 0.5 \cdot -1 = +\ 0.5$
+\end{solution}
+
+\begin{problem}
+Roll a die. If it shows 6, you roll again and add. Otherwise, your score is the number shown. What's the expected score?
+\end{problem}
+
+\begin{solution}
+\[
+EV = 3.5 + \frac{1}{6} \cdot EV \longrightarrow \frac{5}{6} \cdot EV = 3.5 \longrightarrow EV = 4.2
+\]
+
+\end{solution}
+
+\begin{problem}
+Shuffle a standard deck. What's the expected number of cards that are in their "correct" position (card k is in position k)?
+\end{problem}
+
+\begin{solution}
+This is linearity of expectation applied to indicators. Let $I_k = 1$ if card $k$ lands in position $k$, and $0$ otherwise. In a random shuffle each card is equally likely to occupy any of the 52 positions, so $\mathbb{E}[I_k] = P(I_k = 1) = \frac{1}{52}$. The number of correctly placed cards is $M = \sum_{k=1}^{52} I_k$, and by linearity
+\[
+\mathbb{E}[M] = \sum_{k=1}^{52} \mathbb{E}[I_k] = 52 \cdot \frac{1}{52} = 1.
+\]
+The $I_k$ are dependent, but linearity does not require independence, so that never matters.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+You flip a coin until you get heads. How many flips do you expect?
+\end{problem}
+
+\begin{solution}
+\[
+EV = 1 + 0.5 \cdot EV \longrightarrow 0.5 \cdot EV = 1 \longrightarrow EV = 2
+\]
+\end{solution}
+
+\begin{problem}
+A cereal box contains 1 of 4 different toys (equally likely). How many boxes must you buy to expect to collect all 4?
+\end{problem}
+
+\begin{solution}
+The total number of boxes is a sum of four phase waits, so we use linearity of expectation. In phase $k$ we already hold $k-1$ toys and buy boxes until a new one appears. The per-trial success probability is $p = \frac{\text{favourable}}{\text{total}}$, the number of missing toys over 4. We want the reciprocal, the expected number of trials per success, which is $\frac{1}{p}$:
+\begin{align*}
+0 \text{ toys}, \; p = \tfrac{4}{4} \;&\longrightarrow\; \E[T_1] = \tfrac{1}{p} = 1 \\
+1 \text{ toy}, \; p = \tfrac{3}{4} \;&\longrightarrow\; \E[T_2] = \tfrac{1}{p} = \tfrac{4}{3} \\
+2 \text{ toys}, \; p = \tfrac{2}{4} \;&\longrightarrow\; \E[T_3] = \tfrac{1}{p} = 2 \\
+3 \text{ toys}, \; p = \tfrac{1}{4} \;&\longrightarrow\; \E[T_4] = \tfrac{1}{p} = 4
+\end{align*}
+\[
+\E[T] = \E[T_1] + \E[T_2] + \E[T_3] + \E[T_4] = 1 + \tfrac{4}{3} + 2 + 4 = \tfrac{25}{3} \approx 8.33
+\]
+\end{solution}
+
+\begin{problem}
+I roll a die repeatedly and keep a running sum. What's the expected number of rolls until the sum first reaches or exceeds 10?
+\end{problem}
+
+\begin{solution}
+We solve recursively. Let $\E[s]$ be the expected number of additional rolls needed to first reach a sum of at least 10, starting from current sum $s$. The answer we want is $\E[0]$.
+
+Base case: $\E[s] = 0$ for all $s \geq 10$, since the target is already met. For $s < 10$, one roll costs 1 and moves to $s+1, \dots, s+6$ with equal probability $\frac{1}{6}$:
+\begin{align*}
+\E[s] &= 1 + \frac{1}{6}\sum_{j=1}^{6} \E[s+j], \qquad \E[s] = 0 \text{ for } s \geq 10.
+\end{align*}
+Working downward from the base case:
+\begin{align*}
+\E[9] &= 1 + \tfrac{1}{6}\bigl(\E[10] + \cdots + \E[15]\bigr) = 1 \\
+\E[8] &= 1 + \tfrac{1}{6}\E[9] = \tfrac{7}{6} \\
+\E[7] &= 1 + \tfrac{1}{6}\bigl(\E[8] + \E[9]\bigr) = \tfrac{49}{36} \\
+      &\;\;\vdots \\
+\E[0] &\approx 3.6
+\end{align*}
+\end{solution}
+
+\newpage
+
+\begin{problem}
+You roll a fair six-sided die. After seeing the result, you may keep it as your score, or reroll. If you reroll, the new value replaces the old one (you cannot go back to a discarded roll). You are allowed up to three rolls total, and your score is the value you are holding when you stop. Playing optimally to maximize
+your expected score, what is that expected score, and what is the stopping rule at each stage?
+\end{problem}
+
+\begin{solution}
+Let $\E[r]$ be the expected score with $r$ rerolls remaining. Solve backwards.
+
+With no rerolls left, you keep whatever you roll, so $\E[0] = 3.5$.
+
+With one reroll left, you keep the current face only if it beats the continuation value $\E[0] = 3.5$, i.e.\ keep on $\{4,5,6\}$ and reroll otherwise:
+\[
+\E[1] = \tfrac{1}{6}(4) + \tfrac{1}{6}(5) + \tfrac{1}{6}(6) + \tfrac{3}{6}(3.5) = \tfrac{17}{4} = 4.25.
+\]
+With two rerolls left, the continuation value is now $\E[1] = 4.25$, so you keep only faces that beat it, $\{5,6\}$, and reroll on $\{1,2,3,4\}$:
+\[
+\E[2] = \tfrac{1}{6}(6) + \tfrac{1}{6}(5) + \tfrac{4}{6}(4.25) = \tfrac{14}{3} \approx 4.67.
+\]
+\end{solution}
+
+
+\begin{problem}
+You pick a random number uniformly from [0, 1]. Then you pick another. Then another. You stop when the running total exceeds 1. How many numbers do you expect to pick?
+\end{problem}
+
+\begin{solution}
+Let $N$ be the number of draws until the running sum first exceeds 1, and let $X_1, X_2, \dots$ be the draws. We want $\E[N]$.
+
+\medskip
+\textit{Step 1: a tail probability.} The \textit{tail probability} $\Prob(N > n)$ is the chance $N$ exceeds a cutoff $n$, i.e.\ the chance we still need more draws after $n$ of them. Needing more than $n$ draws means the first $n$ have not yet crossed 1:
+\[
+N > n \iff X_1 + \cdots + X_n \leq 1.
+\]
+
+\textit{Step 2: geometry} The point $(X_1, \dots, X_n)$ lands uniformly in the unit hypercube $[0,1]^n$, which has volume 1. Since the draws are uniform, the probability of landing in any region equals that region's volume. The region where the coordinates are nonnegative and sum to at most 1 is a \textit{simplex} (the $n$-dimensional triangle: a segment in 1D, triangle in 2D, tetrahedron in 3D). Its volume is $\frac{1}{n!}$ ($V_n(t) = \int_0^t V_{n-1}(t-x)\,dx$, starting from $V_1(t) = t$. Then $V_n(t) = \frac{t^n}{n!}$, evaluated at $t=1$, $V_n(1)= \frac{1}{n!}$), so
+\[
+\Prob(N > n) = \Prob(X_1 + \cdots + X_n \leq 1) = \frac{1}{n!}.
+\]
+
+\textit{Step 3: sum the tails.} For a nonnegative integer variable, the mean equals the sum of its tail probabilities:
+\[
+\E[N] = \sum_{n=0}^{\infty} \Prob(N > n).
+\]
+This holds because an outcome $N = k$ clears the cutoffs $n = 0, 1, \dots, k-1$, so it is counted exactly $k$ times across the sum, contributing its own value. Substituting the tails:
+\[
+\E[N] = \sum_{n=0}^{\infty} \frac{1}{n!} = \frac{1}{0!} + \frac{1}{1!} + \frac{1}{2!} + \cdots = e \approx 2.718.
+\]
+\end{solution}

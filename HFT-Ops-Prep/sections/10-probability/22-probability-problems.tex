@@ -1,0 +1,152 @@
+\subsubsection{Select Worked Problems}
+
+\begin{problem}
+How many people do you need in a room for a >50\% chance that two share a birthday?
+\end{problem}
+
+\begin{solution}
+Computing this directly is impractical, since there are many ways for multiple people to share a birthday. Instead, using the complement, we simply subtract the probability that \textit{no} people share a birthday from 1:
+\[
+P(\text{all different}) = \prod\limits_{i=1}^{n} \frac{365 - i + 1}{365}
+\]
+We multiply additional factors until the quantity drops \textit{below} 0.5 (because then $1 - P$ is greater than 0.5). This turns out to be $n=23$, where $P(\text{all different}) \approx 0.493$ and thus $P(\text{birthday is shared}) \approx 0.507$.
+\end{solution}
+
+\begin{problem}
+You flip a fair coin 3 times. What's the probability of getting exactly 2 heads?
+\end{problem}
+
+\begin{solution}
+Flipping a coin three times has eight outcomes. Of these, three involve exactly two heads, thus the probability is $\frac{3}{8} = 0.375$.
+
+If we don't want to enumerate each of the eight options and count directly, we could use $C(3, 2) = 3$ to find the number of outcomes involving two heads.
+\end{solution}
+
+
+\begin{problem}
+Roll two dice. What's the probability the sum is 7?
+\end{problem}
+
+\begin{solution}
+There are 36 outcomes of rolling two dice. Of these, the pairs that equal 7 are $(1,6), (2,5), (3,4), (4,3), (5,2), (6,1)$. Then the probability is $\frac{6}{36} \approx 0.167$.
+\end{solution}
+
+\begin{problem}
+You draw 2 cards from a standard 52-card deck (without replacement). What's the probability both are hearts?
+\end{problem}
+
+\begin{solution}
+Without replacement, the draws are dependent. Then, the probability is:
+\[
+\frac{13}{52} \times \frac{12}{51} \approx 0.0588
+\]
+Note that \textit{both} the numerator and the denominator shrank after we removed the first card.
+
+We could also solve this by counting, if we divide the number of ways to pick two hearts by the total number of ways to pick two cards:
+\[
+\frac{C(13,2)}{C(52,2)} = \frac{78}{1326} \approx 0.0588
+\]
+\end{solution}
+
+\begin{problem}
+You flip a fair coin 5 times. What's the probability of getting at least one head?
+\end{problem}
+
+\begin{solution}
+We can use the complement, the probability of getting \textit{no} heads, subtracted from 1:
+\[
+1 - \frac{1}{2^5} = 0.96875
+\]
+\end{solution}
+
+\begin{problem}
+You roll a fair die twice. What's the probability the second roll is strictly greater than the first?
+\end{problem}
+
+\begin{solution}
+THere are 36 total ways to roll two dice. If the first roll is a 1, then there are 5 ways to roll higher on the second die. Similarly, there are 4 ways to roll higher if we rolled a 2, and so on.
+
+Thus the number of favourable outcomes $1 + 2 + \cdots + 5$ or the triangle number of 5, $T_5 = 15$. The final answer is:
+\[
+\frac{15}{36} \approx 0.417
+\]
+
+Alternatively, we could solve by symmetry, calling roll 1 and 2 as $A$ and $B$, respectively. If we notice that $P(A > B) = P(B < A)$, and $P(A = B) = \frac{6}{36}$, then we evenly divide the remaining outcomes by 2 to get $\frac{15}{36}$.
+\end{solution}
+
+\begin{problem}
+A box has 5 white and 3 black balls. You draw 3 without replacement. What's the probability of drawing exactly 2 white and 1 black?
+\end{problem}
+
+\begin{solution}
+The total ways to draw 3 balls are $C(8, 3) = 56$. We then find the ways to choose 2 white balls and 1 black ball individually, which is $C(5,2)$ and $C(3, 1)$, then the answer is:
+\[
+\frac{C(5,2)\times C(3,1)}{C(8,3)} = \frac{10 \times 3}{56} \approx 0.536
+\]
+Since we remove the balls without replacement, this problem follows the hypergeometric distribution.
+\end{solution}
+
+\begin{problem}
+You randomly pick a number from 1 to 100. What's the probability it's divisible by 3 or 5?
+\end{problem}
+
+\begin{solution}
+There are 33 numbers divisible by 3, and 20 numbers divisible by 5. The numbers divisible by both are the multiples of 15 of which there are 6 (15, 30, 45, 60, 75, 90). Thus:
+\[
+P_{Div}(A \cup B) = \frac{33}{100} + \frac{20}{100} - \frac{6}{100} = 0.47
+\]
+\end{solution}
+
+\begin{problem}
+A family has 3 children. Assuming each child is equally likely to be a boy or girl, what's the probability that all 3 are the same gender?
+\end{problem}
+
+\begin{solution}
+There are eight outcomes, of those there are two in which all children are the same gender, so the answer is $\frac{2}{8} = 0.25$.
+\end{solution}
+
+
+\begin{problem}
+You throw 3 dice. What's the probability ALL three show different numbers?
+\end{problem}
+
+\begin{solution}
+There are $6^3 = 216$ total ways to throw three dice. After we throw the first dice, there are 5 options remaining, and 4 after the second dice. Then the answer is:
+\[
+\frac{6 \times 5 \times 4}{6^3} = \frac{120}{216} \approx 0.556
+\]
+\end{solution}
+
+\begin{problem}
+You toss a fair coin until you get heads. What's the probability you need exactly 3 tosses?
+\end{problem}
+
+\begin{solution}
+We stop at the first heads, so needing exactly 3 tosses means the first two tosses are tails and the third is heads: T, T, H. Since tosses are independent and each outcome has probability $\frac{1}{2}$,
+\[
+P(\text{exactly 3}) = \tfrac{1}{2} \times \tfrac{1}{2} \times \tfrac{1}{2} = \tfrac{1}{8}.
+\]
+We do not enumerate anything else, because exactly one sequence produces this event.
+\end{solution}
+
+
+\begin{remark}[Two ways probability gets counted]
+The reason we can pin down this single case without listing every outcome is that this problem lives in a different kind of sample space than counting problems like the birthday question.
+
+When every outcome is equally likely, probability is combinatorial. You divide favorable outcomes by total outcomes, so you have to characterize the entire sample space. Each outcome carries no probability on its own and earns weight only by being counted against the total.
+
+When outcomes are not equally likely, each outcome carries its own probability directly, usually a product of independent step probabilities. Here the sequence $\text{TTH}$ has probability $\tfrac{1}{2}\cdot\tfrac{1}{2}\cdot\tfrac{1}{2} = \tfrac{1}{8}$ by itself, with no denominator to divide by. That is why one case can be solved in isolation.
+
+These are the same axioms applied to different spaces. Counting favorable over total is the special case that appears when all per-outcome probabilities are equal, so the sum of probabilities collapses into a plain count. The coin problem is the general version, where the per-outcome probabilities differ and you take the one you want.
+\end{remark}
+
+\begin{problem}
+In a room of 5 people, what's the probability that at least two share a birthday? (Assume 365 days, equally likely.)
+\end{problem}
+
+\begin{solution}
+Again, we use the complement to find 1 minus the probability that no one shares a birthday:
+\[
+1 - \left ( \frac{365}{365} \times \frac{364}{365} \times \frac{363}{365} \times \frac{362}{365} \times \frac{361}{365}  \right ) \approx 1 - 0.9729 \approx 0.0271
+\]
+\end{solution}

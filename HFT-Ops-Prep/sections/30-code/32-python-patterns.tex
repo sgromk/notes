@@ -1,0 +1,441 @@
+% ============================================================
+\subsection{Python Patterns}
+% ============================================================
+
+Good solutions to interview problems are often determined by the choice of container and knowledge of which built-in primitives express the required operation.
+
+% ------------------------------------------------------------
+\subsubsection*{Containers and cost profiles}
+
+Selecting a container is selecting a cost profile. That decision precedes the
+algorithm and frequently dominates the runtime.
+
+\begin{center}
+\begin{tabular}{lllll}
+\toprule
+& \textbf{Ordered} & \textbf{Mutable} & \textbf{Lookup} & \textbf{Use} \\
+\midrule
+\texttt{list}  & yes & yes & $O(n)$ & ordered sequence, duplicates permitted \\
+\texttt{tuple} & yes & no  & $O(n)$ & fixed record, or a dictionary key \\
+\texttt{set}   & no  & yes & $O(1)$ & membership, deduplication \\
+\texttt{dict}  & insertion & yes & $O(1)$ & mapping from key to value \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+
+\begin{keybox}[Membership cost]
+\texttt{x in some\_list} is $O(n)$. \texttt{x in some\_set} is $O(1)$ on
+average. A membership test inside a loop over $n$ elements is therefore
+$O(n^2)$ against a list and $O(n)$ against a set. Converting the list to a set
+once, before the loop, removes a factor of $n$. This substitution accounts for
+a large share of naive-to-optimal improvements.
+\end{keybox}
+
+\paragraph{Hashability.} Set elements and dictionary keys must be hashable,
+which in practice requires immutability. A \texttt{tuple} is a valid key. A
+\texttt{list} is not, since mutation would invalidate its position in the hash
+table. Converting a list to a tuple to form a composite key is therefore a
+standard construction, as in grouping anagrams by their sorted letters.
+
+\begin{lstlisting}[style=python, caption={Tuple as a composite key}]
+seen = set()
+seen.add((row, col))              # legal, tuple is hashable
+# seen.add([row, col])            # TypeError: unhashable type
+\end{lstlisting}
+
+\paragraph{Dictionary access.} Counting, grouping, and seen-before problems
+reduce to a dictionary. Three access forms differ in their treatment of a
+missing key.
+
+\begin{lstlisting}[style=python, caption={Dictionary access}]
+d[k]                  # raises KeyError if k is absent
+d.get(k, default)     # returns default instead of raising
+d.setdefault(k, [])   # inserts default if absent, then returns it
+
+for k in d:                    # iterates over keys
+for k, v in d.items():         # iterates over pairs
+\end{lstlisting}
+
+% ------------------------------------------------------------
+\newpage
+\subsubsection*{Built-in functions}
+
+An accumulator loop is often a built-in written out longhand. The following
+cover most cases.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Built-in} & \textbf{Expresses} \\
+\midrule
+\texttt{len, sum, min, max} & size and aggregation \\
+\texttt{sorted} & ordering, parameterized by \texttt{key} and \texttt{reverse} \\
+\texttt{any(...)} & existential quantifier: at least one element satisfies $p$ \\
+\texttt{all(...)} & universal quantifier: every element satisfies $p$ \\
+\texttt{enumerate} & index paired with value \\
+\texttt{zip} & parallel iteration over several sequences \\
+\texttt{reversed, range} & traversal order \\
+\texttt{abs, round, divmod} & numeric utilities \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{any} and \texttt{all} short-circuit. The expression
+\texttt{any(x < 0 for x in xs)} terminates at the first negative value.
+
+\paragraph{The \texttt{key} argument.} \texttt{sorted}, \texttt{min}, and
+\texttt{max} accept a \texttt{key} function applied to each element. Ranking
+is performed on the image of that function while the original element is
+returned. The consequence is that a record can be ranked on one of its fields
+and recovered whole.
+
+\begin{lstlisting}[style=python, caption={Ranking on a field, returning the record}]
+min(scores)                            # returns a number
+min(records, key=lambda r: r[1])       # returns the full record
+
+sorted(words, key=len)                        # rank by length
+sorted(records, key=lambda r: (-r[1], r[0]))  # score desc, name asc
+\end{lstlisting}
+
+A tuple key is the analogue of a multi-column \texttt{ORDER BY}. Negating a
+single numeric field reverses that field alone. \texttt{reverse=True} cannot
+express this, since it inverts every field simultaneously.
+
+% ------------------------------------------------------------
+\subsubsection*{Comprehensions}
+
+A comprehension expresses selection and projection in one expression. The form
+\texttt{[f(x) for x in xs if p(x)]} corresponds to selecting $f(x)$ over the
+elements for which $p(x)$ holds. Four bracket types produce four containers.
+
+\begin{lstlisting}[style=python, caption={The four forms}]
+[x*x for x in xs if x > 0]        # list
+{x*x for x in xs}                 # set, deduplicates
+{k: v for k, v in pairs}          # dict
+(x*x for x in xs)      # generator, lazy, builds no intermediate list
+\end{lstlisting}
+
+The generator form is appropriate when the result is consumed once, for
+example inside \texttt{sum(...)} or \texttt{max(...)}, since it avoids
+materializing a list. Nesting beyond two levels is generally less readable
+than an explicit loop.
+
+% ------------------------------------------------------------
+
+\newpage
+\subsubsection*{Sorting}
+
+\begin{itemize}[itemsep=-0.5ex]
+  \item \texttt{sorted(xs)} returns a new list. \texttt{xs.sort()} sorts in
+        place and returns \texttt{None}. The assignment \texttt{xs = xs.sort()}
+        binds \texttt{None} and fails silently.
+  \item Python's sort is \textbf{stable}. Elements comparing equal retain
+        their original relative order. Stability licenses sorting in multiple
+        passes: sorting by the secondary field first and by the primary field
+        second preserves the secondary ordering within each group.
+  \item Sorting a sequence of lists or tuples compares elementwise from the
+        left. The result depends on field order, so an explicit \texttt{key}
+        should be supplied whenever the intent is nonobvious.
+  \item Sorting costs $O(n \log n)$, which is negligible at the input sizes
+        these problems use.
+\end{itemize}
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\subsubsection*{The \texttt{collections} module}
+
+Four types cover nearly every use. Three are specializations of the
+dictionary that eliminate the same recurring boilerplate: the check for
+whether a key already exists before writing to it. The fourth replaces the
+list when insertion or removal happens at the front.
+
+\medskip
+
+\noindent\textbf{\texttt{Counter}: frequency.}
+A \texttt{Counter} is a dictionary from element to count. It is constructed in
+one pass over any iterable and answers the question ``how many times does each
+value occur.'' Frequency is the most common intermediate object in string and
+array problems, and constructing one by hand requires an existence check on
+every element.
+
+\begin{lstlisting}[style=python, caption={Counter}]
+from collections import Counter
+
+c = Counter("mississippi")  # Counter({'i': 4, 's': 4, 'p': 2, 'm': 1})
+c['s']                         # 4
+c['z']              # 0, a missing key reads as zero and does NOT raise
+
+c.most_common(2)               # [('i', 4), ('s', 4)], top 2 by count
+c.most_common()             # every pair, ordered by count descending
+c.total()                      # sum of all counts
+\end{lstlisting}
+
+\vspace{-2ex}
+
+A missing key evaluates to \texttt{0} rather than raising \texttt{KeyError},
+which is what permits \texttt{c[x] += 1} to be written unconditionally. The
+read does not insert the key, so the counter does not grow through inspection.
+
+\texttt{most\_common(k)} selects the top $k$ with a heap in $O(n \log k)$.
+Calling \texttt{most\_common()} with no argument sorts the whole counter at
+$O(n \log n)$, so the argument should be supplied whenever $k$ is known.
+
+Counters support multiset arithmetic, which expresses several problems
+directly.
+
+\begin{lstlisting}[style=python, caption={Counter arithmetic}]
+a, b = Counter("aabbc"), Counter("abbbd")
+
+a + b        # counts added
+a - b        # counts subtracted, results <= 0 are dropped
+a & b        # intersection: elementwise minimum
+a | b        # union: elementwise maximum
+\end{lstlisting}
+
+\begin{keybox}[Two canonical Counter identities]
+\textbf{Anagram test.} Two strings are anagrams if and only if their counters
+are equal, so \texttt{Counter(s) == Counter(t)} settles the question in $O(n)$.
+Sorting both strings answers the same question in $O(n \log n)$.
+
+\medskip
+
+\textbf{Sliding-window matching.} To locate every permutation of a pattern $p$
+inside a text $t$, maintain a counter over a window of length $|p|$ and
+compare it against \texttt{Counter(p)} after each shift. Incrementing the
+entering character and decrementing the leaving one updates the window in
+$O(1)$.
+\end{keybox}
+
+\medskip
+
+\noindent\textbf{\texttt{defaultdict}: grouping.}
+A \texttt{defaultdict} is constructed with a zero-argument factory. Accessing
+a missing key calls that factory, inserts the result, and returns it. The
+effect is to remove the initialization branch from every accumulation loop.
+
+\begin{lstlisting}[style=python, caption={defaultdict}]
+from collections import defaultdict
+
+groups = defaultdict(list)          # missing key -> []
+for name, dept in employees:
+    groups[dept].append(name)       # no existence check required
+
+counts = defaultdict(int)           # missing key -> 0
+adj    = defaultdict(set)           # missing key -> set(), an adjacency list
+grid   = defaultdict(lambda: defaultdict(int))   # a nested, sparse 2D table
+\end{lstlisting}
+
+The factory is any callable taking no arguments. \texttt{int()} returns
+\texttt{0}, \texttt{list()} returns \texttt{[]}, and \texttt{set()} returns an
+empty set, which is why the bare type name is passed rather than a call to it.
+A nested default requires a \texttt{lambda}, since
+\texttt{defaultdict(defaultdict(int))} would pass an instance where a factory
+is expected.
+
+\texttt{defaultdict(list)} performs a \texttt{GROUP BY} that omits the
+aggregation step. Every member of each group survives, which is the property
+that \texttt{ROW\_NUMBER() OVER (PARTITION BY ...)} supplies in SQL. Building a
+graph's adjacency list is the same operation applied to edges.
+
+\begin{keybox}[Reading a \texttt{defaultdict} mutates it]
+Any access to a missing key inserts it. The expression \texttt{if d[k]:}
+therefore creates \texttt{k} with an empty default and the dictionary grows
+through inspection alone. This corrupts a subsequent iteration over
+\texttt{d.items()} and inflates \texttt{len(d)}.
+
+For a read that must not write, use \texttt{k in d} or \texttt{d.get(k)}.
+Neither triggers the factory.
+\end{keybox}
+
+The alternative to a \texttt{defaultdict} is
+\texttt{d.setdefault(k, []).append(x)} on an ordinary dictionary. It produces
+the same result and constructs a fresh empty list on every call, including the
+calls where the key is already present. The \texttt{defaultdict} factory runs
+only on a miss.
+
+\medskip
+
+\noindent\textbf{\texttt{deque}: a queue.}
+A \texttt{deque} is a double-ended queue backed by a doubly linked list of
+fixed-size blocks. Appending and popping at either end is $O(1)$. The relevant
+comparison is against a \texttt{list}, which stores its elements contiguously,
+so removing the front element requires shifting every remaining element left by
+one position.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Operation} & \textbf{\texttt{list}} & \textbf{\texttt{deque}} \\
+\midrule
+Append or pop at the right & $O(1)$ & $O(1)$ \\
+Append or pop at the left  & $O(n)$ & $O(1)$ \\
+Index at position $i$      & $O(1)$ & $O(n)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The costs are complementary. A \texttt{list} is the correct stack, since a
+stack only touches the right end. A \texttt{deque} is the correct queue.
+Random access into a \texttt{deque} is a sign that the wrong container was
+chosen.
+
+\begin{lstlisting}[style=python, caption={deque}]
+from collections import deque
+
+q = deque([1, 2, 3])
+q.append(4)        # right
+q.appendleft(0)    # left
+q.pop()            # from the right
+q.popleft()        # from the left, O(1) where list.pop(0) is O(n)
+q.rotate(1)        # shift every element right by one, cyclically
+\end{lstlisting}
+
+Breadth-first search is the standard application. The frontier is processed in
+insertion order, which requires removal from the front on every iteration of
+the main loop.
+
+\begin{lstlisting}[style=python, caption={BFS frontier}]
+q = deque([start])
+seen = {start}
+while q:
+    node = q.popleft()        # FIFO, so nodes are visited by distance
+    for nxt in adj[node]:
+        if nxt not in seen:
+            seen.add(nxt)
+            q.append(nxt)
+\end{lstlisting}
+
+\paragraph{Bounded length.} A \texttt{deque} constructed with \texttt{maxlen=k}
+discards an element from the opposite end whenever a full deque is appended to.
+This maintains a rolling window over the last $k$ items with no explicit
+eviction logic, which is useful for moving averages and for any statistic over
+a fixed lookback.
+
+\begin{lstlisting}[style=python, caption={A rolling window of the last 3 values}]
+w = deque(maxlen=3)
+for x in stream:
+    w.append(x)          # the oldest element is evicted automatically
+    if len(w) == 3:
+        print(sum(w) / 3)
+\end{lstlisting}
+
+\medskip
+
+\noindent\textbf{\texttt{namedtuple}: a labeled record.}
+A tuple carries no information about what its positions mean, so \texttt{r[1]}
+requires the reader to remember the field order. A \texttt{namedtuple} attaches
+names while remaining a tuple, so it stays immutable, hashable, unpackable, and
+usable as a dictionary key or a set element.
+
+\newpage
+
+\begin{lstlisting}[style=python, caption={namedtuple}]
+from collections import namedtuple
+
+Student = namedtuple("Student", ["name", "score"])
+s = Student("Ada", 92.0)
+
+s.score            # 92.0, and s[1] still works
+name, score = s    # unpacking is unchanged
+min(students, key=lambda s: s.score)  # the key function reads clearly
+\end{lstlisting}
+
+The cost over a plain tuple is negligible and the gain is that a \texttt{key}
+function or a sort becomes self-documenting. When mutability is required,
+\texttt{dataclasses.dataclass} provides the equivalent with assignable fields.
+
+% ------------------------------------------------------------
+\subsubsection*{Iteration}
+
+The following forms eliminate manual index arithmetic, which is the usual
+source of off-by-one errors.
+
+\begin{lstlisting}[style=python, caption={Iteration forms}]
+for i, x in enumerate(xs):        # index and value together
+for a, b in zip(xs, ys):          # parallel, halts at the shorter sequence
+for a, b in zip(xs, xs[1:]):      # consecutive pairs
+for x in reversed(xs):            # reverse traversal without index arithmetic
+
+name, score = record              # tuple unpacking
+first, *rest = xs                 # starred unpacking
+\end{lstlisting}
+
+\vspace{-2ex}
+
+The construction \texttt{zip(xs, xs[1:])} yields every adjacent pair and
+underlies run detection, difference sequences, and monotonicity checks. It is
+the analogue of \texttt{LAG} in SQL.
+
+% ------------------------------------------------------------
+\subsubsection*{Problem structure}
+
+\begin{keybox}[The four-move skeleton]
+A typical warm-up problem decomposes into four steps.
+\begin{enumerate}
+  \item \textbf{Parse} the input into a list of records.
+  \item \textbf{Reduce} the records to a target key: a minimum, a maximum, a
+        count, or the $k$-th distinct value.
+  \item \textbf{Filter} the records against that key.
+  \item \textbf{Order and format} the output.
+\end{enumerate}
+Step 2 accounts for most errors. The characteristic failure is fusing steps 2
+and 3 into a single pass that mishandles an edge case.
+\end{keybox}
+
+\paragraph{Ranking and ties.} The most frequent error in step 2 concerns
+ties. Whether tied elements share a rank or consume one is the same decision
+in Python as in SQL.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Tie policy} & \textbf{Python} & \textbf{SQL} \\
+\midrule
+Ties consume a rank & \texttt{sorted(xs)[k-1]}       & \texttt{ROW\_NUMBER() = k} \\
+Ties share a rank   & \texttt{sorted(set(xs))[k-1]}  & \texttt{DENSE\_RANK() = k} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For scores \texttt{[20, 20, 30]}, the second lowest is \texttt{30}. Both
+elements equal to \texttt{20} hold rank 1 and neither occupies rank 2, so
+\texttt{sorted(xs)[1]} evaluates to \texttt{20} and is incorrect. The
+\texttt{set} converts \texttt{ROW\_NUMBER} semantics into \texttt{DENSE\_RANK}
+semantics.
+
+\paragraph{Rank then filter.} Once the key is identified, it is computed in
+one pass and the records are filtered against it in a second. The structure
+mirrors the necessity of wrapping a window function in a CTE, since a window
+function cannot appear in \texttt{WHERE}.
+
+\begin{lstlisting}[style=python, caption={Rank then filter}]
+target  = sorted({score for _, score in records})[1]   # rank
+winners = sorted(name for name, score in records if score == target)
+                                            # filter, then order
+\end{lstlisting}
+
+% ------------------------------------------------------------
+\vspace{-3ex}
+
+\subsubsection*{Common errors}
+
+\begin{itemize}
+  \item \texttt{sorted(set(xs))[1]} raises \texttt{IndexError} when all values
+        are identical.
+  \item Slicing copies. \texttt{xs[a:b]} costs $O(b-a)$, so a slice inside a
+        loop makes the loop quadratic.
+  \item \texttt{list.insert(0, x)} and \texttt{list.pop(0)} are $O(n)$, since
+        every subsequent element shifts. A \texttt{deque} provides $O(1)$
+        operations at both ends.
+  \item Integer division \texttt{//} floors toward negative infinity, so
+        \texttt{-7 // 2} evaluates to \texttt{-4}. \texttt{int(-7 / 2)}
+        truncates toward zero.
+  \item A mutable default argument (\texttt{def f(xs=[])}) is created once at
+        definition time and persists across calls. The default should be
+        \texttt{None}, with the container constructed inside the func.
+  \item Strings are immutable. Accumulating with \texttt{s += c} in a loop is
+        $O(n^2)$. Collect the pieces in a list and apply
+        \texttt{''.join(parts)}.
+\end{itemize}

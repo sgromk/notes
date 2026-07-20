@@ -1,0 +1,64 @@
+% ============================================================
+\subsection{Heaps and Priority Queues}
+% ============================================================
+
+A binary heap maintains the minimum of a collection under insertion and
+deletion at logarithmic cost. Python's \texttt{heapq} operates on an ordinary
+list interpreted as a heap, so no dedicated type is involved.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Operation} & \textbf{Call} & \textbf{Cost} \\
+\midrule
+Convert a list in place & \texttt{heapify(xs)}     & $O(n)$ \\
+Insert                  & \texttt{heappush(h, x)}  & $O(\log n)$ \\
+Remove the minimum      & \texttt{heappop(h)}      & $O(\log n)$ \\
+Inspect the minimum     & \texttt{h[0]}            & $O(1)$ \\
+Push then pop           & \texttt{heappushpop(h, x)} & $O(\log n)$, one pass \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A heap provides no ordering beyond its root. Iterating over the underlying
+list does not produce sorted output.
+
+\paragraph{Minimum only.} \texttt{heapq} implements a min-heap exclusively. A
+max-heap is obtained by negating the keys on insertion and negating again on
+extraction. For records, push the tuple \texttt{(-priority, item)}, since
+tuples compare lexicographically and the first field dominates.
+
+\begin{keybox}[Top-$k$ under a stream]
+To retain the $k$ largest of $n$ elements, maintain a min-heap of size $k$.
+Each new element is compared against the root, which is the smallest of the
+current $k$. If the element is larger, the root is evicted and the element
+inserted.
+
+The cost is $O(n \log k)$ and the memory is $O(k)$. Sorting the full input
+costs $O(n \log n)$ and requires all $n$ elements in memory at once, so the
+heap is superior when $k \ll n$ and is the only option when the input arrives
+as a stream of unknown length.
+\end{keybox}
+
+\begin{lstlisting}[style=python, caption={The k largest elements}]
+import heapq
+
+def top_k(stream, k):
+    h = []                              # min-heap holding the k best so far
+    for x in stream:
+        if len(h) < k:
+            heapq.heappush(h, x)
+        elif x > h[0]:                  # h[0] is the weakest survivor
+            heapq.heapreplace(h, x)     # pop the root, then push x
+    return sorted(h, reverse=True)
+\end{lstlisting}
+
+When the whole input already fits in memory, the library provides this
+directly as \texttt{heapq.nlargest(k, xs)} and \texttt{heapq.nsmallest(k, xs)},
+both of which accept a \texttt{key} argument.
+
+\paragraph{Two heaps for a running median.} Maintain a max-heap over the lower
+half of the values and a min-heap over the upper half, rebalancing after each
+insertion so their sizes differ by at most one. The median is then read from
+the root of the larger heap, or is the mean of the two roots when the sizes
+are equal. Insertion costs $O(\log n)$ and the median query is $O(1)$.

@@ -1,0 +1,157 @@
+% ============================================================
+\subsection{Recursion and Memoization}
+% ============================================================
+
+A recursive function is defined by three obligations.
+
+\begin{keybox}[The recursion contract]
+\begin{enumerate}[itemsep=1ex]
+  \item \textbf{Base case.} At least one input for which the answer is
+        returned without a recursive call.
+  \item \textbf{Recursive case.} The answer for input $n$ expressed in terms
+        of the answers for strictly smaller inputs.
+  \item \textbf{Progress.} Every recursive call moves the argument closer to a
+        base case, so the recursion terminates.
+\end{enumerate}
+
+\medskip
+
+Correctness follows by induction. Assuming the recursive call returns the
+correct answer on the smaller input, verify only that the combination step is
+correct. Tracing the full call tree by hand is unnecessary.
+\end{keybox}
+
+\paragraph{The call stack.} Each pending call occupies a stack frame, so the
+space cost of a recursion is $O(d)$ where $d$ is the maximum depth. Python
+imposes a default recursion limit of 1000 frames and raises
+\texttt{RecursionError} beyond it. A recursion whose depth scales with $n$ is
+therefore unsafe for large $n$ unless it is rewritten as a loop with an
+explicit stack.
+
+\paragraph{Overlapping subproblems.} Naive recursion recomputes identical
+subproblems. The Fibonacci recurrence $F(n) = F(n-1) + F(n-2)$ generates a
+call tree with $O(\varphi^n)$ nodes, since $F(n-2)$ is evaluated once by the
+$F(n-1)$ branch and again directly. Caching each result by its argument
+collapses the tree to $O(n)$ distinct evaluations.
+
+\begin{lstlisting}[style=python, caption={Memoization by decorator}]
+from functools import lru_cache
+
+@cache(maxsize=None)     
+def fib(n):
+    if n < 2:                     # base case
+        return n
+    return fib(n-1) + fib(n-2)    # recursive case
+\end{lstlisting}
+
+Arguments to a memoized function must be hashable, which is the reason
+memoized state is passed as an integer, a string, or a tuple rather than as a
+list or a set.
+
+\paragraph{Top-down and bottom-up.} Memoized recursion is the top-down form.
+It computes only the states that are reachable, at the cost of a call stack.
+Tabulation is the bottom-up form. It fills an array in an order that
+guarantees every dependency is already resolved, using no stack and no
+recursion.
+
+\begin{lstlisting}[style=python, caption={The same recurrence, tabulated}]
+def fib(n):
+    if n < 2:
+        return n
+    prev, curr = 0, 1
+    for _ in range(n - 1):
+        prev, curr = curr, prev + curr  # only two states are ever live
+    return curr
+\end{lstlisting}
+
+\vspace{-2ex}
+
+The final line illustrates a general reduction. When a recurrence depends only
+on the previous $k$ states, the table collapses from $O(n)$ space to $O(k)$.
+
+% ------------------------------------------------------------
+\subsubsection*{Dynamic programming}
+
+Dynamic programming applies when a problem has \textbf{optimal substructure},
+meaning the optimal solution is composed of optimal solutions to subproblems,
+together with \textbf{overlapping subproblems}, meaning those subproblems recur.
+Absent overlap, plain divide and conquer suffices. Absent optimal substructure,
+a greedy or exhaustive method is required.
+
+\begin{keybox}[Formulating a DP]
+Five questions, answered in order:
+\vspace{0.5ex}
+
+\begin{enumerate}[itemsep=1ex]
+  \item \textbf{State.} What arguments fully determine a subproblem? This is
+        the signature of the function or the index set of the table.
+  \item \textbf{Recurrence.} How is a state's value expressed in terms of
+        smaller states?
+  \item \textbf{Base cases.} Which states are known outright?
+  \item \textbf{Order.} In what order can states be evaluated so that
+        dependencies are resolved first? Top-down recursion answers this
+        automatically.
+  \item \textbf{Answer.} Which state holds the final result?
+\end{enumerate}
+
+\medskip
+
+The complexity is the number of states multiplied by the cost of evaluating
+one state.
+\end{keybox}
+
+\paragraph{Canonical state definitions.} Most problems reuse a small number of
+state shapes.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{State} & \textbf{Meaning} & \textbf{Typical problem} \\
+\midrule
+\texttt{dp[i]}    & best over the prefix ending at $i$ & maximum subarray, house robber \\
+\texttt{dp[i][j]} & best over two prefixes             & edit distance, longest common subsequence \\
+\texttt{dp[i][w]} & first $i$ items, capacity $w$      & 0/1 knapsack \\
+\texttt{dp[i][j]} & best over the interval $[i,j]$     & matrix chain, palindrome partition \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ------------------------------------------------------------
+\subsubsection*{Backtracking}
+
+Backtracking is recursion over a search tree with an explicit undo step. It
+enumerates permutations, subsets, and combinations, and prunes branches that
+cannot yield a valid solution.
+
+\newpage
+
+\begin{lstlisting}[style=python, caption={Backtracking skeleton}]
+def solve(path, choices, results):
+    if is_complete(path):
+        results.append(path[:]) # copy, since path is mutated in place
+        return
+    for c in choices:
+        if not is_valid(path, c):
+            continue                   # prune
+        path.append(c)                 # choose
+        solve(path, remaining(choices, c), results)
+        path.pop()                     # undo
+\end{lstlisting}
+
+The \texttt{path[:]} copy is mandatory. Appending \texttt{path} itself stores a
+reference to a list that subsequent mutation will alter, so every recorded
+result ends up identical.
+
+For unconstrained enumeration, the standard library is preferable to a
+hand-written recursion.
+
+\begin{lstlisting}[style=python, caption={Enumeration without recursion}]
+from itertools import permutations, combinations, product
+
+permutations(xs, r)     # ordered arrangements of length r
+combinations(xs, r)     # unordered selections of length r
+product(xs, repeat=r)   # r-tuples with repetition, the r-fold Cartesian power
+\end{lstlisting}
+
+These correspond exactly to the counting formulas $P(n,r) = n!/(n-r)!$,
+$\binom{n}{r}$, and $n^r$.

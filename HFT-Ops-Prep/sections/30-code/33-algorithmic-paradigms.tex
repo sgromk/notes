@@ -1,0 +1,54 @@
+% ============================================================
+\subsection{Algorithmic Paradigms}
+% ============================================================
+
+Each paradigm is identified by a recognition cue in the problem statement.
+
+\begin{itemize}
+  \item \textbf{Hashing.} Cue: find a pair, count occurrences, seen before,
+        contains a duplicate. Space is traded for $O(1)$ lookup. The canonical
+        construction tests whether the complement of the current element
+        already appears in a map of previously visited elements.
+
+  \item \textbf{Two pointers.} Cue: a sorted sequence, or a pairing problem.
+        Pointers converging from both ends solve ``two elements summing to
+        $t$'' in $O(n)$ with constant extra space. Fast and slow pointers
+        detect a cycle in a linked list.
+
+  \item \textbf{Sliding window.} Cue: a contiguous subarray or substring
+        subject to a constraint. The right edge expands to admit elements and
+        the left edge contracts while the constraint is violated. Each element
+        enters and leaves once, giving $O(n)$.
+
+  \item \textbf{Prefix sums.} Cue: repeated range-sum queries over a static
+        array. Cumulative sums are precomputed once, after which any range
+        query is a difference of two entries. This is the array analogue of
+        \texttt{SUM() OVER}.
+
+  \item \textbf{Binary search on the answer.} Cue: the smallest $x$ such that
+        a condition is feasible. Requires a monotone predicate, meaning that
+        feasibility at $x$ implies feasibility at every larger $x$. The search
+        ranges over the answer space rather than the input.
+
+  \item \textbf{Sorting as preprocessing.} Cue: intervals, scheduling, or
+        grouping equal elements. Sorting converts a global problem into a local
+        one in which each element need only be compared against its neighbor.
+\end{itemize}
+
+\begin{keybox}[Complexity anchors]
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Operation} & \textbf{Cost} \\
+\midrule
+\texttt{x in set}, \texttt{x in dict}   & $O(1)$ average \\
+\texttt{x in list}                      & $O(n)$ \\
+\texttt{list.append}                    & $O(1)$ amortized \\
+\texttt{list.insert(0,x)}, \texttt{list.pop(0)} & $O(n)$ \\
+\texttt{deque.appendleft}, \texttt{deque.popleft} & $O(1)$ \\
+\texttt{sorted(xs)}                     & $O(n \log n)$ \\
+\texttt{xs[a:b]}                        & $O(b-a)$, copies \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{keybox}

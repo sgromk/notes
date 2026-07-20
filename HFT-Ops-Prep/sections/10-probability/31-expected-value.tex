@@ -1,0 +1,61 @@
+\subsection{Expected Value}
+
+\begin{definition}[Expected Value]
+The expected value of a random variable is the probability-weighted average of its outcomes:
+\[
+\E[X] = \sum_i x_i \, P(X = x_i).
+\]
+It is the long-run mean over many repetitions. The expected value need not be an attainable outcome (a fair die has $\E[X] = 3.5$) and need not be the most likely one.
+\end{definition}
+
+\begin{keybox}[Linearity of expectation]
+For any random variables $X$ and $Y$ and any scalars $a, b$,
+\[
+\E[aX + bY] = a\,\E[X] + b\,\E[Y].
+\]
+This holds with no independence assumption. Paired with indicator variables it is the highest-yield tool for expectation brainteasers, since it turns a hard expected count into a sum of easy probabilities.
+\end{keybox}
+
+\begin{definition}[Indicator Random Variable]
+An indicator $\ind\{A\}$ equals $1$ when event $A$ occurs and $0$ otherwise. Its expectation is the event's probability,
+\[
+\E[\ind\{A\}] = 1 \cdot P(A) + 0 \cdot P(A^c) = P(A).
+\]
+\end{definition}
+
+The variable itself is trivial. The leverage is the decomposition it enables. To find the expected \textit{count} of how many events in a family occur, write that count as a sum of indicators, one per event, then apply linearity:
+\[
+\E\!\left[\sum_i \ind\{A_i\}\right] = \sum_i \E[\ind\{A_i\}] = \sum_i P(A_i).
+\]
+Because linearity ignores dependence, this works even when the events are entangled, which is what collapses an otherwise messy count into a sum of easy probabilities. The shuffle and fixed-point problems below are the standard instances.
+
+\begin{theorem}[Law of Total Expectation]
+If the cases $B_1, \dots, B_n$ partition the sample space, meaning they are mutually exclusive and cover every outcome, then
+\[
+\E[X] = \sum_{i=1}^{n} \E[X \mid B_i] \cdot P(B_i).
+\]
+\end{theorem}
+
+This regroups the definition of expected value by cases. Rather than averaging over individual outcomes, average the conditional mean inside each case and weight it by the case probability. Expanding each $\E[X \mid B_i]$ recovers the flat sum, so the identity adds no new information, but it changes what is computable. It is the tool of choice in three situations:
+\begin{itemize}[itemsep=-1ex, label=--]
+    \item you are handed conditional averages and case probabilities rather than the full outcome distribution
+    \item $X$ is continuous, so the flat sum $\sum_x x \, P(X=x)$ does not apply while conditioning on discrete cases still does
+    \item $\E[X \mid B_i]$ refers back to $\E[X]$ itself, which turns the conditioning into a solvable equation
+\end{itemize}
+The cases must be disjoint and exhaustive. Overlapping or missing cases break the weighting.
+
+\begin{example}[Conditioning on cases]
+A commute time depends on the weather. Sunny days are $60\%$ of days with a $20$ minute average, and rainy days are $40\%$ with a $35$ minute average. The two cases partition every day, so
+\[
+\E[\text{commute}] = 0.6(20) + 0.4(35) = 12 + 14 = 26 \text{ minutes.}
+\]
+\end{example}
+
+\begin{example}[Recursive expectation]
+Take the expected number of rolls of a die until the first 6, and call it $E$. One roll always happens. With probability $\frac{1}{6}$ it is a 6 and the process stops, and with probability $\frac{5}{6}$ it is not, which leaves the same problem ahead with the same expectation $E$:
+\[
+E = 1 + \tfrac{5}{6}E \;\longrightarrow\; \tfrac{1}{6}E = 1 \;\longrightarrow\; E = 6.
+\]
+This is the mean of the geometric distribution, the expected number of trials until the first success, which is $\frac{1}{p}$ with $p = \frac{1}{6}$.
+\end{example}
+

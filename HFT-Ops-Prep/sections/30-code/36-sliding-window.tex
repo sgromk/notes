@@ -1,0 +1,252 @@
+% ============================================================
+\subsection{Sliding Window}
+% ============================================================
+
+A sliding window is a contiguous span of a sequence, delimited by two indices
+$\ell$ and $r$, together with a state summarizing the elements inside it. The
+window advances by admitting the element at $r$ and evicting the element at
+$\ell$. The technique applies when the state can be updated in $O(1)$ under
+those two operations, so that recomputing it from scratch is never necessary.
+
+The recognition cue is a request for a \emph{contiguous} subarray or substring
+subject to a constraint. Contiguity is required. A problem about subsequences
+or subsets admits reordering and belongs to a different paradigm.
+
+% ------------------------------------------------------------
+\subsubsection*{Why the cost is linear}
+
+\begin{keybox}[The amortization argument]
+Both indices are monotone. $r$ advances once per iteration of the outer loop
+and $\ell$ never decreases, so each index takes at most $n$ values over the
+entire run. The inner \texttt{while} loop is therefore bounded by $n$
+increments \emph{in total} rather than $n$ increments per outer iteration.
+
+The nesting is syntactic. The work is $O(n)$: every element is admitted exactly
+once and evicted at most once. The naive alternative enumerates all $O(n^2)$
+spans and pays the cost of the state on each.
+\end{keybox}
+
+The precondition is that $\ell$ may safely move forward. This holds when the
+constraint is \textbf{monotone in the window}: if a window violates the
+constraint, every window containing it also violates it. Under that property,
+once $[\ell, r]$ fails, no window starting before $\ell$ and ending at $r$ or
+later can succeed, so the discarded prefixes are provably useless.
+
+% ------------------------------------------------------------
+\subsubsection*{Fixed-size windows}
+
+When the length $k$ is given, there is no contraction step. The window is
+initialized once and then translated, one position at a time, by a paired
+admit and evict.
+
+\begin{lstlisting}[style=python, caption={Maximum sum over any window of length k}]
+def max_window_sum(xs, k):
+    if len(xs) < k:
+        return None
+    total = sum(xs[:k])           # the window is built once, in O(k)
+    best  = total
+    for r in range(k, len(xs)):
+        total += xs[r] - xs[r - k]   # admit xs[r], evict xs[r-k]
+        best = max(best, total)
+    return best
+
+max_window_sum([2, 1, 5, 1, 3, 2], 3)    # 9, from the span [5, 1, 3]
+\end{lstlisting}
+
+The single line \texttt{total += xs[r] - xs[r-k]} is the whole method. It
+replaces an inner loop of length $k$, reducing $O(nk)$ to $O(n)$. The index
+$r-k$ is the element leaving the window, since the window covering positions
+$r-k+1$ through $r$ has just replaced the one covering $r-k$ through $r-1$.
+
+\paragraph{A counter as the window state.} The state need not be a number.
+Matching a pattern's permutations, described earlier under \texttt{Counter},
+carries a frequency table as the state and compares it against a fixed target.
+
+\begin{lstlisting}[style=python, caption={Every starting index at which a permutation of p occurs in t}]
+from collections import Counter
+
+def find_anagrams(t, p):
+    k = len(p)
+    need = Counter(p)
+    have = Counter(t[:k])
+    out  = [0] if have == need else []
+    for r in range(k, len(t)):
+        have[t[r]]     += 1              # admit
+        have[t[r - k]] -= 1              # evict
+        if have[t[r - k]] == 0:
+            del have[t[r - k]]           # see the note below
+        if have == need:
+            out.append(r - k + 1)        # the window's left index
+    return out
+
+find_anagrams("cbaebabacd", "abc")       # [0, 6]
+\end{lstlisting}
+
+Each shift performs a constant amount of work and one dictionary comparison
+over an alphabet of bounded size, giving $O(n)$.
+
+\begin{keybox}[Zero-valued keys in a \texttt{Counter}]
+Decrementing to zero leaves the key present with value \texttt{0}. Two
+consequences follow, and they behave differently.
+
+\medskip
+
+\textbf{Equality.} On Python 3.10 and later, \texttt{Counter.\_\_eq\_\_}
+compares counts over the union of the keys and treats a missing key as zero, so
+\texttt{Counter(\{'a':1,'b':0\}) == Counter(\{'a':1\})} evaluates to
+\texttt{True}. On Python 3.9 and earlier the class inherits
+\texttt{dict.\_\_eq\_\_}, which compares key sets, and the same expression is
+\texttt{False}.
+
+\medskip
+
+\textbf{Size.} \texttt{len(counter)} counts keys on every version. A key held at
+zero still contributes to \texttt{len}, so any window that tests the number of
+\emph{distinct} elements must delete the key on reaching zero.
+
+\medskip
+
+Deleting the exhausted key satisfies both, on every version.
+\end{keybox}
+
+% ------------------------------------------------------------
+\subsubsection*{Variable-size windows}
+
+When the length is unknown, $r$ expands the window on every iteration and an
+inner loop moves $\ell$ forward. The two problem shapes differ in the test
+governing that inner loop and in the point at which the answer is recorded.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+& \textbf{Longest valid window} & \textbf{Shortest sufficient window} \\
+\midrule
+Inner loop & \texttt{while} invariant is broken & \texttt{while} condition holds \\
+Effect     & restore validity & test whether $\ell$ can be given up \\
+Record at  & after the loop, on a valid window & inside the loop, before evicting \\
+Answer     & \texttt{max(best, r - l + 1)}      & \texttt{min(best, r - l + 1)} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+
+\paragraph{Longest valid window.} The window is repaired after each expansion,
+so it is valid at the bottom of every outer iteration, which is where its length
+is measured.
+
+\begin{lstlisting}[style=python, caption={Longest substring with no repeated character}]
+def longest_unique(s):
+    seen = set()                  # the state: which characters are in the window
+    left = best = 0
+    for right, c in enumerate(s):
+        while c in seen:          # admitting c would break the invariant
+            seen.remove(s[left])  # evict from the left until it would not
+            left += 1
+        seen.add(c)               # admit
+        best = max(best, right - left + 1)   # the window is valid here
+    return best
+
+longest_unique("abcabcbb")        # 3, from "abc"
+longest_unique("pwwkew")          # 3, from "wke"
+\end{lstlisting}
+
+The eviction loop is written before the admission so that the invariant is never
+violated inside the set. Admitting first and then repairing is equally correct
+provided the repair condition is written to match, and the ordering must be
+chosen once and held to.
+
+\begin{lstlisting}[style=python, caption={Longest substring with at most k distinct characters}]
+from collections import defaultdict
+
+def longest_k_distinct(s, k):
+    count = defaultdict(int)      # the state: a frequency table over the window
+    left = best = 0
+    for right, c in enumerate(s):
+        count[c] += 1                        # admit
+        while len(count) > k:                # invariant: at most k keys
+            count[s[left]] -= 1
+            if count[s[left]] == 0:
+                del count[s[left]]           # required, or len(count) is wrong
+            left += 1
+        best = max(best, right - left + 1)
+    return best
+
+longest_k_distinct("eceba", 2)    # 3, from "ece"
+\end{lstlisting}
+
+Here the admission precedes the repair, because the invariant is stated over the
+window's state rather than over the incoming element. The \texttt{del} is what
+makes \texttt{len(count)} equal to the number of distinct characters currently
+present.
+
+\paragraph{Shortest sufficient window.} The inner loop contracts while the
+target condition is still satisfied, which searches for the smallest left index
+that keeps it satisfied. The length is recorded before each eviction, since the
+window may cease to qualify immediately afterward.
+
+\begin{lstlisting}[style=python, caption={Shortest subarray with sum at least t, over positive values}]
+def min_length(xs, t):
+    total = 0
+    left  = 0
+    best  = float('inf')
+    for right, x in enumerate(xs):
+        total += x                           # admit
+        while total >= t:                    # the window already suffices
+            best = min(best, right - left + 1)  # record, then try to shrink
+            total -= xs[left]                # evict
+            left  += 1
+    return 0 if best == float('inf') else best
+
+min_length([2, 3, 1, 2, 4, 3], 7)   # 2, from [4, 3]
+min_length([1, 1, 1], 7)            # 0, no window qualifies
+\end{lstlisting}
+
+\texttt{float('inf')} as the initial value of a minimum removes the special case
+for an empty candidate set. The sentinel is then translated to whatever the
+problem specifies for ``no such window,'' which is commonly \texttt{0}.
+
+% ------------------------------------------------------------
+\subsubsection*{When the window does not apply}
+
+\begin{keybox}[The monotonicity precondition]
+\texttt{min\_length} above is correct only because every element is positive.
+Positivity makes \texttt{total} nondecreasing in the window's length, so
+\texttt{total >= t} is monotone and a failing prefix can be discarded
+permanently.
+
+Introduce a negative value and that reasoning collapses. Extending a window may
+now decrease its sum, and a left index abandoned earlier could belong to the
+optimal answer. On \texttt{[3, -2, 5]} with $t = 6$, the window
+\texttt{[3, -2, 5]} qualifies while neither the prefix \texttt{[3, -2]} nor the
+suffix \texttt{[5]} taken alone reveals it by contraction.
+
+The replacement is prefix sums with a hash map, which considers every left
+endpoint rather than only the ones a monotone rule preserves. The check for a
+negative value in the constraints is therefore the first thing to perform on any
+subarray-sum problem.
+\end{keybox}
+
+% ------------------------------------------------------------
+\subsubsection*{Common errors}
+
+\begin{itemize}
+  \item The window length is \texttt{right - left + 1}. Omitting the
+        \texttt{+1} is the standard off-by-one, since both endpoints are
+        inclusive.
+  \item Recording the answer at the wrong point. A longest-window problem
+        measures after the repair loop. A shortest-window problem measures
+        inside the contraction loop, before the eviction.
+  \item An \texttt{if} where a \texttt{while} is required. One eviction restores
+        the invariant only when a single admission can break it by exactly one
+        unit. The general repair is a loop.
+  \item Failing to evict from the state. Advancing \texttt{left} without
+        removing \texttt{xs[left]} from the set, counter, or running sum leaves
+        the state describing a window that no longer exists.
+  \item Retaining zero-valued keys in a \texttt{Counter} or
+        \texttt{defaultdict} while testing \texttt{len} against a distinct-count
+        bound.
+  \item Recomputing the state over the span, as in \texttt{sum(xs[left:right+1])}
+        inside the loop. This restores the $O(n^2)$ cost the window exists to
+        remove.
+\end{itemize}

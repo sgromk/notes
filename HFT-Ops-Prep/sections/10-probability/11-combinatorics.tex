@@ -1,0 +1,80 @@
+\subsection{Combinatorics}
+
+A counting problem is pinned down by two questions. Does the order of the chosen elements matter, and may an element be chosen more than once. The formulas below are organized around those two axes, plus a correction for identical elements and two escape hatches (the complement and inclusion-exclusion) for when a direct count fans out into many cases.
+
+\subsubsection{Permutations}
+
+\begin{definition}[Permutation]
+A permutation is an ordered selection. Choosing $k$ items from $n$ distinct options where order matters gives
+\[
+P(n, k) = \frac{n!}{(n-k)!}.
+\]
+\end{definition}
+
+The formula counts position by position. The first slot has $n$ candidates, the second has $n-1$ once one item is placed, and so on for $k$ slots, giving the falling product $n(n-1)\cdots(n-k+1)$. Writing that product as $\frac{n!}{(n-k)!}$ just cancels the unused tail $(n-k)!$.
+
+\begin{definition}[Permutations with identical elements]
+When the $n$ items being arranged include groups of identical copies with frequencies $n_1, n_2, \dots, n_k$, the number of distinguishable arrangements is
+\[
+\frac{n!}{n_1!\, n_2! \cdots n_k!}.
+\]
+\end{definition}
+
+Start from the $n!$ arrangements that would exist if every item were distinct. Each identical group of size $n_i$ has $n_i!$ internal orderings that all produce the same visible arrangement, so dividing by each $n_i!$ removes exactly those duplicates.
+
+\subsubsection{Combinations}
+
+\begin{definition}[Combination]
+A combination is an unordered selection. Choosing $k$ items from $n$ distinct options where order does not matter gives
+\[
+C(n,k) = \binom{n}{k} = \frac{n!}{k!\,(n-k)!}.
+\]
+\end{definition}
+
+Combinations come from permutations by discarding the ordering. Each unordered set of $k$ items can be arranged in $k!$ ways, and $P(n,k)$ counts all of those as distinct, so
+\[
+C(n,k) = \frac{P(n,k)}{k!}.
+\]
+
+\subsubsection{Distributing Indistinguishable Objects (Stars and Bars)}
+
+\begin{theorem}[Stars and bars]
+The number of ways to place $n$ identical objects into $k$ distinct bins, where a bin may hold any number of objects including zero, is
+\[
+\binom{n + k - 1}{\,k - 1\,} = C(n + k - 1,\, k - 1).
+\]
+\end{theorem}
+
+\begin{proof}
+Lay the $n$ objects in a row as stars and insert $k-1$ dividers (bars) to cut the row into $k$ groups. Reading left to right, objects before the first bar fall in bin 1, objects between the first and second bar fall in bin 2, and so on through bin $k$. Every placement of the bars produces one distribution, and every distribution corresponds to exactly one placement. The row has $n + (k-1)$ positions, and a distribution is fixed by choosing which $k-1$ of them hold bars, which is $\binom{n+k-1}{k-1}$.
+\end{proof}
+
+\subsubsection{Inclusion-Exclusion}
+
+\begin{theorem}[Inclusion-Exclusion]
+The size of a union is the alternating sum of the sizes of all intersections. For two and three sets,
+\[
+|A \cup B| = |A| + |B| - |A \cap B|,
+\]
+\[
+|A \cup B \cup C| = |A| + |B| + |C| - |A\cap B| - |A\cap C| - |B\cap C| + |A\cap B\cap C|.
+\]
+\end{theorem}
+
+The mechanism is bookkeeping on how many times each element gets counted. Summing the individual set sizes counts an element that lies in two sets twice, so subtracting the pairwise intersections corrects it back to one. An element in all three sets is now counted $3 - 3 = 0$ times, so adding the triple intersection restores it to one. The pattern continues to any number of sets: terms over an odd number of sets are added and terms over an even number are subtracted, which leaves every element counted exactly once no matter how many sets contain it.
+
+\begin{keybox}[Which counting tool]
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Order matters?} & \textbf{Repeats allowed?} & \textbf{Count} \\
+\midrule
+yes & no  & $P(n,k) = \dfrac{n!}{(n-k)!}$ \\[0.6em]
+no  & no  & $C(n,k) = \dbinom{n}{k}$ \\[0.6em]
+yes & yes & $n^k$ \\[0.3em]
+no  & yes & $\dbinom{n+k-1}{k-1}$ \; (stars and bars) \\
+\bottomrule
+\end{tabular}
+\end{center}
+Two escape hatches handle counts that fan out into many subcases. Use the \textbf{complement} ($1 - P$ of the unwanted case) on ``at least one'' phrasing, and use \textbf{inclusion-exclusion} on ``divisible by $a$ or $b$'' style overlaps.
+\end{keybox}

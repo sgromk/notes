@@ -1,0 +1,103 @@
+\subsubsection{Select Worked Problems}
+
+\begin{problem}
+I roll two dice. Given that the sum is 8, what's the probability that one of the dice shows a 3?
+\end{problem}
+
+\begin{solution}
+The possible ways to roll a sum of 8 are: $(2, 6), (3, 5), (4, 4), (5, 3), (6, 2)$. Of these, two options have a 3 in them, so the answer is $\frac{2}{5} = 0.4$.
+\end{solution}
+
+\begin{problem}
+A bag has 3 red and 2 blue balls. You draw one, don't replace it, then draw another. What's P(2nd is red | 1st was blue)?
+\end{problem}
+
+\begin{solution}
+Once we drew one blue on, the remaining bag composition is 3 red balls and 1 blue one. Then, there is a $\frac{3}{4}$ probability that the second will be red.
+\end{solution}
+
+
+\begin{problem}
+60\% of emails are spam. A filter catches 95\% of spam but also flags 3\% of legitimate emails. An email is flagged. What's the probability it's actually spam?
+\end{problem}
+
+\begin{solution}
+We want $P(Spam | Flagged)$. The likelihood $P(Flagged | Spam)$ is given as $0.95$, the prior $P(Spam)$ is $0.6$, and the marginal probability $P(Flagged)$ is $0.95 \cdot 0.6 + 0.03 \cdot 0.4 = 0.582$.
+
+Then the posterior is
+\[
+P(Spam | Flagged) = \frac{P(Flagged | Spam) \times P(Spam)}{P(Flagged)} = \frac{0.95 \times 0.6}{0.582} \approx 0.979
+\]
+
+
+\end{solution}
+
+
+\begin{problem}
+You have 2 coins. Coin A is fair (50\% heads). Coin B is biased (75\% heads). You pick a coin at random and flip it. It lands heads. What's the probability you picked coin B?
+\end{problem}
+
+\begin{solution}
+We are looking for the posterior, $P(B|H)$.
+
+The priors are $P(A) = P(B) = 0.5$. The likelihoods are $P(H|A) = 0.5$ and $P(H|B) = 0.75$. Then $P(H) = P(H|A) \cdot P(A) + P(H|B) \cdot P(B) = 0.5 \cdot 0.5 + 0.75 \cdot 0.5 = 0.625$. Then finally
+\[
+P(B|H) = \frac{P(H|B) \cdot P(B)}{P(H)} = \frac{0.75 \cdot 0.5}{0.625} = 0.6
+\]
+After flipping and landing on heads, our belief that we picked coin B increased from $0.5$ to $0.6$.
+\end{solution}
+
+\begin{problem}
+Same as 1.31. The chosen coin is flipped twice and get heads both times. Now what's $P(B)$?
+\end{problem}
+
+\begin{solution}
+The only difference is our priors are $P(A) = 0.4$ and $P(B) = 0.6$. Then we update $P(H) = P(H|A) \cdot P(A) + P(H|B) \cdot P(B) = 0.5 \cdot 0.4 + 0.75 \cdot 0.6 = 0.65$. Finally:
+\[
+P(B|H) = \frac{P(H|B) \cdot P(B)}{P(H)} = \frac{0.75 \cdot 0.6}{0.65} = \frac{9}{13} \approx 0.692
+\]
+\end{solution}
+
+\newpage
+
+\begin{problem}
+A family has 2 children. Given that at least one child is a boy, what's the probability both are boys?
+\end{problem}
+
+\begin{solution}
+We can answer this by considering the restriction over the sample space caused by the new information. Originally, for two children there would be four possibilities, of which 1 has two boys. After we know that at least one child is a boy, only three options remain $(B,G), (B,B), (G, B)$. Thus, the probability both are boys is $\frac{1}{3}$.
+\end{solution}
+
+\begin{problem}
+Three cards: one is red on both sides, one is blue on both sides, one is red on one side and blue on the other. You pick a card at random and see a red side. What's the probability the other side is also red?
+\end{problem}
+
+\begin{solution}
+The natural first instinct is to treat the cards as the sample space, as with the births problem: restrict to cards consistent with seeing a red face, then count outcomes among those. This fails here because a card is not a single unit of observation. When a card has two sides of the same color, ``seeing red'' can happen in more than one way for that card. There's no such internal multiplicity in the births problem.
+
+So take the six sides, not the three cards, as the equally likely outcomes. Three of these six are red: two belong to the $RR$ card, one belongs to the $RB$ card. Since each red side was equally likely to be the one we observed, and two of the three red sides have a red back:
+\[
+P(\text{other side red} \mid \text{observed red}) = \frac{2}{3}.
+\]
+\end{solution}
+
+
+\begin{problem}
+You have a 6-sided die. You don't know if it's fair or loaded. A fair die shows each number with probability 1/6. The loaded die shows 6 with probability 1/2 and each other number with probability 1/10. You pick a die at random (50-50) and roll a 6. What's P(loaded)?
+\end{problem}
+
+\begin{solution}
+By Bayes' theorem, with $P(\text{loaded}) = P(\text{fair}) = 0.5$:
+\[
+P(\text{loaded} \mid 6) = \frac{P(6 \mid \text{loaded}) \, P(\text{loaded})}{P(6)} = \frac{0.5 \times 0.5}{0.5 \times 0.5 + \tfrac{1}{6} \times 0.5} = \frac{0.25}{1/3} = 0.75
+\]
+
+Alternatively, work in odds instead of probabilities. Dividing the Bayes' theorem expressions for $P(\text{loaded} \mid 6)$ and $P(\text{fair} \mid 6)$ cancels $P(6)$ from both, leaving:
+\[
+\underbrace{\frac{P(\text{loaded} \mid 6)}{P(\text{fair} \mid 6)}}_{\text{posterior odds}} = \underbrace{\frac{P(6 \mid \text{loaded})}{P(6 \mid \text{fair})}}_{\text{likelihood ratio}} \times \underbrace{\frac{P(\text{loaded})}{P(\text{fair})}}_{\text{prior odds}}
+\]
+So the posterior odds are just the prior odds scaled by the likelihood ratio, no need to compute $P(6)$ at all. Here, the prior odds are $\frac{P(\text{loaded})}{P(\text{fair})} = \frac{0.5}{0.5} = 1$, and the likelihood ratio is $\frac{P(6 \mid \text{loaded})}{P(6 \mid \text{fair})} = \frac{0.5}{1/6} = 3$. So the posterior odds are $1 \times 3 = 3$, i.e. $3:1$ in favor of loaded, giving $P(\text{loaded} \mid 6) = 3/4 = 0.75$.
+
+In short, a six is three times more likely to appear if the die is loaded, so each 6 observed multiplies the odds by 3. If we observed \textit{another} 6, the odds would update again: $3:1 \rightarrow 9:1$, giving $P(\text{loaded}) = \frac{9}{10}$.
+
+\end{solution}

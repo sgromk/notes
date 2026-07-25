@@ -1,0 +1,213 @@
+% ============================================================
+\subsection{Select Worked Problems}
+% ============================================================
+
+\begin{problem}[Easy]
+Five pirates need to divide 100 Gold Coins. Pirates have a hierarchy, from Level 1 to level 5. The highest level pirate is the leader. The leader proposes a plan to distribute the gold and all the pirates vote on it (including the leader). If at least 50\% of the pirates agree on the plan, the gold is split according to the proposal. If not, level-5 pirate is kicked from the ship, and the level-4 pirate now proposes a new plan. This process continues until a proposal is accepted. All pirates are extremely smart and extremely greedy. How does level-5 Pirate divide the treasure?
+\end{problem}
+
+\begin{solution}
+We approach this problem game-theoretically and dynamically:
+\begin{itemize}[label=$\circ$]
+    \item 2 pirates $\rightarrow$ Pirate 2 proposes 100 coins for themself and zero for Pirate 1
+    \item 3 pirates $\rightarrow$ Pirate 3 bribes Pirate 1 with one coin and keeps 99 for themself, which they accept because they get zero coins if Pirate 3 is booted off.
+    \item 4 pirates $\rightarrow$ Pirate 4 bribes Pirate 2 with one coin and keeps 99 for themself, in the same manner as the 3-pirate case.
+    \item 5 pirates $\rightarrow$ Pirate 5 bribes pirates 1 and 3 with one coin each, keeping 98 for themself.
+\end{itemize}
+
+\begin{center}
+Thus, the final division is [98, 0, 1, 0 ,1].
+\end{center}
+
+\end{solution}
+
+
+\begin{problem}[Easy]
+An explorer travels 1 mile South, 1 mile East, then 1 mile North, and finds themselves back at the starting point. The explorer spots a bear, what is the color of the bear?
+\end{problem}
+
+\begin{solution}
+The bear must be white. There are a few relevant scenarios that could have resulted in the explorer starting back where they began. In the first case, they started at the North pole, then travelling South equates to travelling directly away from the Pole. They can then travel \textit{any} distance East or West, the following mile back North will return them to their destination. There are no bears in the South Pole so we omit this, though the same logic applies (with the Eastward movement equivalent to spinning in place or not moving at all).
+
+There are other solutions near the South Pole. If the traveler's initial one-mile journey South ends on a latitude circle with a circumference of $\frac{1}{n}\  (n \in \mathbb{Z}^+)$ miles, walking one mile East will complete $n$ full rotations around the pole and leave them exactly where they started walking East, meaning the following mile North would place them in the same starting position.
+\end{solution}
+
+\begin{problem}[Easy]
+There is a light bulb inside a room and three switches outside. All switches are currently in off state and only one switch controls the light bulb. You may turn any number of switches on or off any number of times you want. How many times do you need to go into the room to figure out which switch controls the light bulb?
+\end{problem}
+
+\begin{solution}
+We only need to enter the room once. The first switch is flipped and left on for enough time that the bulb become hot. It is then flipped off and the second switch is flipped, we then immediately enter the room. This leads the three cases:
+\begin{enumerate}
+    \item Bulb is hot $\rightarrow$ the light must be off and the first switch controls the light
+    \item Bulb is on $\rightarrow$ the second switch controls the light
+    \item Bulb is off and cold $\rightarrow$ the third switch controls the light
+\end{enumerate}
+
+\medskip
+
+If there were four switches, we can still infer the switch in one entry by turning on both switches 1 and 2 for a long time, then switching off switch 2 and turning on switch 3 before entering the room. This results in the following cases:
+\begin{enumerate}
+    \item Bulb is on and hot $\rightarrow$ Switch 1 controls the light
+    \item Bulb is on and cool $\rightarrow$ Switch 3 controls the light
+    \item Bulb is off and hot $\rightarrow$ Switch 2 controls the light
+    \item Bulb is off and cool $\rightarrow$ Switch 4 controls the light
+\end{enumerate}
+\end{solution}
+
+The extension to four bulbs worked because we had two binary variables (illumination and bulb temperature) which creates 4 dinstinct states, of which we were only using 3 in the 3-bulb case.
+
+\medskip
+
+\begin{problem}[Easy]
+How do you place 50 good candies and 50 rotten candies in two boxes such that if you choose a box at random and take out a candy at random, it better be good!
+
+We need to maximize the probability of getting a good candy when selecting a random box and a random candy from it.
+\end{problem}
+
+\begin{solution}
+On one extreme, we can place all of the good candies in one box with all of the bad candies in another. This gives us $\mathbb{E}[G] = 0.5$. Thus, we should find solutions that better than 50\%. We can beat this rather simply, by placing one good candy in one box and the other 49 in the other box with all of the bad candies. This results in:
+\[
+\mathbb{E}[G] = 0.5 * \frac{1}{1} + 0.5 * \frac{49}{99} \approx 0.747
+\]
+\end{solution}
+
+\begin{problem}[Easy]
+In a world where everyone wants a girl child, each family continues having babies till they have a girl. What do you think will the boy-to-girl ratio be eventually? 
+\end{problem}
+
+\begin{solution}
+The stopping rule shapes each family but does not affect the aggregate ratio, since it cannot bias any individual birth. Each birth is an independent fair coin, and the choice of when to stop having children cannot change the overall fraction of each sex.
+
+Counting round by round makes this precise. Begin with $N$ couples. In the first round all $N$ give birth, producing $\tfrac{N}{2}$ girls and $\tfrac{N}{2}$ boys, and the couples with a girl stop. The $\tfrac{N}{2}$ couples with a boy have another child, producing $\tfrac{N}{4}$ girls and $\tfrac{N}{4}$ boys, and the process repeats. Each round is an independent batch of fair births and contributes equal numbers of girls and boys, so the totals remain equal and the ratio is
+\[
+1 : 1
+\]
+
+The appearance of a girl surplus comes from the family structure. Every family terminates on exactly one girl, which makes girls salient as the final child. The boys are the births preceding that girl, and their count follows a geometric distribution with $p = \tfrac{1}{2}$ and mean $\tfrac{1-p}{p} = 1$. The average family therefore has one boy and one girl. The rule fixes the position of the girl within each family, not the proportion of each sex overall.
+\end{solution}
+
+\begin{problem}
+Hundred tigers and one sheep are put on a magic island that only has grass. Tigers can live on grass, but they want to eat sheep. If a Tiger bites the Sheep then it will become a sheep itself. If 2 tigers attack a sheep, only the first tiger to bite converts into a sheep. Tigers don’t mind being a sheep, but they have a risk of getting eaten by another tiger. All tigers are intelligent and want to survive. Will the sheep survive?
+\end{problem}
+
+\begin{solution}
+This is a parity argument by backward induction, sharing the alternating logic of the pirate loot-splitting problem. The cases build from the bottom up, and the governing fact is that a tiger eats the sheep only when doing so leaves it safe, meaning the resulting one-sheep island has an outcome in which that new sheep is not itself eaten.
+
+Consider the smallest cases. With one tiger, no other tiger threatens it, so it eats the sheep and survives. With two tigers, a tiger that eats the sheep becomes a sheep facing one remaining tiger, which is the one-tiger case in which the sheep is eaten, so neither tiger risks it and the sheep survives. With three tigers, a tiger that eats reduces the island to the two-tiger case, in which a sheep survives, so eating is safe and the sheep is eaten. With four, eating reduces to the three-tiger case, in which the sheep is eaten, so no tiger risks it and the sheep survives.
+
+Each case is thus determined by the one below it: the sheep is eaten precisely when the case with one fewer tiger leaves the sheep safe. This alternation follows parity, so the sheep survives for an even number of tigers and is eaten for an odd number. With 100 tigers, the sheep survives.
+\end{solution}
+
+\begin{problem}
+A duck is sitting at the center of a circular lake. A fox is waiting at the shore, not able to swim, wishing to eat the duck. The Fox can move around the whole lake at a speed four times the speed at which the duck can swim. The duck can fly, but only once it reaches the shore of the lake, it can't fly from the water directly. Can the duck always reach the shore without being eaten by the fox?
+\end{problem}
+
+\begin{solution}
+Let $R$ be the radius of the lake, $v$ the duck's speed, and $4v$ the fox's. A direct dash across fails: the duck would swim $R$ while the fox runs at most half the circumference, $\pi R$. Since $\pi < 4$, the fox covers its distance in less time and arrives first.
+
+Instead the duck swims in a small circle concentric with the lake, of radius slightly less than $\tfrac{R}{4}$. The choice of $\tfrac{R}{4}$ comes from comparing angular speeds. A duck at radius $r$ sweeps angle at rate $\tfrac{v}{r}$, while the fox running the shore sweeps at rate $\tfrac{4v}{R}$, so the duck out-rotates the fox exactly when
+\[
+\frac{v}{r} > \frac{4v}{R} \iff r < \frac{R}{4}
+\]
+The fox tracks the duck from the nearest point of the shore, but since the duck gains angle steadily, the separation between them grows until the duck sits diametrically opposite the fox.
+
+At that moment the duck turns and swims straight for the shore. It must cover $R - \tfrac{R}{4} = \tfrac{3R}{4}$, while the fox must run half the circumference, $\pi R$. Their times are
+\[
+t_{\text{duck}} = \frac{3R}{4v}, \qquad t_{\text{fox}} = \frac{\pi R}{4v}
+\]
+so the comparison reduces to $3 < \pi$, which holds. The duck reaches the shore first and escapes.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+An airplane flies in a straight line from airport $A$ to airport $B$, and then back in a straight line from $B$ to $A$. It travels with a constant engine speed and there is no wind. Will the total travel time for the same round trip be greater, less or the same if, throughout both the flights a constant wind blows from $A$ to $B$?
+\end{problem}
+
+
+\begin{solution}
+The round trip takes longer with wind. Take a plane speed of $100$ mph, a wind of $10$ mph, and a distance of $100$ miles each way. The wind adds to the ground speed on one leg and subtracts on the other, giving
+\[
+\frac{100}{110} + \frac{100}{90} \approx 2.02 \text{ hours}
+\]
+against $2$ hours with no wind.
+
+In general, for distance $d$, plane speed $v$, and wind $w < v$, the round trip takes
+\[
+\frac{d}{v+w} + \frac{d}{v-w} = \frac{2dv}{v^2 - w^2}
+\]
+which exceeds the windless time $\frac{2d}{v}$ for any $w \neq 0$, since $v^2 - w^2 < v^2$. The asymmetry is that the plane spends less time on the fast leg and more time on the slow one, so the time lost to the headwind always outweighs the time gained from the tailwind.
+\end{solution}
+
+\begin{problem}
+You are given two cords that both burn in exactly one hour, not necessarily at a uniform rate. How should you light the cords to determine a time interval of exactly 15 minutes?
+\end{problem}
+
+\begin{solution}
+We light three of the four ends at the same time. When the cord with both ends lit burns out, thirty minutes will have passed. At this point we snuff the fire on the other cord. The segment remaining can be lit from both sides and will burn for an interval of 15 minutes.
+
+The same interval can be obtained from a single cord by maintaining four simultaneous flames, assuming that cutting and lighting take negligible time. A cord holds sixty minutes of burn time, and with $k$ flames alight that reserve is consumed at rate $k$, so four flames exhaust it in $\frac{60}{4} = 15 \text{ minutes}$
+
+To begin, we cut the cord in two and light all four ends. Whenever a piece burns out and the count drops to two flames, we cut one of the remaining pieces and light the two new ends, restoring the count to four. The number of cuts required is not bounded in advance, since it depends on how unevenly the cord burns, but the flame count is held at four throughout and the cord is spent after exactly fifteen minutes.
+\end{solution}
+
+\begin{problem}
+There are 10 black socks and 10 red socks in a cupboard. Your task is to draw a few socks at random, without looking, such that you get at least one matching pair (single color). What's the least number of socks that you need to draw?
+\end{problem}
+
+\begin{solution}
+You only need to draw three. If the first two were opposite colours (not a match), then the third sock \textit{must} match one of the first two. This is the pigeonhole principle with 3 pigeons (socks drawn) and two holes (colours).
+\end{solution}
+
+\newpage
+
+\begin{problem}
+Prove that there are two opposite points on the Earth's surface that have the same temperature. Assume that the temperature varies continuously over the surface.
+\end{problem}
+
+\begin{solution}
+Consider any great circle on the surface, such as the equator, and let $t(\theta)$ be the temperature at angle $\theta$. Two points are opposite when their angles differ by $\pi$, so the goal is a value of $\theta$ satisfying $t(\theta) = t(\theta + \pi)$. Define $f(\theta) = t(\theta) - t(\theta + \pi)$, which is zero when the two points have equal temperatures. As a difference of continuous functions, $f$ is continuous.
+
+Evaluating at the ends of a half circle, and using $t(2\pi) = t(0)$ because the circle closes on itself,
+\[
+f(0) = t(0) - t(\pi), \qquad f(\pi) = t(\pi) - t(0) = -f(0)
+\]
+so $f$ takes values of opposite sign at $0$ and $\pi$, or is zero, in which case the temperatures are equal and we are done.Otherwise, by the Intermediate Value Theorem there must be a point on the closed interval $[0, \pi]$ such that $f(\theta) = 0$, and that root is an antipodal pair at equal temperature.
+
+This is the one-dimensional case of the Borsuk-Ulam theorem, which states that any continuous map $S^n \rightarrow \mathbb{R}^n$ admits an antipodal pair with equal values. Thematically it resembles the hairy ball theorem, in that a continuous structure on a sphere is forced into a degeneracy, though Borsuk-Ulam constrains values at antipodal pairs while the hairy ball theorem forces a tangent vector field to vanish somewhere.
+\end{solution}
+
+\begin{problem}
+The probability of having at least one accident on a road in one hour is $\frac{3}{4}$. What is the probability that at least one accident occurs in half an hour?
+\end{problem}
+
+\begin{solution}
+Assuming accidents in disjoint intervals are independent, no accident in an hour means no accident in each of its two half-hour intervals. Let $q$ be the probability of no accident in half an hour. Then $q^2 = 1 - \frac{3}{4} = \frac{1}{4} \rightarrow q = \frac{1}{2}$. Then the probability of at least one accident in half an hour is $1-q = \frac{1}{2}$.
+\end{solution}
+
+\begin{problem}
+Suppose you're on a game show, and you're given the choice of three doors: Behind one door is a car; behind the others, goats. You pick a door, say No. 1, and the host, who knows what's behind the doors, opens another door, say No. 3, which has a goat. Now, do you want to pick door No. 2? What is the probability to win the car if you switch?
+\end{problem}
+
+\begin{solution}
+Switching wins with probability $\frac{2}{3}$.
+
+Suppose door 1 is chosen. The car is equally likely to be behind each door, giving three cases. If the car is behind door 1, the host opens one of the goats and switching loses. If the car is behind door 2, the host is forced to open door 3, and switching wins. If the car is behind door 3, he is forced to open door 2, and switching wins.
+
+Switching therefore wins in two of the three equally likely cases. Equivalently, switching wins exactly when the initial pick was wrong, which occurs with probability $\frac{2}{3}$.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+One hundred prisoners are lined up, facing one direction and assigned a random hat, either red or blue. Each prisoner can see the hats in front of them but not behind. Starting with the prisoner at the back of the line and moving forward, they must each, in turn, say only one word which must be "red" or "blue". If the word matches their hat color they are released, if not, they are kept imprisoned. They can hear each others' answers, no matter how far they are on the line, but they do not hear the verdict (whether the answer was correct). A friendly guard warns them one night before, giving them enough time to come up with a strategy. How many prisoners can be freed using the best strategy? Assume that there is an unknown number of red \& blue hats.
+\end{problem}
+
+\begin{solution}
+Ninety-nine prisoners are guaranteed release, and the first to speak is correct with probability $\frac{1}{2}$. This is optimal, since that prisoner sees only the hats ahead and receives no information bearing on their own, so no strategy improves on a coin flip for them.
+
+The prisoners agree in advance to encode parity. The prisoner at the back, who sees all 99 hats ahead, says ``red'' if the number of red hats ahead is even and ``blue'' if it is odd.
+
+Each later prisoner deduces their own colour from three known quantities: the announced parity, the colours called behind them, and the hats visible ahead. Their hat is red exactly when the combined parity of the reds heard and seen differs from the announced parity, since their own hat is the only one unaccounted for and so must absorb the discrepancy. Having deduced it, they answer correctly, and their answer joins the record used by those ahead.
+\end{solution}

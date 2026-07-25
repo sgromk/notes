@@ -1,0 +1,50 @@
+\subsubsection{NULL Handling}
+
+\texttt{NULL} means unknown, so it propagates through arithmetic and poisons
+comparisons. The two functions below are the standard guards.
+
+\paragraph{COALESCE and NULLIF.} \texttt{COALESCE(a, b, c, ...)} returns the
+first non-\texttt{NULL} argument, evaluated left to right, or \texttt{NULL} if
+all are \texttt{NULL}. The common use is a fallback that keeps a \texttt{NULL}
+from poisoning arithmetic: \texttt{salary + commission} is \texttt{NULL}
+whenever \texttt{commission} is, so write \texttt{salary + COALESCE(commission, 0)}.
+It also supplies a default down a priority list, as in
+\texttt{COALESCE(nickname, first\_name, 'Unknown')}. It is ANSI standard,
+unlike the vendor-specific \texttt{IFNULL} (MySQL) and \texttt{ISNULL}
+(SQL Server), and it accepts any number of arguments.
+
+\texttt{NULLIF(a, b)} is the mirror image: it returns \texttt{NULL} when
+\texttt{a = b}, otherwise \texttt{a}. Its standard use guards division,
+\texttt{x / NULLIF(y, 0)} yields \texttt{NULL} instead of raising a
+divide-by-zero when \texttt{y} is 0.
+
+\begin{lstlisting}[style=sql, caption={NULLIF guards division, COALESCE supplies defaults}]
+SELECT
+    order_id,
+    revenue / NULLIF(quantity, 0)  AS unit_price,  -- NULL, not an error, when quantity = 0
+    COALESCE(discount, 0)          AS discount      -- NULL discount treated as 0
+FROM orders;
+\end{lstlisting}
+
+\vspace{-1ex}
+
+A subtlety with aggregates: \texttt{SUM}, \texttt{AVG}, and
+\texttt{COUNT(col)} skip \texttt{NULL}s. So \texttt{AVG(commission)} averages
+only the non-\texttt{NULL} rows, while \texttt{AVG(COALESCE(commission, 0))}
+counts the \texttt{NULL}s as zeros and enlarges the denominator. 
+
+\paragraph{Gotchas.}
+\begin{itemize}
+  \item \textbf{\texttt{NOT IN} with NULLs:} if the subquery returns any
+  \texttt{NULL}, \texttt{x NOT IN (...)} is never true and the query returns
+  zero rows. \texttt{x NOT IN (1, NULL)} expands to
+  \texttt{NOT (x=1 OR x=NULL)}, and the \texttt{NULL} comparison poisons the
+  result to unknown. Use \texttt{NOT EXISTS}, which is null-safe.
+  \item \textbf{Integer division truncates:} \texttt{5 / 2} yields \texttt{2}
+  because the fractional part is discarded. Cast one operand:
+  \texttt{5::numeric / 2} or \texttt{5.0 / 2}. Bites hardest in ratio and
+  percentage columns.
+  \item \textbf{\texttt{COUNT(col)} vs \texttt{COUNT(*)}:} the former skips
+  \texttt{NULL}s in \texttt{col}, the latter counts every row. A common source
+  of off-by-$N$ errors.
+\end{itemize}

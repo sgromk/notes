@@ -1,9 +1,129 @@
 \subsubsection{Select Worked Problems}
 
 \begin{problem}
-A basketball player makes 70\% of free throws. In 10 attempts, what's $P(exactly 8 makes)$?
+A basketball player makes 70\% of free throws. In 10 attempts, what's $P(\text{exactly 8 makes})$?
 \end{problem}
 
 \begin{solution}
-Blah
+We are given a target out of 10 indepdent trials, each with the same probability, so we can use the Binomial distribution:
+\[
+P(X = 8) = \binom{10}{8} \cdot 0.7^8 \cdot 0.3^2 \approx 0.233
+\]
+\end{solution}
+
+\vspace{-2ex}
+
+\begin{problem}
+A website gets 2 signups per hour on average. What's $P(\text{0 signups in the next hour})$?
+\end{problem}
+
+\begin{solution}
+The problem gives a rate over a timeframe, so this is uses the Poisson or Exponential, this time we can use either. Working in hours, the rate is $\lambda = 2$ per hour and the window is $t = 1$.
+
+\textbf{Poisson.} Count the signups directly and ask for zero of them:
+\[
+P(X = 0) = e^{-\lambda}\frac{\lambda^0}{0!} = e^{-2} \approx 0.135.
+\]
+
+\textbf{Exponential.} Zero signups in the hour is the same event as the wait for the first signup exceeding one hour, which is the tail probability $P(X > t) = 1 - F(t)$:
+\[
+P(X > 1) = 1 - \left(1 - e^{-\lambda t}\right) = e^{-\lambda t} = e^{-2} \approx 0.135.
+\]
+
+The two agree, which is the identity $P(N_t = 0) = P(X > t)$ between a Poisson count of zero and an Exponential wait past $t$.
+\end{solution}
+
+
+\begin{problem}
+You keep drawing cards (with replacement) from a deck until you get an ace. Expected number of draws?
+\end{problem}
+
+\begin{solution}
+We want to know the expected trials until the first success with replacement, which is the mean of the Geometric distrbution:
+
+\[
+\E[X] = \mu = \frac{1}{p} = \frac{1}{4/52} = 13
+\]
+\end{solution}
+
+\vspace{-2ex}
+
+\begin{problem}
+A factory produces items with a 5\% defect rate. In a batch of 20, what's the expected number of defective items and $P(\text{at most 1 defective})$?
+\end{problem}
+
+\begin{solution}
+We want the successes (defects) in 20 fixed trials, which calls for the Binomial distribution:
+\[
+\E[X] = \mu = np = 20 \cdot 0.05 = 1
+\]
+
+\[
+P(X \leq 1) = P(0) + P(1) = \left ( \binom{20}{0} \cdot 0.05^0 \cdot 0.95^{20} \right ) + \left ( \binom{20}{1} \cdot 0.05^1 \cdot 0.95^{19} \right ) = 0.358 + 0.377 = 0.736
+\]
+\end{solution}
+
+\newpage
+
+\begin{problem}
+On average, a bus arrives every 10 minutes. What's $P(\text{waiting more than 15 minutes})$?
+\end{problem}
+
+\begin{solution}
+We want the tail probability of the Exponential distribution, making our unit of time 1 minute, then $\lambda = 0.1$. 
+\[
+P(X > 15) = 1 - (1 - e^{-0.1 \cdot 15}) = e^{-1.5} \approx 0.223
+\]
+\end{solution}
+
+\vspace{-2ex}
+
+\begin{problem}
+Test scores are Normal with mean 70 and standard deviation 10. What fraction of students score above 90?
+\end{problem}
+
+\begin{solution}
+This is simply asking what proportion of a normal distribution exists in the upper right tail two standard deviations from the mean. We know that 95.4\% of the data lies within 2$\sigma$, then the portion only in the right tail is $\frac{1-0.954}{2} = 0.023 = 2.3\%$
+\end{solution}
+
+\vspace{-1ex}
+
+\begin{problem}
+You roll a die until you've gotten two 6's total. Expected number of rolls?
+\end{problem}
+
+\begin{solution}
+We can use linearity of expectation along with the Geometric distribution (or more directly, the Negative Binomial). Then
+\[
+\E[X] = \frac{r}{p} = \frac{2}{1/6} = 12
+\]
+\end{solution}
+
+\vspace{-2ex}
+
+\begin{problem}
+Errors on a page occur at a rate of 0.5 per page (Poisson). A book has 200 pages. What's the expected total errors? What's the approximate probability the book has fewer than 90 errors?
+\end{problem}
+
+\begin{solution}
+Scaling the rate to the full book, the total is Poisson with
+\[
+\E[X] = 200 \cdot 0.5 = 100 = \lambda, \qquad \sigma = \sqrt{\lambda} = 10.
+\]
+The book total is a sum of 200 independent per-page Poisson counts, so by the CLT it is approximately Normal, and with $\lambda = 100$ well above the $\lambda \approx 10$ threshold the approximation is safe: $X \approx \mathcal{N}(100, 100)$.
+
+Fewer than 90 errors is one standard deviation below the mean, so by the 68\% rule
+\[
+P(X < 90) \approx \frac{1 - 0.68}{2} = 0.16.
+\]
+\end{solution}
+
+\vspace{-2ex}
+
+\begin{problem}
+You flip a coin with P(H) = p. What's the variance of the number of heads in n flips? For what value of p is the variance maximized?
+\end{problem}
+
+\begin{solution}
+This is a binary outcome with a fixed number of flips, which calls for the Binomial distribution. The variance is therefore $\sigma^2 = np(1-p)$. This is maximized at $p = \frac{1}{2}$.
 \end{solution}

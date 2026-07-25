@@ -1,0 +1,48 @@
+\subsubsection{Deduplication}
+
+\paragraph{DISTINCT.} \texttt{DISTINCT} compares the entire select list as a
+tuple. \texttt{SELECT DISTINCT a, b} returns every distinct \emph{pair}, so a
+value in \texttt{a} can still repeat as long as the paired \texttt{b} differs.
+It is a whole-row operator with no way to say ``dedupe on this column and keep
+the rest of the row.'' It runs after \texttt{SELECT} and before
+\texttt{ORDER BY}, which is why every \texttt{ORDER BY} expression must also
+appear in the select list, and it treats two \texttt{NULL}s as duplicates.
+\texttt{COUNT(DISTINCT col)} is a separate mechanism that dedupes the input to
+one aggregate and has no effect on the rows returned.
+
+\newpage
+
+\paragraph{DISTINCT ON.} A PostgreSQL extension that keeps the first row of
+each group sharing the same value of the parenthesized expressions, returning
+all selected columns of that surviving row. ``First'' is defined by
+\texttt{ORDER BY}, whose leading terms must match the \texttt{DISTINCT ON}
+expressions. Omit the \texttt{ORDER BY} and the surviving row is arbitrary.
+
+\begin{lstlisting}[style=sql, caption={Most recent close per ticker}]
+SELECT DISTINCT ON (ticker)
+       ticker, trade_date, close
+FROM prices
+ORDER BY ticker, trade_date DESC;   -- leading term must be ticker
+\end{lstlisting}
+
+\vspace{-1ex}
+
+This is the compact form of the rank-then-filter pattern from the window
+section. The \texttt{ROW\_NUMBER} equivalent needs a subquery and an outer
+\texttt{WHERE rn = 1}. Which to reach for:
+
+\begin{itemize}[label=$\circ$]
+  \item \textbf{Top-1 per group in Postgres:} \texttt{DISTINCT ON} is shorter
+  and generally at least as fast, since it stops at the first row of each
+  group.
+  \item \textbf{Top-$N$ for $N > 1$, or portability:} \texttt{ROW\_NUMBER}
+  extends to \texttt{rn <= 3} and runs on any engine. \texttt{DISTINCT ON} is
+  Postgres-only.
+  \item \textbf{Ties:} \texttt{DISTINCT ON} always emits exactly one row per
+  group, settled by the remaining \texttt{ORDER BY} terms or arbitrarily. To
+  keep every tied row, use \texttt{RANK() = 1}.
+\end{itemize}
+
+Because the \texttt{ORDER BY} is dictated by the deduplication key, presenting
+the result in a different order means wrapping the query in an outer
+\texttt{SELECT ... ORDER BY}.

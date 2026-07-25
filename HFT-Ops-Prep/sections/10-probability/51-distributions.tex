@@ -405,8 +405,11 @@ Lognormal$(\mu,\sigma^2)$ & multiplicative growth & $\frac{1}{x\sqrt{2\pi\sigma^
 
 \begin{keybox}[Moment generating functions]
 The MGF is $M_X(t) = \E[e^{tX}]$. It determines the distribution uniquely, generates moments through $\E[X^n] = M_X^{(n)}(0)$, and multiplies across independent sums, which is the fastest proof that Binomials and Poissons and Normals are each closed under addition.
+
+\vspace{2ex}
+
 \begin{center}
-\footnotesize
+% \footnotesize
 \begin{tabular}{@{}ll@{\hskip 3em}ll@{}}
 \toprule
 \textbf{Distribution} & $M_X(t)$ & \textbf{Distribution} & $M_X(t)$ \\
@@ -418,14 +421,17 @@ NegBin$(r,p)$ & $\left(\dfrac{pe^t}{1-(1-p)e^t}\right)^{\!r}$ & Lognormal & unde
 \bottomrule
 \end{tabular}
 \end{center}
-The lognormal entry is not an oversight. Its right tail is heavy enough that $\E[e^{tX}]$ diverges for every $t > 0$, which is a compact example of a distribution that has all moments yet no MGF.
+
+\vspace{1ex}
+
+As a note on the lognormal entry, the right tail is heavy enough that $\E[e^{tX}]$ diverges for every $t > 0$, which is a compact example of a distribution that has all moments yet no MGF.
 \end{keybox}
 
 \vspace{2ex}
 
 \begin{keybox}[How the families connect]
 \begin{center}
-\footnotesize
+% \footnotesize
 \begin{tabular}{@{}lll@{}}
 \toprule
 \textbf{From} & \textbf{Relationship} & \textbf{To} \\

@@ -1,0 +1,88 @@
+% ============================================================
+\subsection{Markov Chains}
+% ============================================================
+
+A Markov chain models a system that moves between states in steps, where the rule for the next move depends only on where the system is now.
+
+\begin{definition}[Markov Property]
+A process has the Markov property when the distribution of the next state depends only on the current state. The path taken to reach the current state carries no additional information.
+\end{definition}
+
+This is memorylessness generalized from waiting times to states. The Geometric and Exponential forgot how long they had already waited. A Markov chain forgets its entire past trajectory and keeps only its current position, which is what makes the current state a sufficient summary for predicting the future.
+
+\begin{definition}[States and Transitions]
+A \textit{state} is a complete description of the system at one step. Each state carries \textit{transition probabilities} giving the chance of moving to each other state in one step. A \textit{transient} state is one the chain eventually leaves, and an \textit{absorbing} (terminal) state is one it can never leave, such as ``win'' or ``lose''. Collecting the transition probabilities into a matrix $P$, with entry $P_{ij}$ the probability of moving from state $i$ to state $j$, gives the \textit{transition matrix}. Each row sums to 1, since the chain must go somewhere.
+\end{definition}
+
+\vspace{1em}
+
+\begin{keybox}[Two questions a Markov chain answers]
+Problems split by whether the chain can get stuck.
+\begin{itemize}[itemsep=1ex, label=--]
+  \item \textbf{Absorbing chains} contain terminal states the process eventually lands in. The questions are which absorbing state it reaches, a \textit{hitting probability}, and how long it takes to get there, a \textit{hitting time}. Both are solved by first-step analysis.
+  \item \textbf{Recurrent chains} keep moving with no absorbing state. The question is the long-run fraction of time spent in each state, given by the stationary distribution.
+\end{itemize}
+\end{keybox}
+
+\subsubsection{Absorbing Chains and First-Step Analysis}
+
+A problem with terminal states is solved by \textbf{first-step analysis}, which is the same conditioning-on-the-next-move idea behind the recursive expectation examples earlier. Condition on the single step the chain takes from its current state, and write the quantity at that state as a weighted average of the same quantity at the neighboring states, with the transition probabilities as weights. The recipe is:
+\begin{enumerate}[itemsep=-1ex]
+  \item enumerate the states and mark each as transient or absorbing
+  \item for each transient state, write the quantity of interest as a weighted average over the states reachable in one step
+  \item use the absorbing states to set the boundary conditions
+  \item solve the resulting system of equations
+\end{enumerate}
+The quantity of interest is whichever the problem asks for. Filling it with a probability yields a hitting probability, and filling it with an expected step count yields a hitting time.
+
+\newpage
+
+\begin{example}[Gambler's Ruin]
+A gambler starts with $k$ dollars and bets \$1 at a time, winning a dollar with probability $p$ and losing one with probability $q = 1-p$. Play continues until the stake reaches \$0 (ruin) or a target \$$N$. The state space is $\mathcal{S} = \{0, 1, \dots, N\}$, with $0$ and $N$ absorbing.
+
+Let $u_i = P(\text{ruin} \mid \text{start at } i)$. Conditioning on the first bet gives the first-step equation
+\[
+u_i = p\, u_{i+1} + q\, u_{i-1},
+\]
+with boundary conditions set by the absorbing states,
+\[
+u_0 = 1 \quad (\text{already ruined}), \qquad u_N = 0 \quad (\text{already at target}).
+\]
+Writing $r = \frac{q}{p}$, the solution for a starting stake $k$ is
+\[
+u_k = \frac{r^k - r^N}{1 - r^N}.
+\]
+In the fair case $p = q = \tfrac{1}{2}$ this is undefined as written, and the equation instead solves to
+\[
+u_k = \frac{N - k}{N},
+\]
+so the probability of reaching the target is $\frac{k}{N}$, simply the stake as a fraction of the goal.
+\end{example}
+
+\vspace{1em}
+
+\begin{keybox}[Expected time to absorption]
+The expected number of steps until the chain is absorbed, starting from state $k$, is another first-step analysis. Writing $D_k$ for that expected duration,
+\[
+D_k = 1 + p\, D_{k+1} + q\, D_{k-1}, \qquad D_0 = D_N = 0,
+\]
+where the leading $1$ counts the current step. For the fair Gambler's Ruin ($p = q = \tfrac{1}{2}$) this solves to
+\[
+D_k = k(N - k).
+\]
+The product form matches intuition. Duration is longest when the gambler starts in the middle, far from both barriers, and shrinks to zero at either edge.
+\end{keybox}
+
+\subsubsection{Recurrent Chains and the Stationary Distribution}
+
+When a chain has no absorbing states and keeps moving indefinitely, the relevant question is not where it ends but how its time is divided among the states over the long run.
+
+\begin{definition}[Stationary Distribution]
+For a chain with transition matrix $P$, a stationary distribution is a probability vector $\pi$ satisfying
+\[
+\pi P = \pi, \qquad \sum_i \pi_i = 1.
+\]
+It is the long-run fraction of time the chain spends in each state. The equation $\pi P = \pi$ says that a chain already distributed as $\pi$ reproduces that same distribution after one step.
+\end{definition}
+
+For a chain that is irreducible and aperiodic, meaning every state is reachable from every other and the chain does not cycle in a fixed period, this $\pi$ is unique and the chain settles into it regardless of where it started.

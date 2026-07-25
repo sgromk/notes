@@ -1,0 +1,64 @@
+% ============================================================
+% SQL Patterns (PostgreSQL) -- master wrapper for sections/30-code/31-sql/.
+% Mirrors the sections/30-code.tex <-> sections/30-code/ pattern one
+% level down. \input paths are relative to the MAIN document being
+% compiled, so paths below are given in full from the project root.
+% ============================================================
+\subsection{SQL Patterns (PostgreSQL)}
+% ============================================================
+
+Reference for recurring query shapes. Each entry states the problem phrasing
+that signals it and the mechanism that makes it work.
+
+\begin{keybox}[Reading a problem]
+Most prompts map to a small set of shapes, and the wording is the tell:
+\begin{itemize}[label=$\circ$, itemsep=1ex]
+  \item ``per group'', ``for each'' $\to$ \texttt{GROUP BY}, or a
+  \texttt{PARTITION BY} window when the whole row must survive.
+  \item ``top-$N$ per group'', ``most recent per'' $\to$ rank-then-filter,
+  or \texttt{DISTINCT ON} when $N = 1$.
+  \item ``change from the previous'', ``period-over-period'', ``return''
+  $\to$ \texttt{LAG} / \texttt{LEAD}.
+  \item ``running'', ``cumulative'', ``rolling'', ``moving average'' $\to$
+  an ordinary aggregate with \texttt{OVER}.
+  \item ``consecutive'', ``streak'', ``gap'' $\to$ gaps and islands.
+  \item ``one column per category'', ``pivot'' $\to$ conditional aggregation.
+\end{itemize}
+
+\vspace{1ex}
+The first decision on any prompt is whether the answer collapses rows
+(\texttt{GROUP BY}) or keeps every row and appends a computed column (a
+window function).
+\end{keybox}
+
+\begin{keybox}[Logical processing order]
+A query is evaluated in this order, regardless of written order:
+\[
+  \texttt{FROM/JOIN} \to \texttt{WHERE} \to \texttt{GROUP BY} \to
+  \texttt{HAVING} \to \texttt{SELECT} \to \texttt{DISTINCT} \to
+  \texttt{ORDER BY} \to \texttt{LIMIT}
+\]
+Two consequences drive most of the patterns below. \texttt{WHERE} runs
+before aggregation, so it cannot see aggregates or \texttt{SELECT} aliases.
+Window functions are computed at the \texttt{SELECT} step, so they also
+cannot appear in \texttt{WHERE} and must be wrapped in a subquery or CTE
+to filter on.
+\end{keybox}
+
+\input{sections/30-code/31-sql/10-filtering-joins}
+\input{sections/30-code/31-sql/20-aggregation}
+\input{sections/30-code/31-sql/30-null-handling}
+\input{sections/30-code/31-sql/40-window-functions}
+\input{sections/30-code/31-sql/50-deduplication}
+\input{sections/30-code/31-sql/60-string-manipulation}
+
+\newpage
+
+\subsubsection{Command Reference}
+
+Signatures are PostgreSQL. Optional arguments are shown in brackets.
+
+\input{sections/30-code/31-sql/61-tbl-query-clauses}
+\input{sections/30-code/31-sql/62-tbl-aggregates-null}
+\input{sections/30-code/31-sql/63-tbl-window-functions}
+\input{sections/30-code/31-sql/64-tbl-string-functions}

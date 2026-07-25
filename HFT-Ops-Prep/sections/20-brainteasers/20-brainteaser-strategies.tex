@@ -1,0 +1,148 @@
+% ============================================================
+\subsection{Strategies}
+% ============================================================
+
+Most of these problems are solved by recognizing a recurring structure rather than by extended calculation. A given problem usually reduces to one of a small set of standard techniques, and the central skill is identifying which one applies. The approach proceeds in three phases: frame the problem precisely, map it to a known reduction, and verify the result against limiting cases. 
+
+% ============================================================
+\subsubsection{Framing}
+% ============================================================
+
+Much of the work happens at the setup stage. An error introduced while framing a problem propagates through every later step and cannot be repaired by correct algebra, so the setup warrants explicit attention before any technique is chosen.
+
+\begin{keybox}[Framing checklist]
+\begin{itemize}[itemsep=1ex, label=--]
+  \item State every implicit assumption: fairness of coins and dice, independence of trials, sampling with or without replacement, and the exact meaning of ``random'', meaning which distribution over which set
+  \item Fix the sample space and the unit of observation. Counting the wrong objects as equally likely is the most common source of probability errors
+  \item Classify the target quantity as a probability, an expectation, a count, a ratio, an optimal strategy, or a worst-case guarantee. The class selects the toolset
+\end{itemize}
+\end{keybox}
+
+The choice of observational unit deserves particular care. A single experiment supports several sample spaces, and only some of them make the outcomes equally likely. A direct count is valid only at the level where that symmetry holds, so the first task is to identify that level and count there.
+
+% ============================================================
+\subsubsection{Core Probabilistic Reductions}
+% ============================================================
+
+Most probability puzzles reduce to one of the techniques below:
+
+\vspace{1ex}
+
+\begin{keybox}[Cue to reduction]
+\begin{center}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Cue in the problem} & \textbf{Reduction} \\
+\midrule
+``at least one'' & complement, $1 - P(\text{none})$ \\
+``expected number of \dots'' & linearity of expectation with indicators \\
+exchangeable items, ``$A$ before $B$'' & symmetry \\
+``until the first \dots'', repeated identical trials & conditioning on the first step \\
+waiting for a pattern, random walk, absorbing states & Markov states \\
+updating on evidence, false positives & Bayes, odds form \\
+fixed trial count, rate, or waiting structure & recognize the named distribution \\
+sum or average of many independent pieces & normal approximation, CLT \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{keybox}
+
+Three techniques recur often enough to warrant restating:
+
+\textbf{Linearity with indicators.} The expected size of a count equals the sum of the probabilities of its parts, whether or not those parts are independent. The method is to write the count as a sum of indicator variables, one per event, and take expectations term by term. Its power comes from sidestepping dependence entirely, since linearity holds without any independence assumption, which reduces an intractable joint distribution to a list of individual probabilities.
+
+\textbf{Symmetry.} When several items are exchangeable, every statement about their relative order is uniform over the possible orderings. This converts a probability into a counting ratio with no further work. Two consequences appear repeatedly: a specific item $A$ precedes a specific item $B$ with probability $\tfrac{1}{2}$, and among $k$ competing items each is equally likely to be first. When the items instead compete at rates $\lambda_i$, the uniform $\tfrac{1}{k}$ generalizes to the rate share $\lambda_j / \sum_i \lambda_i$.
+
+\textbf{Conditioning and self-similarity.} A process is self-similar when its state after one step is a scaled copy of the original problem. Conditioning on that first step then expresses the unknown in terms of itself, producing a solvable equation. This is recursive expectation for waiting times and first-step analysis for Markov chains, and it is the standard route for any ``expected time until'' quantity.
+
+% ============================================================
+\subsubsection{Combinatorial and Logical Tactics}
+% ============================================================
+
+These tactics address counting problems and questions of the form ``is a configuration reachable'' or ``must something exist''.
+
+\textbf{Small cases and induction.} Compute the answer for $n = 1, 2, 3$, conjecture the pattern, then confirm it by induction or a direct argument. Beyond producing the formula, small cases expose the recursive structure that conditioning later exploits.
+
+\textbf{Invariants.} An invariant is a quantity left unchanged by every legal move. If two states differ in the value of some invariant, no sequence of moves connects them, which resolves reachability and ``is it possible'' questions without any search. The usual construction assigns each configuration a value in a small set, often through a parity or coloring argument, and shows that every move preserves it.
+
+\textbf{Pigeonhole and extremal arguments.} If more items than categories are distributed among the categories, some category holds at least two. The extremal variant examines the largest or smallest element of a configuration to force a contradiction or an existence claim. Both establish that something must occur without exhibiting it, which is what makes them suited to existence questions.
+
+\textbf{Working backwards.} When the goal state is simple and the starting state is complex, reason from the end. The value of the final position is known outright, and each earlier position is defined in terms of positions closer to the goal, which is the structure underlying optimal-stopping and game problems.
+
+\textbf{Generating functions.} Encoding a sequence as the coefficients of a power series turns operations on the sequence into algebra on the series. Convolution becomes multiplication, so counting problems with additive constraints and distributions of sums of independent variables both reduce to expanding a product.
+
+% ============================================================
+\subsubsection{Adversarial and Sequential Decisions}
+% ============================================================
+
+These problems involve a decision maker choosing actions over time, sometimes against an opponent, to optimize an outcome.
+
+\textbf{Backward induction.} In a finite game of alternating moves with perfect information, solve from the last move outward. At each position a player selects the move that optimizes their outcome assuming optimal play thereafter. Applied recursively, this fixes the value of every position together with the equilibrium strategy.
+
+\textbf{Dominant strategies and minimax.} A dominant strategy is optimal regardless of the opponent's choice, and when one exists the analysis reduces to it. When none exists, a zero-sum game is solved by minimax, in which each player minimizes their maximum loss. With mixed strategies permitted, the two players' values coincide at a single value of the game, which is von Neumann's minimax theorem.
+
+\textbf{Optimal stopping.} When observations arrive in sequence and each accept-or-reject decision is final, the problem is one of optimal stopping, and its solution is typically a threshold rule. Observe without committing for a calibrated initial portion of the sequence to establish a baseline, then accept the first later observation that exceeds it. In the canonical case of selecting the best of $n$ candidates presented in random order, the initial portion is a fraction $1/e$ and the resulting success probability also approaches
+\[
+\frac{1}{e} \approx 0.368
+\]
+
+\textbf{Fair games and martingales.} A fair bet has expected value zero, and a sequence of fair bets forms a martingale, whose expected future value equals its present value regardless of history. No stopping rule applied with finite capital converts a fair game into a favorable one in expectation, which is the formal reason betting systems fail. Gambler's Ruin is the standard model, and its ruin and duration formulas quantify the outcome.
+
+\begin{remark}[Kelly sizing]
+For a favorable repeated bet, the wealth fraction that maximizes long-run growth is the edge divided by the odds, which for an even-money bet at win probability $p$ is $2p - 1$. Staking more than this fraction raises variance without raising growth, and staking well beyond it drives the long-run growth rate negative despite the positive edge.
+\end{remark}
+
+% ============================================================
+\subsubsection{Counting Information}
+% ============================================================
+
+A separate class of problems asks for the minimum number of measurements that guarantee a result in the worst case. The governing tool is outcome counting. A measurement with $b$ distinguishable results partitions the remaining possibilities into $b$ groups, so $k$ measurements distinguish at most $b^k$ cases. Resolving $M$ possibilities therefore requires
+\[
+k \geq \log_b M
+\]
+
+\begin{keybox}[Worst-case guarantees by outcome counting]
+\begin{center}
+% \footnotesize
+\begin{tabular}{@{}lcl@{}}
+\toprule
+\textbf{Measurement} & \textbf{Outcomes per step} & \textbf{$k$ steps resolve} \\
+\midrule
+yes/no question & $2$ & $2^k$ \\
+balance weighing & $3$ & $3^k$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{2ex}
+
+A balance produces three outcomes, left heavy, right heavy, or level, so $k$ weighings resolve $3^k$ cases, and locating one heavy item among $N$ of known direction needs $\lceil \log_3 N \rceil$. If the odd item may be either heavier or lighter, each candidate splits into two hypotheses and the requirement becomes $3^k \geq 2N$.
+\end{keybox}
+
+The same bound gives $\lceil \log_2 M \rceil$ yes/no questions, achieved by binary search. When the possibilities are not equally likely, the bound sharpens from a raw count to the entropy: the expected number of yes/no questions needed is at least $H(X)$ bits.
+
+% ============================================================
+\subsubsection{Estimation}
+% ============================================================
+
+Order-of-magnitude questions are handled by decomposition. Break the unknown into a product of factors, each estimable to within a small multiple, anchor on a known reference quantity, estimate each factor independently, and combine. Because the factor errors are multiplicative and roughly independent, they tend to partially cancel rather than accumulate, so a chain of rough estimates usually lands within a factor of two or three of the true value.
+
+% ============================================================
+\subsubsection{Verification}
+% ============================================================
+
+A closed-form answer should survive a set of inexpensive checks before it is trusted. Each check tests the answer against a case where the correct value is already known or constrained.
+
+\vspace{1.5ex}
+
+\begin{keybox}[Sanity checks]
+\begin{itemize}[itemsep=1ex, label=--]
+  \item \textbf{Boundary.} Send a parameter to an extreme, such as $p \to 0$, $p \to 1$, $n = 1$, or $n \to \infty$, and confirm the formula reduces to the obvious value
+  \item \textbf{Range.} A probability lies in $[0,1]$, an expected number of trials is at least $1$, and a variance is nonnegative
+  \item \textbf{Monotonicity.} The answer should move in the correct direction as each parameter increases
+  \item \textbf{Symmetry.} If the setup is symmetric in two variables, the answer must be symmetric in them as well
+  \item \textbf{Small case.} Evaluate by hand at $n = 2$ or $3$ and match the result against the formula
+\end{itemize}
+\end{keybox}

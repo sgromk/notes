@@ -1,0 +1,60 @@
+\subsubsection{Filtering and Joins}
+
+The foundation. Every later pattern assumes you can already restrict rows and
+combine tables.
+
+\paragraph{WHERE vs HAVING.} \texttt{WHERE} filters individual rows before
+grouping. \texttt{HAVING} filters whole groups after aggregation and is the
+only place an aggregate predicate is legal. A filter on a plain
+(non-aggregated) column belongs in \texttt{WHERE} so rows are dropped before
+the grouping work happens. Reserve \texttt{HAVING} for conditions like
+\texttt{COUNT(*) > 5}.
+
+\begin{lstlisting}[style=sql, caption={WHERE prunes rows, HAVING prunes groups}]
+SELECT department, COUNT(*) AS headcount
+FROM employees
+WHERE active = true          -- row filter, before grouping
+GROUP BY department
+HAVING COUNT(*) > 5;         -- group filter, on an aggregate
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\newpage
+
+\paragraph{Joins.} The recognition cue is which side you want to keep when a
+match is missing.
+\begin{itemize}[label=$\circ$]
+  \item \textbf{INNER:} rows with a match on both sides.
+  \item \textbf{LEFT / RIGHT:} keep all rows from one side, \texttt{NULL}-fill the other.
+  \item \textbf{FULL OUTER:} keep unmatched rows from both sides.
+  \item \textbf{CROSS:} Cartesian product, every left row against every right row.
+  \item \textbf{SELF:} a table joined to itself under an alias (employee to manager, row to prior row).
+  \item \textbf{Semi-join} (\texttt{EXISTS}, \texttt{IN}): keep left rows with at least one match. No row duplication, no right-side columns.
+  \item \textbf{Anti-join} (\texttt{NOT EXISTS}, or \texttt{LEFT JOIN ... WHERE right.key IS NULL}): keep left rows with no match.
+\end{itemize}
+
+Semi- and anti-joins filter the left table on whether a match exists, without
+pulling right-side columns or duplicating rows. Prefer \texttt{NOT EXISTS} over
+\texttt{NOT IN} for the anti-join, since a \texttt{NULL} on the right poisons
+\texttt{NOT IN} to zero rows.
+
+\begin{lstlisting}[style=sql, caption={Semi-join keeps matches, anti-join keeps non-matches}]
+-- Semi-join: customers with at least one order
+SELECT c.customer_id, c.name
+FROM customers c
+WHERE EXISTS (SELECT 1 FROM orders o
+              WHERE o.customer_id = c.customer_id);
+
+-- Anti-join: customers with no orders
+SELECT c.customer_id, c.name
+FROM customers c
+WHERE NOT EXISTS (SELECT 1 FROM orders o
+                  WHERE o.customer_id = c.customer_id);
+
+-- Anti-join, LEFT JOIN form: unmatched rows are the NULL-filled ones
+SELECT c.customer_id, c.name
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.customer_id
+WHERE o.customer_id IS NULL;
+\end{lstlisting}

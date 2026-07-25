@@ -1,0 +1,26 @@
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.225\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Command} & \textit{Arguments} & \textit{What it does} \\
+\midrule
+\textbf{COUNT(*)} & none & Counts every row, including all-\texttt{NULL} ones. \\
+\textbf{COUNT(col)} & one column & Counts rows where \texttt{col} is non-\texttt{NULL}. \\
+\textbf{COUNT(\allowbreak DISTINCT col)} & one column & Counts distinct non-\texttt{NULL} values. \\
+\textbf{SUM / AVG /\allowbreak MIN / MAX} & one expression & Skip \texttt{NULL}s. \texttt{AVG} divides by the non-\texttt{NULL} count. \\
+\textbf{STRING\_AGG} & \texttt{(expr, delim [ORDER BY ...])} & Concatenates a group into one delimited string. \\
+\textbf{ARRAY\_AGG} & \texttt{(expr [ORDER BY ...])} & Collects group values into an array. \\
+\textbf{COALESCE} & any number of values & Returns the first non-\texttt{NULL} argument, left to right. \\
+\textbf{NULLIF} & two values & Returns \texttt{NULL} when the arguments are equal, otherwise the first. Guards division by zero. \\
+\textbf{GREATEST / LEAST} & list of values & Largest or smallest value across columns within one row. Ignores \texttt{NULL}s. \\
+\textbf{IS [NOT] DISTINCT FROM} & two values & Null-safe comparison that treats two \texttt{NULL}s as equal. \\
+\textbf{IS [NOT] NULL} & one value & The only valid null test. \texttt{= NULL} is always unknown. \\
+\bottomrule
+\end{tabularx}
+\caption*{Aggregates and \texttt{NULL} handling}
+\end{table}
+
+\vspace{-2ex}

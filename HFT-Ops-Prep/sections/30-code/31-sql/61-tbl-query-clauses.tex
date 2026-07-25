@@ -1,0 +1,26 @@
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.225\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Command} & \textit{Arguments} & \textit{What it does} \\
+\midrule
+\textbf{WHERE} & boolean predicate & Filters individual rows before grouping. Cannot see aggregates, window functions, or select aliases. \\
+\textbf{GROUP BY} & column or expression list & Collapses rows to one output row per distinct key combination. \\
+\textbf{HAVING} & boolean predicate & Filters whole groups after aggregation. The only legal home for an aggregate predicate. \\
+\textbf{DISTINCT} & applies to the select list & Removes duplicate rows compared across the entire select list. Treats two \texttt{NULL}s as equal. \\
+\textbf{DISTINCT ON} & \texttt{(expr, ...)} & Postgres. Keeps one row per distinct value of the expressions, chosen by the leading \texttt{ORDER BY} terms, which must match. \\
+\textbf{ORDER BY} & \texttt{expr [ASC|DESC] [NULLS FIRST|LAST]} & Sorts the output. Postgres places \texttt{NULL}s last under \texttt{ASC} and first under \texttt{DESC}. \\
+\textbf{LIMIT / OFFSET} & \texttt{n} & Caps the number of rows returned, or skips the first \texttt{n}. \\
+\textbf{WITH} & \texttt{name AS (query)} & Common table expression. Names a subquery for reuse. \texttt{WITH RECURSIVE} walks hierarchies. \\
+\textbf{CASE} & \texttt{WHEN cond THEN val [ELSE val] END} & Row-level branching. Returns the first match, or \texttt{NULL} when nothing matches and \texttt{ELSE} is absent. \\
+\textbf{FILTER} & \texttt{(WHERE cond)} after an aggregate & Restricts which rows the aggregate consumes. Postgres shorthand for \texttt{SUM(CASE ...)}. \\
+\textbf{EXISTS / NOT EXISTS} & subquery & Semi-join and anti-join. Null-safe, unlike \texttt{IN} and \texttt{NOT IN}. \\
+\bottomrule
+\end{tabularx}
+\caption*{Query clauses and structure}
+\end{table}
+
+\vspace{-2ex}

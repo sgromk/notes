@@ -1,0 +1,27 @@
+\vspace{-4ex}
+
+\subsubsection{Aggregation}
+
+\paragraph{Conditional aggregation (pivot).} The signal is a request for one
+column per category on a single row. Fold a categorical column into counts by
+wrapping a \texttt{CASE} in an aggregate. Rows the \texttt{CASE} does not match
+contribute 0 to \texttt{SUM}. In Postgres the \texttt{FILTER} clause does the
+same thing and reads more cleanly.
+
+\begin{lstlisting}[style=sql, caption={Pivot risk categories to columns}]
+SELECT
+    inspection_type,
+    COUNT(*) FILTER (WHERE risk_category = 'Low Risk')      AS low_risk,
+    COUNT(*) FILTER (WHERE risk_category = 'High Risk')     AS high_risk,
+    COUNT(*)                                                AS total
+FROM sf_restaurant_health_violations
+GROUP BY inspection_type
+ORDER BY total DESC;
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The \texttt{SUM(CASE WHEN ... THEN 1 ELSE 0 END)} form is equivalent and
+portable across engines. \texttt{COUNT} ignores \texttt{NULL}, so
+\texttt{COUNT(CASE WHEN cond THEN 1 END)} (no \texttt{ELSE}) also counts only
+the matches.

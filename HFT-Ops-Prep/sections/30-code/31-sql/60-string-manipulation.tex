@@ -1,0 +1,104 @@
+\subsubsection{String Manipulation}
+
+Positions are 1-based, and every function returns a new value rather than
+mutating in place. The recurring uses are normalizing a dirty join key, parsing
+a delimited field, and folding a group of strings into one.
+
+\paragraph{Concatenation.} The operator \texttt{a || b} propagates
+\texttt{NULL}: if either side is \texttt{NULL} the whole expression is
+\texttt{NULL}. \texttt{CONCAT(a, b, ...)} treats \texttt{NULL} as an empty
+string. \texttt{CONCAT\_WS(sep, ...)} takes the separator first, joins the rest
+with it, and skips \texttt{NULL} arguments without leaving a doubled separator.
+Choosing \texttt{||} for user-facing text is a common way to silently blank out
+a whole column.
+
+\paragraph{Case and whitespace.} \texttt{UPPER} and \texttt{LOWER} are the
+standard folds, \texttt{INITCAP} capitalizes the first letter of each word and
+lowercases the rest. \texttt{TRIM} strips characters from the ends only, spaces
+by default, with \texttt{LEADING}, \texttt{TRAILING}, or \texttt{BOTH} to pick
+a side. Interior whitespace survives, so collapsing double spaces needs
+\texttt{REGEXP\_REPLACE(s, '\textbackslash s+', ' ', 'g')}.
+\texttt{LPAD(s, n, fill)} and \texttt{RPAD} pad to a fixed width and truncate
+when the input is already longer than \texttt{n}.
+
+\vspace{2ex}
+
+\begin{lstlisting}[style=sql, caption={Normalizing a join key}]
+SELECT
+    LOWER(TRIM(email))                      AS email_key,
+    SPLIT_PART(LOWER(TRIM(email)), '@', 2)  AS domain,
+    LPAD(account_id::text, 8, '0')          AS padded_id,
+    CONCAT_WS(', ', last_name, first_name)  AS sort_name
+FROM users;
+\end{lstlisting}
+
+\newpage
+
+\paragraph{Extraction and search.} \texttt{SUBSTRING(s FROM a FOR b)} (or
+\texttt{SUBSTR(s, a, b)}) takes \texttt{b} characters starting at position
+\texttt{a}. \texttt{LEFT(s, n)} and \texttt{RIGHT(s, n)} take from the ends,
+and a negative \texttt{n} drops that many characters from the opposite end.
+\texttt{STRPOS(s, sub)} returns the 1-based index of the first occurrence and
+\texttt{0} when the substring is absent, so a found/not-found test compares
+against \texttt{0}. \texttt{SPLIT\_PART(s, delim, n)} pulls the \texttt{n}th
+field of a delimited string and returns an empty string when that field does
+not exist, worth wrapping in \texttt{NULLIF(..., '')}.
+
+\begin{lstlisting}[style=sql, caption={Parsing a delimited name field}]
+SELECT full_name,
+       SPLIT_PART(full_name, ' ', 1)              AS first_name,
+       NULLIF(SPLIT_PART(full_name, ' ', 2), '')  AS last_name,
+       LENGTH(full_name)
+         - LENGTH(REPLACE(full_name, ' ', ''))    AS space_count
+FROM people;
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The last expression is the occurrence-counting idiom: remove every copy of the
+target and measure how much the string shrank. For a needle longer than one
+character, divide the difference by \texttt{LENGTH(needle)}.
+
+\paragraph{Replacement.} \texttt{REPLACE(s, from, to)} substitutes every
+literal occurrence. \texttt{TRANSLATE(s, from, to)} maps character to character
+by position and deletes any character in \texttt{from} that has no counterpart
+in \texttt{to}, a fast way to strip a known character set.
+\texttt{REGEXP\_REPLACE(s, pattern, repl, flags)} handles the general case and
+replaces only the \emph{first} match unless the \texttt{`g'} flag is passed, a
+frequent source of half-cleaned output.
+
+\paragraph{Pattern matching.} \texttt{LIKE} uses \texttt{\%} for any run of
+characters and \texttt{\_} for exactly one, and it is case sensitive.
+\texttt{ILIKE} is the case-insensitive form. For real expressiveness the POSIX
+operators apply: \texttt{\textasciitilde} matches, \texttt{\textasciitilde*}
+matches case-insensitively, and \texttt{!\textasciitilde} negates. Anchors
+\texttt{\^{}} and \texttt{\$} matter, since an unanchored pattern matches
+anywhere in the string.
+
+\begin{lstlisting}[style=sql, caption={Regex cleaning and validation}]
+SELECT phone,
+       REGEXP_REPLACE(phone, '[^0-9]', '', 'g')  AS digits,
+       phone ~ '^\+?[0-9]{10,15}$'               AS looks_valid,
+       email ILIKE '%@gmail.com'                 AS is_gmail
+FROM contacts;
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\paragraph{Splitting and aggregating.} \texttt{STRING\_AGG(expr, delim ORDER BY
+...)} collapses a group into one delimited string and is the string analogue of
+\texttt{SUM}. The \texttt{ORDER BY} lives inside the call, so the output order
+is deterministic. The inverse direction expands one row into many:
+\texttt{UNNEST(STRING\_TO\_ARRAY(s, delim))} or
+\texttt{REGEXP\_SPLIT\_TO\_TABLE(s, pattern)} in the \texttt{FROM} clause.
+
+\begin{lstlisting}[style=sql, caption={Collapse a group, then expand it back}]
+SELECT department,
+       STRING_AGG(name, ', ' ORDER BY name) AS members
+FROM employees
+GROUP BY department;
+-- one row per tag stored in a comma-separated column
+SELECT p.id, TRIM(tag) AS tag
+FROM products p,
+     UNNEST(STRING_TO_ARRAY(p.tags, ',')) AS tag;
+\end{lstlisting}

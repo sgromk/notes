@@ -1,0 +1,71 @@
+\subsubsection{Select Worked Problems}
+
+\begin{problem}
+A gambler has \$4 and wants to reach \$7, betting \$1 each round on a fair game. What's the probability of reaching \$7 before going broke?
+\end{problem}
+
+\begin{solution}
+Since the game is fair, we can assume that $p=\frac{1}{2}$. Then the probability of reaching the target is $\frac{k}{N} = \frac{4}{7}$
+\end{solution}
+
+\begin{problem}
+You flip a coin. What's the expected number of flips to get 3 heads in a row?
+\end{problem}
+
+\begin{solution}
+$\mathcal{S} = \{S_0, S_1, S_2, S_3\}$, where the subscript indicates the number of consecutive heads in the state. Then the only absorbing state is $S_3$.
+
+We then create a system of transition equations, where each state has a 50\% chance to progress or to go back to zero consecutive heads:
+\begin{align*}
+    E_0 &=  1 + \frac{1}{2} E_0 + \frac{1}{2}E_1 \\[1ex]
+    E_1 &=  1 + \frac{1}{2} E_0 + \frac{1}{2}E_2 \\[1ex]
+    E_2 &=  1 + \frac{1}{2} E_0 + \frac{1}{2}E_3 \\[1ex]
+    E_3 &= 0
+\end{align*}
+
+We then backsubstitute to solve for $E_0$:
+\begin{align*}
+    E_2 &= 1 + \frac{1}{2}E_0 + \frac{1}{2}0 = 1 + \frac{1}{2}E_0\\[1ex]
+    E_1 &= 1 + \frac{1}{2}E_0 + \frac{1}{2} \left ( 1 + \frac{1}{2}E_0 \right) = \frac{3}{2} + \frac{3}{4}E_0\\[1ex]
+    E_0 &= 1 + \frac{1}{2}E_0 + \frac{1}{2} \left( \frac{3}{2} + \frac{3}{4}E_0  \right ) = \frac{7}{4} + \frac{7}{8} E_0\\[1ex]
+    \rightarrow E_0 &= 14 
+\end{align*}
+\end{solution}
+
+\begin{problem}
+You roll a die repeatedly. What's the expected number of rolls until the running sum is a multiple of 3?
+\end{problem}
+
+\begin{solution}
+Divisibility by three makes the relevant states the residue classes of the running sum modulo 3: $\mathcal{S} = \{[0], [1], [2]\}$, with $[0]$ the target. A die value is uniform mod 3, since the faces $1,\dots,6$ give residues $1,2,0,1,2,0$, two of each. Adding a uniform residue to any current sum lands on a uniform residue, so each roll moves to one of the three classes with probability $\tfrac{1}{3}$. This folds the six equally likely rolls into three equally likely transitions.
+
+The state $[0]$ plays two roles that must be separated. As the \textit{target} it is absorbing, so no further rolls are needed once the sum is a multiple of 3, i.e., $E_0 = 0$. 
+
+As the \textit{start} the running sum is 0, but the target requires arriving there by a roll, so the first move is forced and the start does not inherit the absorbing value. It gets its own equation below. Let $E_i$ be the expected additional rolls to reach a multiple of 3 from residue $i$. The transient states $[1]$ and $[2]$ give
+\begin{align*}
+    E_1 &= 1 + \tfrac{1}{3}E_0 + \tfrac{1}{3}E_1 + \tfrac{1}{3}E_2 \\[1ex]
+    E_2 &= 1 + \tfrac{1}{3}E_0 + \tfrac{1}{3}E_1 + \tfrac{1}{3}E_2
+\end{align*}
+By symmetry $E_1 = E_2 = E$, and with $E_0 = 0$ each reduces to
+\[
+E = 1 + \tfrac{2}{3}E \;\longrightarrow\; \tfrac{1}{3}E = 1 \;\longrightarrow\; E = 3
+\]
+Finally the forced first roll from the start:
+\[
+R = 1 + \tfrac{1}{3}\underbrace{E_0}_{=\,0} + \tfrac{1}{3}E_1 + \tfrac{1}{3}E_2 = 1 + \tfrac{1}{3}(3) + \tfrac{1}{3}(3) = 3
+\]
+
+\textbf{Checks.} Each roll independently lands on a multiple of 3 with probability $\tfrac{1}{3}$ regardless of the current sum, so the count is Geometric$(\tfrac{1}{3})$ with mean $\tfrac{1}{p} = 3$. Equivalently, this is the expected return time to state $[0]$, which for an irreducible chain is $\frac{1}{\pi_0}$. The residue chain is symmetric with $\pi = (\tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{3})$, giving $\frac{1}{\pi_0} = 3$.
+\end{solution}
+
+\begin{problem}
+A particle starts at position 0 on a number line. Each step: +1 with probability $\frac{2}{3}$, -1 with probability $\frac{1}{3}$. What's the probability it ever reaches -3?
+\end{problem}
+
+\begin{solution}
+With no upper barrier, this is one-sided ruin: against an upward drift, what is the chance the walk ever gets $3$ levels down. For a biased walk that steps toward the target with probability $p$ and away with probability $p'$, where $p < p'$, the probability of ever reaching a point $n$ levels below the start is $\left(p/p'\right)^n$. The ratio is below $1$ since the walk drifts away from the target, and it is raised to the $n$ because the $n$ levels are cleared one at a time, each an independent copy of the same descent. Here the walk moves down with probability $p = \tfrac{1}{3}$ and up with probability $p' = \tfrac{2}{3}$, and $n = 3$, so
+\[
+P(\text{ever reach } -3) = \left(\frac{1/3}{2/3}\right)^3 = \left(\tfrac{1}{2}\right)^3 = \tfrac{1}{8}
+\]
+This ratio is the same $r = q/p$ that drives Gambler's Ruin, here with the upper barrier sent to infinity. When the walk is fair the ratio equals $1$ and every level is reached with certainty.
+\end{solution}

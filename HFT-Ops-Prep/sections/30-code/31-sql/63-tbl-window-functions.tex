@@ -1,0 +1,27 @@
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.225\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Command} & \textit{Arguments} & \textit{What it does} \\
+\midrule
+\textbf{OVER} & \texttt{(PARTITION BY ... ORDER BY ... [frame])} & Turns a function into a window function evaluated per row without collapsing the result set. \\
+\textbf{ROW\_NUMBER()} & none & Sequential number within the partition. Ties broken arbitrarily. \\
+\textbf{RANK()} & none & Competition rank. Ties share a rank and leave gaps afterward. \\
+\textbf{DENSE\_RANK()} & none & Ties share a rank with no gaps. \\
+\textbf{NTILE(n)} & bucket count & Splits the partition into \texttt{n} roughly equal buckets and labels each row. \\
+\textbf{LAG(col[, k, default])} & \texttt{k} defaults to 1 & Value \texttt{k} rows earlier in the ordered partition. \texttt{NULL} past the partition edge unless a default is supplied. \\
+\textbf{LEAD(col[, k, default])} & same as \texttt{LAG} & Value \texttt{k} rows ahead. \\
+\textbf{FIRST\_VALUE /\allowbreak LAST\_VALUE} & \texttt{col} & First or last value in the current frame. \texttt{LAST\_VALUE} needs an explicit frame to see the full partition. \\
+\textbf{NTH\_VALUE(col, n)} & column, position & The \texttt{n}th value in the frame. \\
+\textbf{SUM / AVG / COUNT ... OVER} & aggregate plus window spec & Running or rolling aggregate computed per row. \\
+\textbf{ROWS BETWEEN} & \texttt{a PRECEDING} to \texttt{b FOLLOWING}, \texttt{CURRENT ROW}, \texttt{UNBOUNDED} & Physical frame counted in rows. Use it for fixed moving windows. \\
+\textbf{RANGE BETWEEN} & same bound keywords & Value-based frame that includes every row tied on the \texttt{ORDER BY} key. This is the default frame. \\
+\bottomrule
+\end{tabularx}
+\caption*{Window functions and frames}
+\end{table}
+
+\newpage

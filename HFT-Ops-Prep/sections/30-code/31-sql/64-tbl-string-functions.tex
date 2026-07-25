@@ -1,0 +1,32 @@
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.225\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Command} & \textit{Arguments} & \textit{What it does} \\
+\midrule
+\textbf{\texttt{||}} & two strings & Concatenation. Yields \texttt{NULL} if either side is \texttt{NULL}. \\
+\textbf{CONCAT} & any number of values & Concatenation treating \texttt{NULL} as an empty string. \\
+\textbf{CONCAT\_WS} & separator, then values & Joins arguments with a separator and skips \texttt{NULL}s. \\
+\textbf{LENGTH / CHAR\_LENGTH} & one string & Character count. \texttt{OCTET\_LENGTH} gives bytes. \\
+\textbf{UPPER / LOWER /\allowbreak INITCAP} & one string & Case folding. \texttt{INITCAP} capitalizes each word and lowercases the rest. \\
+\textbf{TRIM} & \texttt{[LEADING|TRAILING|BOTH] [chars] FROM s} & Strips characters from the ends only, spaces by default. \texttt{LTRIM}, \texttt{RTRIM}, \texttt{BTRIM} are shorthands. \\
+\textbf{LPAD / RPAD} & \texttt{(s, n [, fill])} & Pads to width \texttt{n}, truncating when \texttt{s} is already longer. \\
+\textbf{LEFT / RIGHT} & \texttt{(s, n)} & First or last \texttt{n} characters. A negative \texttt{n} drops that many from the opposite end. \\
+\textbf{SUBSTRING} & \texttt{(s FROM a FOR b)} or \texttt{SUBSTR(s, a, b)} & Slice of length \texttt{b} starting at 1-based position \texttt{a}. \\
+\textbf{STRPOS / POSITION} & \texttt{(s, sub)} / \texttt{(sub IN s)} & 1-based index of the first occurrence, \texttt{0} when absent. \\
+\textbf{REPLACE} & \texttt{(s, from, to)} & Replaces every literal occurrence. \\
+\textbf{TRANSLATE} & \texttt{(s, from\_set, to\_set)} & Maps characters by position and deletes those with no counterpart. \\
+\textbf{SPLIT\_PART} & \texttt{(s, delim, n)} & The \texttt{n}th delimited field. Returns an empty string when the field is missing. \\
+\textbf{STRING\_TO\_\allowbreak ARRAY / UNNEST} & \texttt{(s, delim)} / \texttt{(array)} & Splits into an array, then expands an array into rows. \\
+\textbf{REVERSE / REPEAT} & \texttt{(s)} / \texttt{(s, n)} & Reverses a string, or repeats it \texttt{n} times. \\
+\textbf{LIKE / ILIKE} & pattern with \texttt{\%} and \texttt{\_} & Wildcard match, case sensitive and case insensitive respectively. \\
+\textbf{\textasciitilde{} \textasciitilde* !\textasciitilde{}} & POSIX regex & Regex match, case-insensitive match, and negated match. \\
+\textbf{TO\_CHAR} & \texttt{(value, format)} & Formats a number or timestamp as text, e.g.\ \texttt{'YYYY-MM-DD'}. \\
+\textbf{CAST / \texttt{::}} & \texttt{(expr AS type)} / \texttt{expr::type} & Type conversion. \texttt{::numeric} also fixes integer division. \\
+\bottomrule
+\end{tabularx}
+\caption*{String functions}
+\end{table}

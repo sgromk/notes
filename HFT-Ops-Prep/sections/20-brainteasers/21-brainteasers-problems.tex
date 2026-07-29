@@ -211,3 +211,249 @@ The prisoners agree in advance to encode parity. The prisoner at the back, who s
 
 Each later prisoner deduces their own colour from three known quantities: the announced parity, the colours called behind them, and the hats visible ahead. Their hat is red exactly when the combined parity of the reds heard and seen differs from the announced parity, since their own hat is the only one unaccounted for and so must absorb the discrepancy. Having deduced it, they answer correctly, and their answer joins the record used by those ahead.
 \end{solution}
+
+
+\begin{problem}
+A traveler meets a pair of twins at a fork in the road: one path is correct and one incorrect. One of the twins always tells the truth (knight), and the other one always lies (knave). Which single question can the traveler ask one of the twins to determine the correct path?
+\end{problem}
+
+\begin{solution}
+Ask either twin: ``Which path would your brother say is the good one?'', then take the opposite of the path indicated.
+
+The question works because it forces the answer to pass through both twins, one truthful and one lying, so a single inversion is applied no matter which twin is asked. Let the honest report of the good path be $G$. The brother being described contributes one inversion if he is the liar, and the twin answering contributes a second inversion if he is the liar. Exactly one of the two is the liar in either case, so the answer always carries exactly one inversion and points to the bad path.
+
+Concretely, asking the knight gives a truthful report of what the knave would say, and the knave would name the bad path. Asking the knave gives a lying report of what the knight would say, and the knight would name the good path, which the knave inverts to the bad path. Both routes indicate the bad path, so the traveler takes the other one.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+
+\vspace{-1ex}
+There are two jars, one contains water, and the other contains wine (equal volumes). A certain amount of water is transferred to the wine, then the same amount of the mixture is transferred back to the water beaker. Is there now more water in the wine than there is wine in the water?
+\end{problem}
+
+\begin{solution}
+Call the initial volume in each jar $V$. Each jar ends with volume $V$ again, since equal amounts move out and back. Say the wine jar finishes with $x$ of water, so its remaining wine is $V-x$.
+
+Since there was initially $V$ wine, the $x$ missing from the wine jar must be in the water jar, with $V-x$ of water there to reach a total volume of $V$. Thus the amount of water in the wine jar equals the amount of wine in the water jar.
+\end{solution}
+
+\vspace{-1ex}
+
+\begin{problem}
+\vspace{-1ex}
+
+There are 100 light bulbs in a sequence, all kept in OFF state. The first person comes and toggles all the bulbs which are at a position that is a multiple of 1, i.e. switch all bulbs to ON. The second person toggles all multiples of 2, i.e. turn the even-numbered bulbs OFF and leave the odd ones as is. The third person comes and toggles all multiples of 3. This process continues until the 100th person does their part. After this, how many bulbs are in ON state?
+\end{problem}
+
+\begin{solution}
+10 bulbs will be on. A bulb ends ON if it is toggled an odd number of times, and bulb $n$ is toggled once by each person whose number divides $n$, so it ends ON exactly when $n$ has an odd number of divisors. This happens only for perfect squares, and the number of perfect squares up to $n$ is $\lfloor \sqrt{n} \rfloor$, which is $\lfloor \sqrt{100} \rfloor = 10$.
+
+The prime factorization of a number $n$ follows the form $n = p_1^{e_1} \cdot p_2^{e_2} \cdots p_k^{e_k}$, where $e_i$ counts the copies of the prime $p_i$. A divisor $d$ of $n$ has to use a subset of that factorization: $d = p_1^{a_1} \cdot p_2^{a_2} \cdots p_k^{a_k}, \ 0 \leq a_i \leq e_i$. There are $e_i + 1$ choices for each exponent, so the total number of divisors is
+\[
+\tau(n) = \prod_{i=1}^k (e_i + 1)
+\]
+$n$ is a perfect square when every $e_i$ is even, since squaring doubles each exponent. Then each $e_i + 1$ is odd, and a product of odd numbers is odd, so a perfect square has an odd number of divisors and no other number does.
+\end{solution}
+
+\vspace{-1ex}
+
+\begin{problem}
+\vspace{-1ex}
+
+We have a weighted coin that shows a Head with probability $p$ and Tails with $1-p$, $(0.5 < p < 1)$. How do we define two equally likely events using this coin? Each event is a function of the outcomes of one or more coin tosses.
+\end{problem}
+
+\begin{solution}
+We want two equally likely events, each built from coin toss outcomes. We do \textit{not} know $p$, so we anchor the equality on something independent of $p$. Flip the coin twice and read the ordered pair. Define Event 1 as $HT$ and Event 2 as $TH$, and discard $HH$ or $TT$.
+
+These are equally likely because $P(HT) = p(1-p)$ and $P(TH) = (1-p)p$ are the same product, equal for every $p$. Discarding the tied outcomes $HH$ and $TT$ leaves the remaining probability split evenly between the two.
+
+The flips must be read in fixed, non-overlapping pairs. If instead we flipped a single stream until either $HT$ or $TH$ first appeared, the result would be decided by the very first flip, since the run ends as soon as the coin differs from where it started. That favors $HT$ with probability $p$ and breaks the fairness.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+Spiderman has two close friends, Mary Jane \& Gwen Stacy. After every mission, he rushes to the central subway. One line heads towards Mary's place, and another towards Stacy. Trains from each line leave every 10 minutes. Spiderman being impartial always boards the first train that leaves. However, he observes that he ends up visiting Mary Jane nine times more often than Gwen Stacy. Can you decipher why?
+\end{problem}
+
+\begin{solution}
+The key is that Spiderman boards the next train to depart, so what matters is the waiting gap \textit{before} each train, and those two gaps are unequal. We assume his arrival time is uniform across the 10-minute cycle.
+
+Say Mary's train departs at times 0 and 10, and Gwen's train departs at some time $d$ in between, $0 < d < 10$. If he arrives in $(0, d)$ the next train is Gwen's, and if he arrives in $(d, 10)$ the next train is Mary's. So the interval leading to Gwen has length $d$ and the interval leading to Mary has length $10 - d$, giving $P(\text{Mary}) = \frac{10 - d}{10}$ and $P(\text{Gwen}) = \frac{d}{10}$. Concretely, we solve for a 9-to-1 ratio: $\frac{10 - d}{d} = 9 \implies d = 1$.
+
+So Gwen's train leaves just 1 minute after Mary's, which leaves a 9-minute window in which the next train goes to Mary.
+\end{solution}
+
+\begin{problem}
+An egg breaks only if dropped from above a threshold floor, within a 100-story building. Every time you drop an egg, it is counted as an attempt. You are given 2 eggs to deduce the threshold floor, and eggs can be reused if they do not break. Minimize the number of drops (trials) in the worst case. 
+\end{problem}
+
+\begin{solution}
+We cannot perform a standard binary search because overestimates of the target require a linear search from the last floor to the threshold (until we find it). Considering this, we could try to optimize an equation which divides 100 into $d$ splits and then performs $\frac{100}{d}$ trials for the linear scan:
+\[
+\min \  \left(d + \frac{100}{d}\right), \qquad d \in \mathbb{N}, \ d \in [1, 100]
+\]
+The minimum of this can be solved using the roots of the derivative:
+\[
+\frac{d}{dd} \left( d + \frac{100}{d} \right) = 0 \longrightarrow 1 - \frac{100}{d^2} = 0 \longrightarrow d = 10
+\]
+which gives 19 trials in the worst case (threshold on floor 99). This is not the true optimum, the approach failed for two reasons. Firstly the function is discrete, which we only \textit{approximated} using a derivative. Secondly, and more importantly, the equation we chose encoded a constraint that each division be the same size. To find the true optimum, we can do better by searching in cuts of \textit{decreasing} size over time.
+
+We use step sizes that decrease by 1. From an initial step $n$, we drop at floor $n$, then $n + (n-1)$, then $n + (n-1) + (n-2)$, and so on, running a linear scan from the last passed floor whenever the egg breaks. Each band is one floor shorter than the last, so a broken first egg always leaves the worst-case total at $n$. The floors this covers is the triangle number $\frac{n(n+1)}{2}$, so we want the smallest $n$ with
+\[
+\frac{n(n+1)}{2} \geq 100
+\]
+Which is $n=14$. Thus, the worst case is 14 drops.
+
+Intuitively, the decreasing steps work by \textit{spreading} the worst case evenly across every threshold placement rather than letting it collapse onto one. In the fixed-jump attempt the cost concentrated on a single floor (99), which sat as a spike above the rest. The decreasing schedule flattens that spike, so every placement costs exactly $n$, and the worst case drops to meet the average. This is the general shape of a minimax problem: whenever the maximum is uneven, the tall placement has slack elsewhere to borrow from, and we keep leveling until no placement can be improved without worsening another.
+\end{solution}
+
+
+\begin{problem}
+1024 pirates stand in a circle. They start shooting alternately in a cycle such that the 1st pirate shoots the 2nd, the 3rd shoots the 4th and so on. The pirates who got shot are eliminated from the game. They continue in circles, shooting the next standing pirate, till only one pirate is left. Which position should someone stand to survive?
+\end{problem}
+
+\begin{solution}
+Each pass around the circle, the number of pirates decreases by a factor of 2. Since the initial total is a power of 2, every pass starts with an even number of pirates. With an even count the pirates split exactly into shooter-victim pairs, so the last pirate of the pass is a victim, and the next shooter wraps back around to position 1. Thus position 1 shoots every pass and is never shot, until they are the last one remaining. So the pirate in position 1 survives.
+\end{solution}
+
+
+\begin{problem}
+I bought two fair six-sided dice. Keeping the first one untouched, I modified the second die, by erasing each face and writing a number of my own. Now, the sum of outcomes of the two dice is equally likely an integer between 1 and 12. Can you deduce the numbers written on the modified die?
+\end{problem}
+
+\begin{solution}
+The modified die has three zero faces and three six faces. The key detail is that any integer from 1 to 12 is equally likely, unlike the usual two-dice sum which peaks at 7 and tapers to a single way each of making 2 or 12. Since the standard die contributes at least 1, reaching a sum of 1 forces a 0 on the modified die, and reaching 12 forces a 6. The standard die alone is already uniform over 1 to 6, so we can build a uniform 1 to 12 by taking that block and shifting a copy of it up by 6. Adding 0 leaves the sum in 1 to 6, and adding 6 moves it to 7 to 12, so to weight the two blocks equally the modified die needs three 0 faces and three 6 faces.
+\end{solution}
+
+\begin{problem}
+Assume the gender of a child can be either Boy or Girl, equally likely.
+
+\begin{enumerate}[label={\alph*.}]
+    \item Suppose I have two children. Younger one is a girl. What is the probability that both children are girls?
+    \item Suppose I have two children, and atleast one of them is a boy. Find the probability that both of them are boys.
+    \item Suppose I have two kids, lets call them X and Y. Suppose X is a girl. What is the probability that I have two daughters?
+\end{enumerate}
+\end{problem}
+
+\begin{solution}
+The three parts differ in whether the condition names a specific child or only makes a claim about the pair. Naming a specific child leaves the other as an independent fair coin. An existential ``at least one'' condition does not.
+
+\begin{enumerate}[label={\alph*.}]
+    \item We condition on a specific child, the younger, being a girl. Writing each outcome as (older, younger), the condition leaves the two equally likely cases $\{(B,G), (G,G)\}$, of which $(G,G)$ is both girls. So the probability is $\frac{1}{2}$, which is just the independent chance that the older child is also a girl.
+    \item Saying \textit{at least} one is a boy names no particular child, so it removes only $(G,G)$. This leaves three equally likely cases $\{(B,G), (G,B), (B,B)\}$, of which only $(B,B)$ is both boys, giving $\frac{1}{3}$. The two mixed cases both satisfy the condition, which is why the denominator is 3 rather than 2.
+    \item Labeling the children and telling us X is a girl fixes a specific child, exactly as in (a). The other child is an independent fair coin, so the probability of two daughters is $\frac{1}{2}$.
+\end{enumerate}
+\end{solution}
+
+\begin{problem}
+In a dark room, there is a deck of 52 cards, with exactly 10 cards facing up, rest are facing down. You can touch the cards with your hands but cannot sense which cards are facing up/down. You need to split all these cards into two decks with equal number of cards facing up.
+\end{problem}
+
+\begin{solution}
+We first note that the two decks only need an \textit{equal} number of face-up cards between them, not a count matching the original 10. The two decks also need not be the same size.
+
+Using this, we draw 10 cards at random, matching the number of face-up cards in the deck. Suppose this pile contains $x$ face-up cards, so the remaining 42 cards hold the other $10 - x$ face up. Since our pile has 10 cards total, it also holds $10 - x$ face-down cards. We then flip every card in the pile, which turns those $10 - x$ face-down cards up and the $x$ face-up cards down, leaving exactly $10 - x$ face up. Both piles now show $10 - x$ face-up cards.
+\end{solution}
+
+
+\begin{problem}
+A certain town comprises of 100 married couples. Some husbands secretly cheat on their wives. All wives know about the nature of every husband except their own. When a wife concludes that her husband cheated, she kicks her husband into the street at midnight. All husbands remain silent about their secret. One day, the mayor of the town announces to the whole town that there is at least 1 cheating husband in the town. After announcement, no one talks, waiting for someone to get kicked. Till 9th night from announcement, no husband was kicked, but on the 10th night, some husbands got kicked out simultaneously. How many are they?
+\end{problem}
+
+\begin{solution}
+10 husbands were kicked out. Each wife saw either 9 cheating husbands (her husband cheats) or 10 (her husband is faithful), so each knows her count is either correct or lower by 1.
+
+A wife who sees $c$ cheaters therefore knows every other wife sees at least $c-1$, so no one can act before night $c$, and the earlier nights tell her nothing. She watches only night $c$. If those $c$ are all of them, they are kicked that night. When night $c$ passes with no one kicked, the count must instead be $c+1$, so her own husband is the extra cheater, and she kicks him on night $c+1$. The 10 cheaters' wives each saw 9, ignored everything up to night 9, and when it stayed quiet they kicked their husbands together on night 10.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+A father claims that it snowed last night. His first daughter says that the probability of snowfall on any given night is $\frac{1}{8}$. His second daughter says that the father lies 5 out of every 6 times. Given that the father claims it snowed, what is the probability that it actually did?
+\end{problem}
+
+\begin{solution}
+We can use Bayes' Theorem directly to solve for $P(S)$, that snowfall occurred given $C$, the father claimed it snowed. Using $P(C|S) = 1 - \frac{5}{6} = \frac{1}{6}$:
+\[
+P(S|C) = \frac{P(C|S)\cdot P(S)}{P(C)} =  \frac{\frac{1}{6} \cdot \frac{1}{8}}{\frac{1}{6} \cdot \frac{1}{8} + \frac{5}{6} \cdot \frac{7}{8}} = \frac{1}{36}
+\]
+\end{solution}
+
+
+\begin{problem}
+Two witches make a nightly visit to an all-night coffee shop. Each arrives at a random time between 0:00 and 1:00. Each one of them stays for exactly 30 minutes. On any one given night, what is the probability that the witches will meet at the coffee shop?
+\end{problem}
+
+\begin{solution}
+
+The answer is $\frac{3}{4}$. If we plot each witches arrival as $X$ and $Y$, then we can solve $|X-Y| \leq 30$:
+
+
+\begin{center}
+
+\begin{tikzpicture}[scale=0.09]
+  % --- shaded regions ---
+  % meeting band |X-Y| <= 30
+  \fill[green!25] (0,0) -- (0,30) -- (30,60) -- (60,60) -- (60,30) -- (30,0) -- cycle;
+  % miss: second arrives >30 late
+  \fill[red!20] (0,30) -- (0,60) -- (30,60) -- cycle;
+  % miss: first arrives >30 late
+  \fill[red!20] (30,0) -- (60,0) -- (60,30) -- cycle;
+
+  % --- gridlines every 10 ---
+  \draw[gray!40,very thin] (0,0) grid[step=10] (60,60);
+
+  % --- band boundaries Y = X +/- 30 ---
+  \draw[green!55!black,thick] (0,30) -- (30,60);
+  \draw[green!55!black,thick] (30,0) -- (60,30);
+
+  % --- outer square ---
+  \draw[very thick] (0,0) rectangle (60,60);
+
+% --- axis ticks and labels ---
+  \foreach \t in {0,20,40,60}{
+    \draw (\t,0) -- (\t,-1.5) node[below,scale=1.2] {\t};
+    \draw (0,\t) -- (-1.5,\t) node[left,scale=1.2] {\t};
+  }
+  \node[scale=1] at (30,-11) {$X$ = first witch arrival (min)};
+  \node[rotate=90,scale=1] at (-13,30) {$Y$ = second witch arrival (min)};
+
+  % --- region labels ---
+  \node[green!45!black,align=center] at (30,30) {meet\\ $|X-Y|\le 30$\\ area $2700$};
+  \node[red!60!black,scale=0.85] at (12,50) {miss $450$};
+  \node[red!60!black,scale=0.85] at (48,10) {miss $450$};
+\end{tikzpicture}
+
+\end{center}
+
+
+\end{solution}
+
+\newpage
+
+
+\begin{problem}
+Someone breaks into a king's wine cellar where he stores 1000 bottles of wine. This person proceeds to poison one of the 1000 bottles, but gets away too quickly for the king's guard to see which one he poisoned or to catch him.
+
+The king needs the remaining 999 safe bottles for his party in 4 weeks. The king has 10 prisoners who deserve execution. The poison takes about 3 weeks to take effect, and any amount of it will kill whoever drinks it. How can he figure out which bottle was poisoned in time for the party?
+\end{problem}
+
+\begin{solution}
+We can use each prisoner's death as one bit of binary information. With 10 prisoners we can encode $2^{10} = 1024$ unique states, more than enough for 1000 bottles. We number the bottles in binary and assign each prisoner a bit position, and a prisoner drinks from a bottle whenever its bit is a 1. After 3 weeks, the set of prisoners who died reads off the poisoned bottle directly. For example, bottle 579 is 1001000011 in binary, so prisoners 1, 4, 9, and 10 drank from it, and they are the only ones who die.
+\end{solution}
+
+\begin{problem}
+Let $X$ be a random variable that takes value 0 or 1 with 50\% probability each. You need to define a new random variable $Y$ as a function of $X$, such that $Y$ has the value 1 with 25\% probability and 0 otherwise.
+\end{problem}
+
+\begin{solution}
+A single draw of $X$ can only give probabilities of 0, $\frac{1}{2}$, or 1, so we need two independent draws to reach $\frac{1}{4}$. We make $Y$ the product of two independent instances of $X$:
+\[
+Y = X_1 \cdot X_2
+\]
+The product is 1 only when both draws are 1, which by independence happens with probability $\frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$.
+\end{solution}

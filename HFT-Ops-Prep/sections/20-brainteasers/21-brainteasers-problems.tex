@@ -457,3 +457,30 @@ Y = X_1 \cdot X_2
 \]
 The product is 1 only when both draws are 1, which by independence happens with probability $\frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$.
 \end{solution}
+
+\begin{problem}
+You have 25 horses and can race 5 at a time. Each race gives you the ranking of those 5 but no times. What's the minimum number of races to find the top 3 horses?
+\end{problem}
+
+\begin{solution}
+It takes seven races at minimum. We first split the 25 horses into five races of five, which we call $A$ through $E$.
+
+For the sixth race, the five group winners compete. We relabel the groups by this result, so that $A_1$ beats $B_1$ beats $C_1$ beats $D_1$ beats $E_1$, where $X_i$ is the $i$-th place horse in group $X$. This confirms $A_1$ as the best horse overall.
+
+We eliminate $D_1$ and $E_1$ along with their whole groups. Each already has three proven-faster horses above it ($A_1$, $B_1$, $C_1$), so it cannot make the top three, and everyone behind it in its group is slower.
+
+We prune the remaining groups by the same rule: a horse is out once three horses are proven faster than it. That eliminates $C_2$ and below, $B_3$ and below, and $A_4$ and below. We also set $A_1$ aside as the known winner. This leaves $A_2$, $A_3$, $B_1$, $B_2$, and $C_1$, exactly five horses.
+
+We race these in the seventh race and take the top two as the second and third best horses overall.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+There are 21 flags. Two players take turns removing 1, 2, or 3 flags. The player who takes the last flag wins. You go first. What's your strategy?
+\end{problem}
+
+\begin{solution}
+We work backwards from the goal. We want to leave the opponent's turn with exactly 4 flags remaining (so every move loses: whatever they take, we take the rest and win). To land them on 4, we want to have left them on 8 on the previous round (for any $n$ they remove, we remove $4-n$ to bring them back to 4). Using this same repeating logic, we keep leaving them on multiples of 4, up to 20. Thus, on the first turn, we remove 1 flag.
+\end{solution}
+

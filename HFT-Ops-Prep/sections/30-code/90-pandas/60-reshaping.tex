@@ -1,0 +1,37 @@
+% ============================================================
+\subsubsection{Reshaping}
+% ============================================================
+
+Reshaping moves data between the row axis and the column axis. In long form each row is one observation, keyed by its identifying columns. In wide form the values of one key spread across the columns, one column per distinct value. \texttt{pivot} carries a frame from long to wide, and \texttt{melt} carries it back.
+
+\vspace{1ex}
+
+\begin{definition}[pivot and pivot\_table]
+\texttt{pivot(index, columns, values)} lifts the distinct entries of the \texttt{columns} field onto the column axis, indexes the result by \texttt{index}, and fills each cell from \texttt{values}. It requires exactly one value per \texttt{(index, columns)} cell and raises on a duplicate. \texttt{pivot\_table} adds an \texttt{aggfunc} that reduces colliding values, so it tolerates duplicates by aggregating them.
+\end{definition}
+
+\paragraph{Pivoting to pair split rows.} A single logical record is sometimes spread across several rows, distinguished by a type column with one measured value each. Pivoting that type column lifts its values into columns, bringing the pieces of one record onto a single row where they combine through column arithmetic. This replaces a self-join for the common case of a small fixed set of types, such as a start and an end.
+
+\begin{lstlisting}[style=python, caption={Pivot a start/end type column into aligned columns}]
+wide = events.pivot(index=['machine_id', 'process_id'],
+                    columns='activity_type',
+                    values='timestamp')
+
+wide['duration'] = wide['end'] - wide['start']
+\end{lstlisting}
+
+\begin{keybox}[pivot versus pivot\_table]
+\texttt{pivot} reshapes without aggregating and raises when a cell would receive more than one value. \texttt{pivot\_table} aggregates collisions through its \texttt{aggfunc}, which defaults to the mean. Use \texttt{pivot} when uniqueness is guaranteed by the data, so an unexpected duplicate surfaces as an error rather than being averaged away. Reach for \texttt{pivot\_table} when collisions are expected and a summary of them is the intent.
+\end{keybox}
+
+\paragraph{Melting wide to long.} \texttt{melt} is the inverse operation. The \texttt{id\_vars} columns stay fixed as identifiers, and the \texttt{value\_vars} columns collapse into two columns, one holding the former column name and one holding its value. It normalizes a wide frame into the long form that grouping and plotting expect.
+
+\begin{lstlisting}[style=python, caption={Collapse quarter columns into rows}]
+long = wide.melt(id_vars='region',
+                 value_vars=['q1', 'q2', 'q3', 'q4'],
+                 var_name='quarter', value_name='revenue')
+\end{lstlisting}
+
+\vspace{-2ex}
+
+\paragraph{stack and unstack.} \texttt{stack} moves a column level down into a row-index level, and \texttt{unstack} lifts a row-index level up into columns. They are the index-level counterparts of \texttt{melt} and \texttt{pivot}, and \texttt{pivot} itself is \texttt{set\_index} followed by \texttt{unstack}. Reshaping often leaves a MultiIndex on the rows or columns, which \texttt{reset\_index}, \texttt{droplevel}, or \texttt{rename\_axis} flatten back to plain labels.

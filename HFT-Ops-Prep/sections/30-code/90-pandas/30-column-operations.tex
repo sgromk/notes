@@ -1,0 +1,56 @@
+% ============================================================
+\subsubsection{Column Operations and Vectorization}
+% ============================================================
+
+pandas operations run array-at-a-time. A column expression applies to the whole Series in one pass over the underlying array, which runs far faster than a Python loop and removes the need for a loop in most transformations. This vectorized style is the default, and the row-wise \texttt{apply} is the fallback for the rare case that resists it.
+
+\paragraph{Building columns.} Arithmetic and comparisons between columns produce new Series aligned on the index, assigned back by name. \texttt{assign} does the same inside a chain, returning a copy with columns added or overwritten. Its callable form receives the frame, which lets a new column read from the frame as it is being built.
+
+\begin{lstlisting}[style=python, caption={Direct assignment and the chainable assign}]
+df['ratio'] = df['rev'] / df['units']
+
+df = df.assign(
+    ratio=lambda d: d['rev'] / d['units'],
+    is_big=lambda d: d['rev'] > 1000)
+\end{lstlisting}
+
+\begin{keybox}[Prefer vectorized operations over apply]
+Arithmetic, comparisons, numpy ufuncs, and the \texttt{.str} and \texttt{.dt} accessors are all vectorized and act on the whole column at compiled speed. A Python-level \texttt{apply} runs the function once per element or row and is slower by one to two orders of magnitude. Nearly every transformation has a vectorized form, and finding it repays the effort at any nontrivial size.
+\end{keybox}
+
+\vspace{1ex}
+
+\paragraph{Conditional columns.} A two-way choice is \texttt{np.where(cond, a, b)}, taking \texttt{a} where the condition holds and \texttt{b} elsewhere. A multi-way choice is \texttt{np.select(conditions, choices, default)}, which takes the first matching condition in order. \texttt{Series.where(cond, other)} keeps the value where the condition holds and substitutes \texttt{other} elsewhere, and \texttt{mask} is its complement. Each of these replaces a conditional \texttt{apply} with a single vectorized call.
+
+\begin{lstlisting}[style=python, caption={Two-way and multi-way conditionals without apply}]
+df['flag'] = np.where(df['temp'] > 97, 'hot', 'mild')
+
+conditions = [df['score'] >= 90, df['score'] >= 80]
+grades     = ['A', 'B']
+df['grade'] = np.select(conditions, grades, default='C')
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\paragraph{The str and dt accessors.} A Series of string dtype exposes vectorized string methods under \texttt{.str}, and a datetime Series exposes calendar and clock fields under \texttt{.dt}. Both return aligned Series, so their results drop straight into masks and new columns. \texttt{pd.to\_datetime} parses text or epoch values into \texttt{datetime64[ns]}, the prerequisite for \texttt{.dt}.
+
+\begin{lstlisting}[style=python, caption={Vectorized string and datetime work}]
+df['user'].str.lower().str.startswith('a')      # chainable, vectorized
+df['email'].str.contains('@company', na=False)  # na=False maps missing to False
+
+df['ts']      = pd.to_datetime(df['ts'])
+df['year']    = df['ts'].dt.year
+df['weekday'] = df['ts'].dt.dayofweek           # Monday = 0
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The workhorses are \texttt{.str.contains}, \texttt{.str.extract} for a regex capture, \texttt{.str.split}, \texttt{.str.len}, and positional slicing through \texttt{.str[:3]}, alongside \texttt{.dt.year}, \texttt{.dt.month}, \texttt{.dt.date}, and \texttt{.dt.floor('D')}. The \texttt{na} argument on the string predicates fixes how a missing value scores in the resulting mask.
+
+\paragraph{Element mapping.} \texttt{map} on a Series applies a dict or function element by element, which suits recoding a small fixed set of values. \texttt{replace} substitutes chosen values throughout a column, \texttt{astype} casts to a target dtype, and \texttt{round} sets the number of decimals on a numeric column.
+
+\vspace{1ex}
+
+\begin{keybox}[apply and the axis argument]
+\texttt{Series.apply(f)} calls \texttt{f} once per element, and \texttt{DataFrame.apply(f, axis=1)} calls it once per row, handing each row over as a Series. Both run at Python speed and are the last resort, kept for logic with no vectorized form. The \texttt{axis} argument is a recurring source of confusion: \texttt{axis=0} runs down the index and operates on each column, while \texttt{axis=1} runs across the columns and operates on each row. A row-wise \texttt{apply} spanning several columns is the one case where \texttt{axis=1} earns its cost.
+\end{keybox}

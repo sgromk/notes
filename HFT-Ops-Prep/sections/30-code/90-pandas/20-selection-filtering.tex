@@ -1,0 +1,65 @@
+% ============================================================
+\subsubsection{Selection and Filtering}
+% ============================================================
+
+Three access needs recur: selecting by label, selecting by position, and selecting by predicate. pandas keeps the first two on separate accessors, \texttt{loc} for labels and \texttt{iloc} for positions, and expresses the third through a boolean mask. Restricting rows is the pandas \texttt{WHERE}, and every later pattern builds on it.
+
+\paragraph{Bracket indexing.} The bare \texttt{[]} operator on a DataFrame is overloaded by the type of its argument. A string selects a column and returns a Series, a list of strings selects several columns and returns a DataFrame, and a boolean Series filters rows. The overloading is convenient but ambiguous, and a key that could name either a row or a column is resolved as a column. For anything past a plain column pick, \texttt{loc} states the intent without ambiguity.
+
+\begin{lstlisting}[style=python, caption={The overloaded bracket}]
+df['temp']            # a Series (one column)
+df[['city', 'temp']]  # a DataFrame (a column list)
+df[df['temp'] > 97]   # row filter by boolean mask
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\begin{definition}[loc and iloc]
+\texttt{loc} selects by label and \texttt{iloc} by integer position. Both take a row selector and an optional column selector, \texttt{df.loc[rows, cols]}, and each selector accepts a single key, a list, a slice, or a boolean mask. A \texttt{loc} label slice includes both endpoints, whereas an \texttt{iloc} position slice excludes the stop in the usual Python way.
+\end{definition}
+
+The inclusive label slice is a frequent trap. \texttt{df.loc['a':'c']} returns rows a through c inclusive, while \texttt{df.iloc[0:3]} returns three rows and stops before position 3.
+
+\begin{lstlisting}[style=python, caption={Label access, position access, filtered selection}]
+df.loc[3, 'temp']                          # row label 3, column 'temp'
+df.loc[df['temp'] > 97, ['city', 'temp']]  # mask picks rows, list picks columns
+df.iloc[0]                                 # first row by position
+df.iloc[-1]                                # last row by position
+\end{lstlisting}
+
+\vspace{-2ex}
+
+\paragraph{Boolean masks.} A comparison on a Series returns a boolean Series of the same length, and passing it to \texttt{loc} keeps the \texttt{True} rows. Compound conditions combine with the bitwise operators \texttt{\&}, \texttt{|}, and \texttt{\textasciitilde}, and each comparison must be wrapped in parentheses because the bitwise operators bind tighter than the comparisons. The Python keywords \texttt{and}, \texttt{or}, and \texttt{not} do not work on a Series, since they demand a single truth value and raise on an array.
+
+\newpage
+
+\begin{lstlisting}[style=python, caption={Combine masks with bitwise operators, parenthesize each side}]
+mask = (df['temp'] > 97) & (df['city'] == 'Austin')
+df.loc[mask]
+
+df.loc[~df['city'].isin(['Dallas', 'Houston'])]   # NOT IN
+\end{lstlisting}
+
+\vspace{-3ex}
+
+\paragraph{Membership and range.} \texttt{isin(values)} is a vectorized membership mask, the pandas \texttt{IN}, and negating it with \texttt{\textasciitilde} gives the \texttt{NOT IN}. \texttt{between(lo, hi)} tests a closed interval. Both read more cleanly than the equivalent chain of \texttt{|} clauses or the paired inequalities they stand in for.
+
+\paragraph{The query string.} \texttt{query} filters from a string expression, naming columns bare and outer variables with a leading \texttt{@}. It reads well for a long compound predicate and spares the repetition of the frame name. Being parsed at call time, it runs slower than a mask and accepts only expressions it can interpret, so a mask stays the general tool.
+
+\begin{lstlisting}[style=python, caption={query names columns bare and locals with @}]
+threshold = 97
+df.query('temp > @threshold and city == "Austin"')
+\end{lstlisting}
+
+\begin{keybox}[Chained assignment is unreliable]
+A selection can return a view onto the original's data or an independent copy, and which one arises is not predictable from the expression. Assigning through a chained selection, \texttt{df[df['t'] > 100]['city'] = 'hot'}, may therefore write into a discarded temporary and leave the original untouched, which is what raises the \texttt{SettingWithCopyWarning}. The reliable form selects the rows and the column together in a single \texttt{loc}, so the write lands on the frame itself.
+\end{keybox}
+
+\vspace{1ex}
+
+\begin{lstlisting}[style=python, caption={The chained write warns and may no-op, the single loc is definite}]
+df[df['temp'] > 100]['city'] = 'hot'          # unreliable, warns
+df.loc[df['temp'] > 100, 'city'] = 'hot'      # correct, one selection
+\end{lstlisting}
+
+\vspace{-2ex}

@@ -129,7 +129,7 @@ Answer     & \texttt{max(best, r - l + 1)}      & \texttt{min(best, r - l + 1)} 
 \end{tabular}
 \end{center}
 
-\medskip
+\newpage
 
 \paragraph{Longest valid window.} The window is repaired after each expansion,
 so it is valid at the bottom of every outer iteration, which is where its length
@@ -202,7 +202,8 @@ min_length([2, 3, 1, 2, 4, 3], 7)   # 2, from [4, 3]
 min_length([1, 1, 1], 7)            # 0, no window qualifies
 \end{lstlisting}
 
-\texttt{float('inf')} as the initial value of a minimum removes the special case
+\vspace{-2ex}
+\texttt{float(`inf')} as the initial value of a minimum removes the special case
 for an empty candidate set. The sentinel is then translated to whatever the
 problem specifies for ``no such window,'' which is commonly \texttt{0}.
 
@@ -227,10 +228,12 @@ negative value in the constraints is therefore the first thing to perform on any
 subarray-sum problem.
 \end{keybox}
 
+\vspace{-1ex}
+
 % ------------------------------------------------------------
 \subsubsection*{Common errors}
 
-\begin{itemize}
+\begin{itemize}[itemsep=-0.5ex]
   \item The window length is \texttt{right - left + 1}. Omitting the
         \texttt{+1} is the standard off-by-one, since both endpoints are
         inclusive.

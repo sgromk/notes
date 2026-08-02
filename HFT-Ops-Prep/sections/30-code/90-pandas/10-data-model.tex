@@ -1,0 +1,102 @@
+% ============================================================
+\subsubsection{The Data Model}
+% ============================================================
+
+A DataFrame looks like a table, but two properties make it behave unlike a SQL table or a raw array. Every DataFrame carries a labeled axis called the index, and every column holds values of a single resolved dtype. The index drives automatic alignment across operations, and the dtype decides what an operation means and how fast it runs.
+
+\vspace{1ex}
+
+\begin{definition}[Series]
+A Series is a one-dimensional labeled array of a single dtype. It pairs an ordered sequence of values with an \texttt{index} of labels, so every element is addressable by its label as well as by its position.
+\end{definition}
+
+\vspace{2ex}
+
+\begin{definition}[DataFrame]
+A DataFrame is a two-dimensional structure whose columns are Series sharing one common row index. Each column carries its own dtype, so a DataFrame has no single dtype of its own. The column labels form a second axis, itself an \texttt{Index}, which makes the structure symmetric: rows and columns are both labeled.
+\end{definition}
+
+A DataFrame behaves much like a dictionary of aligned Series keyed by column name. Selecting a single column returns the underlying Series, and that Series keeps the frame's row index.
+
+\begin{lstlisting}[style=python, caption={A frame is columns of typed Series over a shared index}]
+df = pd.DataFrame({
+    'city': ['Austin', 'Dallas', 'Austin'],
+    'temp': [98, 101, 96],
+})
+
+df['temp']        # a Series, dtype int64, indexed 0,1,2
+df.index          # RangeIndex(start=0, stop=3, step=1)
+df.columns        # Index(['city', 'temp'], dtype='object')
+df.dtypes         # city -> object, temp -> int64
+\end{lstlisting}
+
+\vspace{-2ex}
+
+\paragraph{The index.} A fresh DataFrame receives a default \texttt{RangeIndex} running from 0, so the labels coincide with positions and the distinction stays invisible. The index becomes load-bearing the moment it holds anything else, such as a datetime, a string key, or the grouping key that a \texttt{groupby} leaves behind. An index may be of any dtype and is not required to be unique. Two consequences shape later sections. Label-based access through \texttt{loc} and positional access through \texttt{iloc} diverge as soon as the index departs from a clean \texttt{0..n} range. And the index survives operations, so a filter or a sort carries the original labels forward rather than renumbering, which is the reason \texttt{reset\_index} exists to install a fresh range when the old labels have served their purpose.
+
+\vspace{1ex}
+
+\begin{keybox}[Alignment on labels]
+Binary operations align their operands on the index before computing. pandas matches labels, evaluates on the ones the operands share, and fills every label present in only one operand with a missing value. Position plays no part in this matching. The same rule governs assignment and boolean-mask selection, so a mask built on one frame lands on the correct rows of another as long as the two share an index, whatever their row order.
+\end{keybox}
+
+\newpage
+
+\begin{lstlisting}[style=python, caption={Addition aligns by label and fills the gaps}]
+a = pd.Series([1, 2, 3], index=['x', 'y', 'z'])
+b = pd.Series([10, 20],  index=['y', 'z'])
+
+a + b
+# x     NaN     <- 'x' has no match in b
+# y    12.0
+# z    23.0
+\end{lstlisting}
+
+\vspace{-1ex}
+
+A boolean Series used as a mask, \texttt{df.loc[mask]}, is matched to the frame by label, so the mask and the frame need not share a row order for the selection to land on the right rows. The same rule cuts the other way: combining two columns taken from different frames introduces \texttt{NaN} at every label where their indices disagree, even when the columns appear to line up by position.
+
+\paragraph{Dtypes.} Each column resolves to a single dtype, and that dtype determines both the operations available and the speed at which they run. Vectorized arithmetic and the \texttt{.str} and \texttt{.dt} accessors all require a genuine numeric, datetime, or string dtype underneath. The core dtypes are collected below.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.28\textwidth} >{\raggedright\arraybackslash}p{0.12\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{dtype} & \textit{Stores} & \textit{Missing} & \textit{Note} \\
+\midrule
+\textbf{\texttt{int64}, \texttt{float64}} & Integers and floating point & \texttt{NaN} (float only) & The numpy-backed numeric types. \\
+\textbf{\texttt{bool}} & Booleans & none & The result of every comparison. \\
+\textbf{\texttt{object}} & Arbitrary Python objects, usually strings & \texttt{None}, \texttt{NaN} & Python-speed, the untyped fallback. \\
+\textbf{\texttt{datetime64[ns]}} & Timestamps & \texttt{NaT} & Unlocks the \texttt{.dt} accessor. \\
+\textbf{\texttt{timedelta64[ns]}} & Durations & \texttt{NaT} & Produced by subtracting timestamps. \\
+\textbf{\texttt{category}} & A fixed set of repeated labels & \texttt{NaN} & Compact, and can carry an order. \\
+\textbf{\texttt{Int64}, \texttt{string}, \texttt{boolean}} & As their lowercase forms & \texttt{pd.NA} & Nullable, capitalized, missing-aware. \\
+\bottomrule
+\end{tabularx}
+\caption*{Core dtypes. The lowercase numpy-backed types are the default. The capitalized nullable types carry \texttt{pd.NA} and preserve integer and boolean columns across missing values.}
+\end{table}
+
+\vspace{-2ex}
+
+The \texttt{object} dtype is the fallback for anything without a native type, which in practice is mostly Python strings. It stores pointers to Python objects, so work on it runs at Python speed rather than vectorized speed. Converting an \texttt{object} column of strings to a real \texttt{string} or \texttt{category} dtype, or a column of date-like text to \texttt{datetime64[ns]}, is usually the first step.
+
+\vspace{2ex}
+
+\begin{keybox}[Missing values force a dtype]
+numpy \texttt{NaN} is a floating-point value, and numpy integer arrays have no representation for a missing entry. A single missing value in an integer column therefore promotes the whole column to \texttt{float64}. This appears constantly after a left join or a \texttt{reindex}, where unmatched rows introduce \texttt{NaN} and an \texttt{int64} count column comes back as \texttt{float64}. Datetime and timedelta columns use \texttt{NaT} in the same role. The nullable dtypes, written with a capital initial (\texttt{Int64}, \texttt{boolean}, \texttt{string}), instead carry \texttt{pd.NA} as a type-agnostic missing marker and hold an integer column at integer dtype through the gap.
+\end{keybox}
+
+\vspace{2ex}
+
+\begin{lstlisting}[style=python, caption={A NaN forces float64, a nullable dtype keeps the integer}]
+pd.Series([1, 2, 3]).dtype             # dtype('int64')
+pd.Series([1, 2, np.nan]).dtype        # dtype('float64'), the gap forces the promotion
+
+pd.Series([1, 2, pd.NA], dtype='Int64')
+# 0       1
+# 1       2
+# 2    <NA>                            # integer dtype preserved, missing marked by pd.NA
+\end{lstlisting}

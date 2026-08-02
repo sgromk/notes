@@ -1,0 +1,87 @@
+% ============================================================
+\subsubsection{Grouping and Aggregation}
+% ============================================================
+
+Grouping follows the split-apply-combine shape: split the rows by a key, apply a reduction within each group, and combine the results into one row per group. It is the pandas \texttt{GROUP BY}, with the wrinkle that the grouping is a distinct lazy object holding the split, and no work happens until a reduction is named.
+
+\vspace{1ex}
+
+\begin{definition}[GroupBy]
+\texttt{df.groupby('k')} returns a GroupBy object that partitions the rows by the values of \texttt{k} without computing anything. A reduction called on it, such as \texttt{.sum()} or \texttt{.agg(...)}, evaluates per group and combines to one row each. The key may be a list of columns for a composite grouping.
+\end{definition}
+
+\paragraph{Named aggregation.} The clearest reduction form names each output column and gives its source column and function as a tuple, \texttt{out=('col', 'func')}. It maps onto \texttt{func(col) AS out} directly, and it extends to several outputs in one call.
+
+\begin{lstlisting}[style=python, caption={Named aggregation, one row per group}]
+g = (df.groupby('customer_id', as_index=False)
+       .agg(n_orders=('order_id', 'count'),
+            total=('amount', 'sum')))
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The older forms remain available. A dict \texttt{agg(\{'amount': 'sum'\})} maps a column to a function, and a list \texttt{agg(['sum', 'mean'])} applies several functions at once and returns a frame with a MultiIndex on its columns. The named form sidesteps that nested column index.
+
+\paragraph{The group key becomes the index.} A \texttt{groupby} puts the key on the index of the result, one level per key column. \texttt{reset\_index()} moves it back to an ordinary column and installs a clean range index, and passing \texttt{as\_index=False} to \texttt{groupby} does the same inline. The key needs to leave the index whenever a later step selects it as a column or expects a plain integer row label.
+
+\vspace{1ex}
+
+\begin{keybox}[count versus size versus nunique]
+\texttt{count} tallies non-null values in the group, \texttt{size} tallies rows including nulls, and \texttt{nunique} tallies distinct non-null values. The gap between \texttt{count} and \texttt{size} is where left-join placeholders hide: an unmatched row carries \texttt{NaN}, so \texttt{size} scores it as one row while \texttt{count} scores it as zero. Choosing the intended one of these is a routine source of off-by-$N$ errors.
+\end{keybox}
+
+\vspace{2ex}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.15\textwidth} >{\raggedright\arraybackslash}p{0.30\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Reduction} & \textit{SQL analog} & \textit{What it computes} \\
+\midrule
+\textbf{\texttt{count}} & \texttt{COUNT(col)} & Non-null values in the group. \\
+\textbf{\texttt{size}} & \texttt{COUNT(*)} & Every row in the group, nulls included. \\
+\textbf{\texttt{nunique}} & \texttt{COUNT(DISTINCT col)} & Distinct values, nulls excluded. \\
+\textbf{\texttt{sum}} & \texttt{SUM(col)} & Total of the values. An empty group sums to 0. \\
+\textbf{\texttt{mean}} & \texttt{AVG(col)} & Arithmetic mean. \\
+\textbf{\texttt{median}} & \texttt{PERCENTILE\_CONT(0.5)} & Middle value by order. \\
+\textbf{\texttt{min}} & \texttt{MIN(col)} & Smallest value. \\
+\textbf{\texttt{max}} & \texttt{MAX(col)} & Largest value. \\
+\textbf{\texttt{std}} & \texttt{STDDEV\_SAMP(col)} & Sample standard deviation, \texttt{ddof = 1}. \\
+\textbf{\texttt{var}} & \texttt{VAR\_SAMP(col)} & Sample variance, \texttt{ddof = 1}. \\
+\textbf{\texttt{first}} & \texttt{FIRST\_VALUE} (window) & First value in the current row order. \\
+\textbf{\texttt{last}} & \texttt{LAST\_VALUE} (window) & Last value in the current row order. \\
+\textbf{\texttt{any / all}} & \texttt{BOOL\_OR / BOOL\_AND} & Whether any, or all, values are truthy. \\
+\bottomrule
+\end{tabularx}
+\caption*{Common reductions for \texttt{agg}. All skip \texttt{NaN} except \texttt{size}. \texttt{std} and \texttt{var} default to the sample estimator, unlike SQL engines that default to population.}
+\end{table}
+
+\vspace{-2ex}
+
+\paragraph{transform versus agg.} \texttt{agg} returns one row per group. \texttt{transform} returns a result the same length as the input, broadcasting each group's statistic back onto every member row. It is the tool for a group-relative column, where each row is measured against a summary of its own group.
+
+\begin{lstlisting}[style=python, caption={A group-relative column via transform}]
+dept_mean = df.groupby('dept')['salary'].transform('mean')
+df['above_dept_avg'] = df['salary'] > dept_mean
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\paragraph{Filtering whole groups.} \texttt{groupby(...).filter(pred)} keeps or drops entire groups by a group-level predicate, the reading of \texttt{HAVING}. The predicate runs once per group in Python, so on a wide key the vectorized equivalent through \texttt{transform('size')} and a mask runs faster.
+
+\begin{lstlisting}[style=python, caption={Keep groups by a group predicate (HAVING)}]
+# groups of size greater than one
+df.groupby('email').filter(lambda g: len(g) > 1)
+
+# vectorized equivalent
+df[df.groupby('email')['email'].transform('size') > 1]
+\end{lstlisting}
+
+\vspace{2ex}
+
+\begin{keybox}[groupby drops null keys by default]
+A row whose grouping key is \texttt{NaN} is excluded from every group, so a null-keyed record drops out of the result. Passing \texttt{dropna=False} retains the null-key group. Set it whenever a grouping key may be missing and those rows still belong in the output.
+\end{keybox}

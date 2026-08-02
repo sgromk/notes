@@ -1,0 +1,52 @@
+% ============================================================
+\subsubsection{Ordering and Row-Relative Logic}
+% ============================================================
+
+Some results depend on the order of the rows or on values in other rows. Ordering operations sort or rank the frame, and row-relative operations read a neighbor or a running window. These are the pandas counterpart of SQL window functions, and as with a SQL window the order must be stated, since a frame carries no inherent one.
+
+\paragraph{Sorting.} \texttt{sort\_values(by, ascending, na\_position)} orders rows by one or more columns, with \texttt{by} taking a list for a multi-key sort and \texttt{ascending} a matching list of directions. \texttt{na\_position} places \texttt{NaN} at the start or the end. \texttt{sort\_index} orders by the index labels instead.
+
+\begin{lstlisting}[style=python, caption={Multi-key sort with a direction per key}]
+df.sort_values(['dept', 'salary'], ascending=[True, False])
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\paragraph{Extremes and top-N.} \texttt{nlargest(n, col)} and \texttt{nsmallest(n, col)} return the top or bottom rows by a column and cost less than a full sort for a handful of rows. \texttt{idxmax} and \texttt{idxmin} return the index label of the extreme value, an argmax, which \texttt{loc} then reads as a row. Both break ties by first occurrence.
+
+\begin{lstlisting}[style=python, caption={Top rows and the row of the maximum}]
+df.nlargest(3, 'salary')
+df.loc[df['salary'].idxmax()]      # the single row holding the max
+\end{lstlisting}
+
+\vspace{-3ex}
+
+\paragraph{Ranking.} \texttt{rank(method, ascending)} numbers rows by value, with the tie policy set by \texttt{method}: \texttt{dense}, \texttt{min}, and \texttt{first} correspond to the SQL \texttt{DENSE\_RANK}, \texttt{RANK}, and \texttt{ROW\_NUMBER}. Applied after a \texttt{groupby} it ranks within each group, the top-$N$-per-group tool. Sorting and then \texttt{groupby(...).head(n)} reaches the same result by keeping the first \texttt{n} rows of each group.
+
+\begin{lstlisting}[style=python, caption={Rank within a group, and top-N per group by slicing}]
+df['rk'] = df.groupby('dept')['salary'].rank(method='dense', ascending=False)
+
+(df.sort_values('salary', ascending=False)
+   .groupby('dept').head(1))        # highest-paid row per dept
+\end{lstlisting}
+
+\begin{keybox}[Row-relative operations need an explicit order]
+\texttt{shift}, \texttt{diff}, \texttt{rank}, \texttt{rolling}, and the cumulative methods all read the current row order and nothing else. Without a preceding \texttt{sort\_values} the previous row is whatever order the rows arrived in. This is the \texttt{ORDER BY} inside a SQL window, and a per-group version needs the operation applied through \texttt{groupby} so it resets at each group boundary rather than bleeding across.
+\end{keybox}
+
+\paragraph{Neighbor access with shift and diff.} \texttt{shift(n)} moves a column down \texttt{n} positions and fills the vacated top with \texttt{NaN}, so \texttt{shift(1)} sets the previous row's value beside the current one, the \texttt{LAG}. \texttt{shift(-1)} looks ahead, the \texttt{LEAD}. \texttt{diff()} equals \texttt{current - shift(1)}, so \texttt{diff() > 0} tests whether a value rose. The first row of an ordering has no predecessor, so its shifted value is \texttt{NaN} and every comparison against it is \texttt{False}, which drops it with no explicit guard. Applying the shift through \texttt{groupby} resets it at each group edge.
+
+\begin{lstlisting}[style=python, caption={Per-group return against the previous row}]
+df = df.sort_values(['ticker', 'date'])
+prev = df.groupby('ticker')['close'].shift(1)
+df['ret'] = df['close'] / prev - 1     # NaN on each ticker's first row
+\end{lstlisting}
+
+\vspace{-2.5ex}
+
+\paragraph{Running and rolling windows.} A cumulative method such as \texttt{cumsum} or \texttt{cummax} runs from the start up to the current row, giving a running total. \texttt{rolling(k)} fixes a window of \texttt{k} consecutive rows for a moving statistic, and \texttt{expanding} grows the window from the start. \texttt{min\_periods} sets how many observations a window needs before it returns a value in place of \texttt{NaN}. Wrapping these in \texttt{groupby(...).transform(...)} keeps the result aligned to the original rows while resetting each group.
+
+\begin{lstlisting}[style=python, caption={A per-group moving average aligned to the rows}]
+df['ma20'] = (df.groupby('ticker')['close']
+                .transform(lambda s: s.rolling(20).mean()))
+\end{lstlisting}

@@ -1,0 +1,66 @@
+% ============================================================
+\subsubsection{Joining and Combining}
+% ============================================================
+
+Two operations bring separate frames together. \texttt{merge} combines columns by matching keys, the pandas \texttt{JOIN}. \texttt{concat} stacks frames along an axis without matching. Reach for \texttt{merge} when rows are paired by a key and for \texttt{concat} when frames are laid end to end.
+
+\vspace{1ex}
+
+\begin{definition}[merge]
+\texttt{merge} joins two frames on one or more key columns. \texttt{on} names a key shared by both, while \texttt{left\_on} and \texttt{right\_on} pair keys that differ in name. \texttt{how} selects which unmatched rows survive, taking \texttt{inner}, \texttt{left}, \texttt{right}, \texttt{outer}, or \texttt{cross}, and defaults to \texttt{inner}.
+\end{definition}
+
+The \texttt{how} argument carries the same meaning as the SQL join it names. \texttt{inner} keeps rows matched on both sides. \texttt{left} and \texttt{right} keep every row from one side and fill the other with \texttt{NaN}. \texttt{outer} keeps unmatched rows from both. \texttt{cross} forms the Cartesian product and takes no key.
+
+\begin{lstlisting}[style=python, caption={A keyed merge and a rename-free key pairing}]
+orders.merge(customers, on='customer_id', how='left')
+a.merge(b, left_on='cid', right_on='id', how='inner')
+\end{lstlisting}
+
+\begin{keybox}[Join type decides which unmatched rows survive]
+The \texttt{how} argument decides whether an unmatched row survives as a hole or disappears. A left join keeps every left row and fills the unmatched right columns with \texttt{NaN}, while an inner join drops those rows outright. The choice carries a dtype consequence: filling an integer column with \texttt{NaN} promotes it to \texttt{float64}, so an \texttt{int64} count returns as \texttt{float64} after a left join.
+\end{keybox}
+
+\vspace{1ex}
+
+\paragraph{Overlapping column names.} When both frames carry a non-key column of the same name, \texttt{merge} disambiguates the two with the default suffixes \texttt{\_x} and \texttt{\_y}. The result then requires tracking which side is which, so passing an explicit \texttt{suffixes=} pair, or renaming beforehand, keeps the output readable.
+
+\vspace{2ex}
+
+\begin{keybox}[Duplicate keys multiply rows]
+A merge emits one row per matching pair of keys. When a key repeats on both sides, the matches fan out as their product, so a many-to-many merge can return far more rows than either input. Passing \texttt{validate='one\_to\_one'} or \texttt{'one\_to\_many'} makes \texttt{merge} assert the expected multiplicity and raise on a violation.
+\end{keybox}
+
+\paragraph{Stacking with concat.} \texttt{concat} joins a list of frames along one axis. \texttt{axis=0} stacks rows and aligns on the columns, \texttt{axis=1} stacks columns and aligns on the index. \texttt{ignore\_index=True} discards the source indices and lays down a fresh range index, which matters when the pieces carry overlapping or meaningless labels.
+
+\begin{lstlisting}[style=python, caption={Stack rows, then stack columns}]
+pd.concat([jan, feb, mar], ignore_index=True)   # rows, fresh index
+pd.concat([features, labels], axis=1)           # columns, aligned on index
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\paragraph{Semi- and anti-joins through isin.} Filtering a frame by whether its key appears in another needs no materialized join. \texttt{isin} against the other frame's key column keeps the matching rows, a semi-join, and negating it keeps the non-matching rows, an anti-join. Neither widens the frame nor pulls columns from the other side.
+
+\begin{lstlisting}[style=python, caption={Semi-join keeps matches, anti-join keeps non-matches}]
+customers[customers['id'].isin(orders['customer_id'])]    # has orders
+customers[~customers['id'].isin(orders['customer_id'])]   # has no orders
+\end{lstlisting}
+
+\begin{keybox}[Filter anti-joins on a key]
+An exclusion should test the column that identifies a row uniquely, which is the primary key. Filtering on a display attribute such as a name folds together distinct records that happen to share it, so one person's match can drop an unrelated person of the same name from the result. The membership form also holds an advantage over the SQL \texttt{NOT IN}: \texttt{isin} returns an independent boolean per row, so a missing value among the excluded keys cannot void the whole result the way a single \texttt{NULL} collapses \texttt{NOT IN} to zero rows.
+\end{keybox}
+
+\paragraph{As-of joins.} \texttt{merge\_asof} matches each left row to the single right row whose key is nearest without exceeding it, the backward direction being the default. It answers point-in-time questions, where a fact is read as of a moment rather than on an exact match. Both frames must be sorted on the join key, since the algorithm advances through them in order. The \texttt{by} argument confines matching within a group, pairing a row only with keys from the same group.
+
+\begin{lstlisting}[style=python, caption={Match each sale to the price in effect at its date}]
+prices = prices.sort_values('start_date')
+sales  = sales.sort_values('purchase_date')
+
+pd.merge_asof(sales, prices, by='product_id',
+              left_on='purchase_date', right_on='start_date')
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The join consults the start key alone and never a matching end key, so it is not a between-dates join and will attach a stale value to a left row falling past a window's close. It fits when each key marks the start of an interval running until the next one.

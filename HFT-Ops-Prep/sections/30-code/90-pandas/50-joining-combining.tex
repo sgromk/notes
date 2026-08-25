@@ -25,6 +25,8 @@ The \texttt{how} argument decides whether an unmatched row survives as a hole or
 
 \paragraph{Overlapping column names.} When both frames carry a non-key column of the same name, \texttt{merge} disambiguates the two with the default suffixes \texttt{\_x} and \texttt{\_y}. The result then requires tracking which side is which, so passing an explicit \texttt{suffixes=} pair, or renaming beforehand, keeps the output readable.
 
+\paragraph{Joining on the index.} \texttt{join} is a convenience wrapper over \texttt{merge} that matches on the index of the right frame by default, which suits attaching a lookup table already indexed by its key. \texttt{merge} stays the explicit tool for arbitrary key columns, and it reads more clearly whenever the key is an ordinary column rather than the index.
+
 \vspace{2ex}
 
 \begin{keybox}[Duplicate keys multiply rows]
@@ -52,6 +54,8 @@ An exclusion should test the column that identifies a row uniquely, which is the
 \end{keybox}
 
 \paragraph{As-of joins.} \texttt{merge\_asof} matches each left row to the single right row whose key is nearest without exceeding it, the backward direction being the default. It answers point-in-time questions, where a fact is read as of a moment rather than on an exact match. Both frames must be sorted on the join key, since the algorithm advances through them in order. The \texttt{by} argument confines matching within a group, pairing a row only with keys from the same group.
+
+\newpage
 
 \begin{lstlisting}[style=python, caption={Match each sale to the price in effect at its date}]
 prices = prices.sort_values('start_date')

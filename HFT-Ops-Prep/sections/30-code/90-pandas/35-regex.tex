@@ -1,0 +1,49 @@
+% ============================================================
+\subsubsection{String Matching with Regex}
+% ============================================================
+
+The \texttt{.str} accessor backs its matching methods with regular expressions. The three predicates differ only in where the pattern is anchored, which decides whether it must match the whole string or merely appear inside it. Patterns are written as raw strings, \texttt{r'...'}, so backslashes reach the regex engine intact.
+
+\vspace{1ex}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.30\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Method} & \textit{Anchoring} & \textit{True when} \\
+\midrule
+\textbf{\texttt{str.match}} & Start only, an implicit \texttt{\textasciicircum} & The pattern matches a prefix of the string. \\
+\textbf{\texttt{str.fullmatch}} & Both ends, an implicit \texttt{\textasciicircum...\$} & The pattern matches the entire string. \\
+\textbf{\texttt{str.contains}} & None & The pattern is found anywhere in the string. \\
+\bottomrule
+\end{tabularx}
+\caption*{The three regex predicates on \texttt{.str}. All return a boolean Series and read \texttt{pat} as a regex. \texttt{contains} is the pandas \texttt{REGEXP} or \texttt{RLIKE}, and its unanchored search subsumes \texttt{LIKE '\%x\%'}.}
+\end{table}
+
+\vspace{-2ex}
+
+\paragraph{Substitution and extraction.} \texttt{str.replace(pat, repl, regex=True)} substitutes on a pattern. From pandas 2.0 the \texttt{regex} flag defaults to \texttt{False} and treats \texttt{pat} as literal text, so a pattern replacement must set \texttt{regex=True}. \texttt{str.extract(pat)} returns one column per capture group in the pattern, pulling structured fields out of a string, and \texttt{str.extractall} returns every match rather than only the first.
+
+\vspace{1ex}
+
+\begin{keybox}[Match methods return NaN on missing input]
+On a row whose string is missing, \texttt{match}, \texttt{fullmatch}, and \texttt{contains} return \texttt{NaN} in place of a boolean. A mask carrying \texttt{NaN} raises when passed to \texttt{loc}, so a matching predicate used as a filter takes \texttt{na=False} to score missing strings as non-matches. Case sensitivity is set through \texttt{case=False} or \texttt{flags=re.IGNORECASE}.
+\end{keybox}
+
+\newpage
+
+\begin{lstlisting}[style=python, caption={Validate whole strings, then extract a field}]
+# fullmatch checks the entire string; the ^ and $ are implied
+valid = users['email'].str.fullmatch(r'[\w]+@[A-Za-z]+\.com', na=False)
+users.loc[valid].sort_values('user_id')
+
+# one column per capture group
+users['email'].str.extract(r'@([A-Za-z]+)\.com')   # the domain
+\end{lstlisting}
+
+\vspace{-1ex}
+
+Two habits keep patterns tight. \texttt{fullmatch} already anchors both ends, so a leading \texttt{\textasciicircum} or trailing \texttt{\$} adds nothing. And \texttt{\textbackslash w} already covers letters, digits, and the underscore, so a class such as \texttt{[\textbackslash w\_]} repeats the underscore it already contains.

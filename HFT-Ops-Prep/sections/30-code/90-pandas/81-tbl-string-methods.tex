@@ -1,0 +1,29 @@
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.225\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Method} & \textit{Arguments} & \textit{What it does} \\
+\midrule
+\textbf{\texttt{str.contains}} & \texttt{pat}, \texttt{case}, \texttt{na}, \texttt{regex} & Boolean, \texttt{True} where \texttt{pat} is found anywhere. Reads \texttt{pat} as a regex. \\
+\textbf{\texttt{str.match /\allowbreak fullmatch}} & \texttt{pat}, \texttt{na} & Anchored at the start, or over the whole string. \\
+\textbf{\texttt{str.extract /\allowbreak extractall}} & \texttt{pat}, \texttt{expand} & One column per capture group of the first match. \texttt{extractall} returns every match. \\
+\textbf{\texttt{str.replace}} & \texttt{pat}, \texttt{repl}, \texttt{regex} & Substitutes on a pattern. \texttt{regex} defaults to \texttt{False} from pandas 2.0. \\
+\textbf{\texttt{str.split /\allowbreak rsplit}} & \texttt{pat}, \texttt{n}, \texttt{expand} & Splits each string. \texttt{expand=True} spreads the parts into columns. \\
+\textbf{\texttt{str.len}} & none & Character count per string. \\
+\textbf{\texttt{str.lower / upper /\allowbreak title / capitalize}} & none & Case folding. \texttt{title} upper-cases each word, \texttt{capitalize} only the first. \\
+\textbf{\texttt{str.strip /\allowbreak lstrip / rstrip}} & \texttt{to\_strip} & Strips characters from the ends, whitespace by default. \\
+\textbf{\texttt{str.pad / zfill}} & \texttt{width}, \texttt{side} / \texttt{width} & Pads to a width. \texttt{zfill} left-pads with zeros. \\
+\textbf{\texttt{str.cat}} & \texttt{others}, \texttt{sep}, \texttt{na\_rep} & Concatenates element-wise, or joins the whole Series when \texttt{others} is omitted. \\
+\textbf{\texttt{str.get /\allowbreak str[a:b]}} & index or slice & Element or slice of each string by position. \\
+\textbf{\texttt{str.startswith /\allowbreak endswith}} & prefix or suffix, \texttt{na} & Boolean test at either end, literal text. \\
+\textbf{\texttt{str.find}} & \texttt{sub} & 0-based index of the first occurrence, \texttt{-1} when absent. \\
+\textbf{\texttt{str.count}} & \texttt{pat} & Number of non-overlapping matches per string. \\
+\bottomrule
+\end{tabularx}
+\caption*{Vectorized string methods on the \texttt{.str} accessor. The predicates take \texttt{na} to score a missing string, and the pattern methods read a regex unless told otherwise.}
+\end{table}
+
+\newpage

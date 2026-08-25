@@ -85,3 +85,14 @@ df[df.groupby('email')['email'].transform('size') > 1]
 \begin{keybox}[groupby drops null keys by default]
 A row whose grouping key is \texttt{NaN} is excluded from every group, so a null-keyed record drops out of the result. Passing \texttt{dropna=False} retains the null-key group. Set it whenever a grouping key may be missing and those rows still belong in the output.
 \end{keybox}
+
+\vspace{-2ex}
+
+\paragraph{Frequencies and distinct values.} \texttt{value\_counts} on a Series tallies how often each value occurs and returns the counts sorted high to low, with \texttt{normalize=True} giving proportions instead. \texttt{unique} lists the distinct values in order of appearance and \texttt{nunique} counts them. \texttt{drop\_duplicates} removes repeated rows, keyed to chosen columns through \texttt{subset} and keeping the first or last of each run through \texttt{keep}. A grouped string concatenation, the \texttt{GROUP\_CONCAT}, falls out of \texttt{agg} with a join function.
+
+\begin{lstlisting}[style=python, caption={Frequencies, distinct rows, and joined strings}]
+df['dept'].value_counts(normalize=True)      # share of rows per dept
+df.drop_duplicates(subset=['email'], keep='first')
+
+df.groupby('dept')['name'].agg(', '.join)    # GROUP_CONCAT
+\end{lstlisting}

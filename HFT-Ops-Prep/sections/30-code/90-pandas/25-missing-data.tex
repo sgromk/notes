@@ -1,0 +1,43 @@
+% ============================================================
+\subsubsection{Missing Data}
+% ============================================================
+
+Missing entries are carried by a sentinel rather than a separate flag: \texttt{NaN} in a float column, \texttt{NaT} in a datetime column, and \texttt{pd.NA} in a nullable column. Because the sentinel lives in the data, detecting, dropping, and filling it are ordinary column operations, and the arithmetic rules around it decide how a reduction or a comparison treats a gap.
+
+\vspace{1ex}
+
+\begin{keybox}[NaN never equals itself]
+\texttt{NaN} compares unequal to everything, itself included, so \texttt{s == np.nan} is \texttt{False} on every row and never finds a missing value. Detection goes through \texttt{isna} and \texttt{notna} instead, which test the sentinel directly. This mirrors SQL, where \texttt{x = NULL} is never true and the test is \texttt{IS NULL}. One consequence is useful: \texttt{s != s} is \texttt{True} exactly where \texttt{s} is \texttt{NaN}, which is how a duplicate-tolerant equality check spots gaps.
+\end{keybox}
+
+\vspace{-2ex}
+
+\paragraph{Detecting and dropping.} \texttt{isna} returns a boolean mask of the missing cells and \texttt{notna} its complement, both feeding a filter directly. \texttt{dropna} removes rows holding any missing value, restricted to certain columns with \texttt{subset} or loosened with \texttt{thresh}, which keeps a row that clears a minimum count of non-missing values. Aggregations skip \texttt{NaN} on their own, so \texttt{mean} and \texttt{sum} need no explicit filtering.
+
+\begin{lstlisting}[style=python, caption={Detect, filter, and drop missing values}]
+df[df['manager_id'].notna()]           # keep rows with a manager
+df.dropna(subset=['salary'])           # drop rows missing salary
+df.dropna(thresh=3)                    # keep rows with >= 3 non-missing fields
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\paragraph{Filling.} \texttt{fillna(value)} substitutes a constant or an aligned Series, the pandas \texttt{COALESCE}. Passing a dict fills each column with its own default. A group-aware fill runs through \texttt{groupby(...)} and \texttt{.transform}, which replaces a gap with a statistic of its own group, such as the group mean.
+
+\begin{lstlisting}[style=python, caption={Constant fill and group-relative fill}]
+df['manager_id'].fillna(0)
+
+# fill each department's missing salaries with that department's mean
+df['salary'] = df['salary'].fillna(
+    df.groupby('dept')['salary'].transform('mean'))
+\end{lstlisting}
+
+\vspace{2ex}
+
+\begin{keybox}[Forward fill carries the last observation]
+\texttt{ffill} propagates the last valid value forward into the gaps that follow it, and \texttt{bfill} pulls the next valid value backward. On an ordered series this is carrying the last observation forward, the standard way to hold a price or a level across timestamps that report no change. The fill follows the current row order, so a time series must be sorted by time first, and a per-entity fill runs through \texttt{groupby} so one entity's last value cannot leak into the next.
+\end{keybox}
+
+\vspace{-2ex}
+
+\paragraph{Combining sources.} \texttt{combine\_first} fills the missing cells of one frame from another aligned on the index, taking the first non-missing value at each position. It is the \texttt{COALESCE} across two whole frames, used to layer a fallback table under a primary one.

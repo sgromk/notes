@@ -24,6 +24,31 @@ wide['duration'] = wide['end'] - wide['start']
 \texttt{pivot} reshapes without aggregating and raises when a cell would receive more than one value. \texttt{pivot\_table} aggregates collisions through its \texttt{aggfunc}, which defaults to the mean. Use \texttt{pivot} when uniqueness is guaranteed by the data, so an unexpected duplicate surfaces as an error rather than being averaged away. Reach for \texttt{pivot\_table} when collisions are expected and a summary of them is the intent.
 \end{keybox}
 
+\vspace{-2ex}
+
+\paragraph{Summarizing with pivot\_table.} \texttt{pivot\_table} aggregates as it reshapes, so it takes several arguments a bare \texttt{pivot} does not. \texttt{aggfunc} sets the reduction, defaulting to the mean and accepting a list for several at once. \texttt{values} names the column or columns to summarize, \texttt{fill\_value} replaces the empty cells, and \texttt{margins=True} appends row and column totals. Passing a list to \texttt{index} or \texttt{columns} builds a MultiIndex on that axis.
+
+\begin{lstlisting}[style=python, caption={A long panel to a date-by-entity grid, and a summary with totals}]
+# long: one row per (date, ticker)  ->  wide: dates down, tickers across
+panel = returns.pivot_table(index='date', columns='ticker', values='ret')
+
+pd.pivot_table(sales, index='region', columns='quarter',
+               values='revenue', aggfunc='sum',
+               fill_value=0, margins=True)
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The date-by-entity grid is the standard layout for time-series work: each column is one entity's series aligned to a shared date index, ready for column-wise returns, correlations, and rolling statistics.
+
+\paragraph{Cross-tabulation.} \texttt{pd.crosstab} counts the co-occurrences of two categoricals, a frequency table over their pairs. It is \texttt{pivot\_table} specialized to counting, and \texttt{normalize=True} turns the counts into proportions across the whole table, a row, or a column.
+
+\begin{lstlisting}[style=python, caption={Frequency of department against hire year}]
+pd.crosstab(df['department'], df['hire_year'])
+\end{lstlisting}
+
+\vspace{-1ex}
+
 \paragraph{Melting wide to long.} \texttt{melt} is the inverse operation. The \texttt{id\_vars} columns stay fixed as identifiers, and the \texttt{value\_vars} columns collapse into two columns, one holding the former column name and one holding its value. It normalizes a wide frame into the long form that grouping and plotting expect.
 
 \begin{lstlisting}[style=python, caption={Collapse quarter columns into rows}]
@@ -35,3 +60,9 @@ long = wide.melt(id_vars='region',
 \vspace{-2ex}
 
 \paragraph{stack and unstack.} \texttt{stack} moves a column level down into a row-index level, and \texttt{unstack} lifts a row-index level up into columns. They are the index-level counterparts of \texttt{melt} and \texttt{pivot}, and \texttt{pivot} itself is \texttt{set\_index} followed by \texttt{unstack}. Reshaping often leaves a MultiIndex on the rows or columns, which \texttt{reset\_index}, \texttt{droplevel}, or \texttt{rename\_axis} flatten back to plain labels.
+
+\paragraph{Exploding a list column.} \texttt{explode} turns a column of lists into one row per element, repeating the other columns across the pieces. It expands a nested field into flat long form, inverting a group-and-collect, and is the pandas reading of a \texttt{JSON\_TABLE} over an array column.
+
+\begin{lstlisting}[style=python, caption={One row per element of each list}]
+df.explode('skills')     # a row per skill, other columns repeated
+\end{lstlisting}

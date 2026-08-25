@@ -67,23 +67,66 @@ in \texttt{to}, a fast way to strip a known character set.
 replaces only the \emph{first} match unless the \texttt{`g'} flag is passed, a
 frequent source of half-cleaned output.
 
-\paragraph{Pattern matching.} \texttt{LIKE} uses \texttt{\%} for any run of
-characters and \texttt{\_} for exactly one, and it is case sensitive.
-\texttt{ILIKE} is the case-insensitive form. For real expressiveness the POSIX
-operators apply: \texttt{\textasciitilde} matches, \texttt{\textasciitilde*}
-matches case-insensitively, and \texttt{!\textasciitilde} negates. Anchors
-\texttt{\^{}} and \texttt{\$} matter, since an unanchored pattern matches
-anywhere in the string.
+\paragraph{Pattern matching.} \texttt{LIKE} uses \texttt{\%} for any run of characters and \texttt{\_} for exactly one, matches case-sensitively, and takes an \texttt{ESCAPE} clause to match a literal \texttt{\%} or \texttt{\_}. \texttt{ILIKE} is the case-insensitive form. \texttt{SIMILAR TO} combines the two conventions: it reads \texttt{\%} and \texttt{\_} as wildcards and also accepts the regex metacharacters \texttt{|}, \texttt{*}, \texttt{+}, and grouping, anchoring the pattern to the whole string. The POSIX operators cover the general case. \texttt{\textasciitilde} matches, \texttt{\textasciitilde*} matches case-insensitively, and \texttt{!\textasciitilde} and \texttt{!\textasciitilde*} are their negations. Each returns a boolean. A POSIX pattern is unanchored and matches anywhere in the string unless \texttt{\^{}} or \texttt{\$} fixes it to an end.
 
-\begin{lstlisting}[style=sql, caption={Regex cleaning and validation}]
-SELECT phone,
-       REGEXP_REPLACE(phone, '[^0-9]', '', 'g')  AS digits,
-       phone ~ '^\+?[0-9]{10,15}$'               AS looks_valid,
-       email ILIKE '%@gmail.com'                 AS is_gmail
-FROM contacts;
+\vspace{1ex}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.28\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Construct} & \textit{Meaning} \\
+\midrule
+\texttt{\^{}} \quad \texttt{\$} & Start and end of the string. \\
+\texttt{.} & Any single character. \\
+\texttt{[abc]} \quad \texttt{[\^{}abc]} \quad \texttt{[a-z]} & A character in the set, outside the set, or in the range. \\
+\texttt{*} \quad \texttt{+} \quad \texttt{?} & The preceding item zero or more, one or more, or zero or one times. \\
+\texttt{\{n\}} \quad \texttt{\{n,\}} \quad \texttt{\{n,m\}} & Exactly \texttt{n}, at least \texttt{n}, or between \texttt{n} and \texttt{m} repetitions. \\
+\texttt{|} & Alternation between the branches on either side. \\
+\texttt{( )} \quad \texttt{(?: )} & A capturing group, or a non-capturing group. \\
+\texttt{\textbackslash d} \quad \texttt{\textbackslash s} \quad \texttt{\textbackslash w} & A digit, a whitespace character, or a word character. The uppercase form negates each. \\
+\texttt{\textbackslash y} & A word boundary, the Postgres spelling. \\
+\bottomrule
+\end{tabularx}
+\caption*{POSIX regex constructs used by \texttt{\textasciitilde} and the \texttt{REGEXP\_} functions. Quantifiers are greedy unless followed by \texttt{?}.}
+\end{table}
+
+\vspace{-2ex}
+
+\paragraph{Match tests as indicator flags.} A POSIX match returns a boolean, so casting it with \texttt{::int} produces a 0/1 column per pattern. \texttt{\^{}p} matches a string that begins with \texttt{p}, \texttt{p\$} one that ends with \texttt{p}, and an unanchored \texttt{p} one that contains \texttt{p} at any position. Alternation inside a group, \texttt{(a|b|c)}, matches any branch, and anchoring the group applies the test at that position.
+
+\begin{lstlisting}[style=sql, caption={Presence flags from anchored and unanchored patterns}]
+SELECT sample_id,
+       (dna_sequence ~ '^ATG')::int            AS has_start,  -- begins with ATG
+       (dna_sequence ~ '(TAA|TAG|TGA)$')::int  AS has_stop,   -- ends with a stop codon
+       (dna_sequence ~ 'ATAT')::int            AS has_atat,   -- occurs anywhere
+       (dna_sequence ~ 'GGG')::int             AS has_ggg
+FROM samples
+ORDER BY sample_id;
 \end{lstlisting}
 
 \vspace{-1ex}
+
+\paragraph{Extracting with regex.} \texttt{SUBSTRING(s FROM pattern)} returns the first substring the pattern matches, or the first capture group when the pattern contains one, and \texttt{NULL} on no match. \texttt{REGEXP\_SUBSTR(s, pattern, ...)} returns a single match as a scalar. \texttt{REGEXP\_MATCHES(s, pattern, flags)} returns the capture groups as an array, and under the \texttt{`g'} flag returns one row per match, which places it in the \texttt{FROM} clause. \texttt{REGEXP\_COUNT(s, pattern)} returns the number of matches.
+
+\begin{lstlisting}[style=sql, caption={Pulling fields out with a pattern}]
+SELECT email,
+       SUBSTRING(email FROM '@(.+)$')     AS domain,       -- the capture group
+       REGEXP_SUBSTR(ip_port, '^[0-9.]+') AS ip,
+       REGEXP_COUNT(csv, ',') + 1         AS field_count
+FROM records;
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The presence of a capture group determines what \texttt{SUBSTRING} returns: with a group it returns the group, and without one it returns the whole match. \texttt{'@(.+)\$'} therefore returns the domain without the \texttt{@}.
+
+\paragraph{Greediness and flags.} Quantifiers are greedy and match the longest possible span. A trailing \texttt{?} makes a quantifier lazy, so \texttt{.*?} matches as few characters as possible. An operation acts on the first match alone unless the \texttt{`g'} flag is passed, the default that leaves \texttt{REGEXP\_REPLACE} applied to a single occurrence without it. Word boundaries are written \texttt{\textbackslash y} in Postgres, since \texttt{\textbackslash b} denotes a backspace inside a bracket expression.
+
+\newpage
 
 \paragraph{Splitting and aggregating.} \texttt{STRING\_AGG(expr, delim ORDER BY
 ...)} collapses a group into one delimited string and is the string analogue of

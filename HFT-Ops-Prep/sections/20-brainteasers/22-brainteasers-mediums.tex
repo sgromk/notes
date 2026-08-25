@@ -1,0 +1,324 @@
+\begin{problem}
+A line of 100 airline passengers is waiting to board a plane. They each hold a ticket to one of the 100 seats on that flight. For convenience, let's say that the $n_{\text{th}}$ passenger in line has a ticket for seat number `$n$'. Being drunk, the first person in line picks a random seat (equally likely for each seat). All of the other passengers are sober, and will go to their assigned seats unless it is already occupied; If it is occupied, they will then find a free seat to sit in, at random. What is the probability that the last (100th) person to board the plane will sit in their own seat (\#100)?
+\end{problem}
+
+\begin{solution}
+Label seats so passenger $n$ owns seat $n$, with passenger 1 drunk.
+
+First we pin down where the 100th passenger can end up. Take any passenger $k$ with $2 \le k \le 99$. When $k$ boards, seat $k$ is either free, in which case $k$ takes it, or already occupied. Either way seat $k$ is occupied once $k$ has boarded. So when passenger 100 boards, seats $2,\dots,99$ are full and the one free seat is 1 or 100.
+
+Now we show these are equally likely. Seats 1 and 100 are the only seats no passenger in $\{2,\dots,99\}$ owns. Both begin free, and every passenger who chooses at random chooses uniformly among the free seats. Swap the labels 1 and 100. Passenger 1 chooses at random no matter what he owns, passenger 100 takes the leftover no matter what she owns, and the owners of seats $2,\dots,99$ are unaffected. So the swap sends the boarding process to an equally likely one with the two seats exchanged, and the two outcomes have equal probability.
+
+So, passenger 100 gets seat 100 with probability $\tfrac12$.
+\end{solution}
+
+\begin{problem}
+A stick is broken into 3 parts, by choosing 2 points randomly along its length. With what probability can it form a triangle?
+\end{problem}
+
+\begin{solution}
+Call the length $\ell$ and set $\ell = 1$. To form a triangle every piece must
+be shorter than $\tfrac12$, since a piece of length $\tfrac12$ or more equals or
+exceeds the sum of the other two.
+
+Fix the first cut and measure it from its nearer end, calling that distance $X$,
+so $X$ is uniform on $[0, \tfrac12]$. Let $Y$ be the second cut, uniform on
+$[0,1]$.
+
+If $Y < X$ the pieces are $Y$, $X - Y$, and $1 - X$. Here $1 - X \ge \tfrac12$, so
+this always fails.
+
+If $Y > X$ the pieces are $X$, $Y - X$, and $1 - Y$. We already have $X < \tfrac12$.
+The remaining piece $1 - Y$ stays below $\tfrac12$ when $Y > \tfrac12$, and the
+middle piece $Y - X$ stays below $\tfrac12$ when $Y < X + \tfrac12$. So we succeed
+exactly when
+\[
+  \tfrac12 < Y < X + \tfrac12
+\]
+a window of width $X$. Given $X$, the success probability is therefore $X$.
+
+Since the first cut is uniform on $[0, \tfrac12]$, we can average with $\frac{1}{b-a} \int_a^b g(x)dx$,
+\[
+  P(\text{triangle}) = \frac{1}{\frac{1}{2} - 0}\int_0^{1/2} x\, dx
+  = 2\left[\frac{x^2}{2}\right]_0^{1/2} = \left(\tfrac12\right)^2 - 0 = \tfrac14
+\]
+So the probability of forming a valid triangle is $\tfrac14$.
+\end{solution}
+
+\begin{problem}
+A rabbit sits at the bottom of a staircase with $n$ stairs. The rabbit can hop up only one or two stairs at a time. What kind of sequence is depicted by the different ways possible for the rabbit to ascend to the top of the stairs of length $n=1,2,3\dots$?
+\end{problem}
+
+\begin{solution}
+We'll call the number of paths to a certain stair $n$ as $f(n)$. We can compute $f(1)$ to $f(5)$ as:
+
+\begin{center}
+\begin{tabular}{c c l}
+\hline
+$n$ & $f(n)$ & paths \\
+\hline
+1 & 1 & \texttt{1} \\
+2 & 2 & \texttt{11, 2} \\
+3 & 3 & \texttt{111, 12, 21} \\
+4 & 5 & \texttt{1111, 112, 121, 211, 22} \\
+5 & 8 & \texttt{11111, 1112, 1121, 1211, 2111, 122, 212, 221} \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{1em}
+
+Examining each level from $n=3$ onwards, we can see that each path can be constructed as the paths to $n-2$ plus a double hop, or the paths to $n-1$ plus a single hop. Thus, the number of paths to $n$ is equal to the number of paths to $n-2$ plus the number of paths to $n-1$, which is the Fibonacci recurrence. So the pattern that arises is the Fibonacci
+sequence.
+
+\end{solution}
+
+
+\begin{problem}
+$A, B$, and $C$ live together and share everything equally. One day $A$ brings home 5 logs of wood, $B$ brings 3 logs and $C$ brings none. Then they use the wood to cook together and share the food. Since $C$ did not bring any wood, he gives \$8 instead. How much to $A$ and how much to $B$?
+\end{problem}
+
+\begin{solution}
+The three of them consume $8$ logs total, so each eats $\frac{8}{3}$ logs.
+Measuring what each contributed beyond his own share, $A$ has a surplus of
+$5 - \frac{8}{3} = \frac{7}{3}$ logs and $B$ has a surplus of
+$3 - \frac{8}{3} = \frac{1}{3}$ logs.
+
+$C$'s \$8 pays for the $\frac{8}{3}$ logs he ate without providing any. Those
+logs were supplied entirely out of the two surpluses, so the money splits in
+proportion to surplus:
+\[
+  \frac{7}{3} : \frac{1}{3} = 7 : 1
+\]
+Thus $A$ receives \$7 and $B$ receives \$1.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+\vspace{-1ex}
+Suppose you have a hotel which has one floor with infinite number of rooms in a row and all of them are occupied. A new customer wants to check in, how will you accommodate her? What if infinite number of people want to check in, how will you accommodate them? 
+
+Lastly, suppose infinite number of buses arrive at the hotel, each having infinite number of people, how will you accommodate them?
+
+\end{problem}
+
+\begin{solution}
+This is a question of counting infinities, or more specifically, of finding a 1-1 mapping that includes the new incoming people. Since all of these are based on integer amounts of people, each is countable (even an infinite number of buses of infinite people).
+
+In the first case, we can simply ask each person in room $k$ to move to room $k+1$. Similarly for the second case, we can ask each $k_{\text{th}}$ person to move to room $2 \cdot k$. This would leave open every $2 \cdot k - 1$ room open for the infinite number of people arriving on the bus.
+
+For the final case, identify each person by a pair. An original occupant is
+labeled by their room number $k \ge 1$. A bus passenger is labeled $(i, j)$,
+meaning seat $j \ge 1$ of bus $i \ge 1$. We assign rooms in successive shells,
+indexed by $n = 1, 2, 3, \dots$, where shell $n$ contains:
+\begin{itemize}
+  \item the $n$th original occupant,
+  \item seats $1$ through $n$ of bus $n$, that is the pairs $(n, 1), \dots, (n, n)$,
+  \item seat $n$ of every earlier bus, that is the pairs $(1, n), \dots, (n-1, n)$.
+\end{itemize}
+
+The bus pairs in shell $n$ are exactly those with $\max(i, j) = n$, so every pair
+$(i, j)$ lands in shell $\max(i, j)$ and lands in no other. Every occupant $k$
+lands in shell $k$. Each shell holds $2n$ people, a finite count, so processing
+the shells in order $1, 2, 3, \dots$ reaches every person after finitely many
+rooms are filled. No bus is skipped, since a fixed pair $(i, j)$ is served by the
+time we finish shell $\max(i, j)$.
+\end{solution}
+
+\begin{problem}
+\vspace{-1ex}
+A group has 70 members. For any two members $X$ and $Y$, there is a language
+that $X$ speaks but $Y$ does not, and there is a language that $Y$ speaks but
+$X$ does not. At least how many different languages are spoken by this group?
+\end{problem}
+
+\begin{solution}
+Start by considering a smaller group, say $n = 6$ with members labelled 1
+to 6. We show this is supportable by 4 languages, denoted $A$, $B$, $C$, and
+$D$. Assign languages as sets:
+\begin{align*}
+1 &= \{A, B\} & 2 &= \{A, C\} & 3 &= \{A, D\} \\
+4 &= \{B, C\} & 5 &= \{B, D\} & 6 &= \{C, D\}
+\end{align*}
+
+\vspace{-0.5em}
+
+The condition is that for any two members $X$ and $Y$, each speaks a language the
+other does not. In set terms, neither set may contain the other. Here all six
+sets have size 2, and no size-2 set can contain another (collections of distinct but differently sized sets could contain subsets), so any two distinct sets
+satisfy the condition automatically.
+
+This suggests giving every member a set of the same size $r$, which is both
+convenient and optimal. Convenient, because the number of available sets is then just $\binom{n}{r}$. Optimal, because nothing is gained by mixing sizes: enlarging one member's set
+only shrinks the pool of sets that can coexist with it. By Sperner's theorem, the
+largest antichain (a collection of sets where none contains another) built from
+$n$ elements is obtained by taking all subsets of a single size
+$\lfloor n/2 \rfloor$, giving $\binom{n}{\lfloor n/2 \rfloor}$ of them. 
+
+Finally, the smallest $n$ for which $\binom{n}{\lfloor n/2 \rfloor} \ge 70$ is $n=8$ languages. 
+\end{solution}
+
+
+\newpage
+
+\begin{problem}
+Two players, $A$ and $B$, form a team playing against an opponent. To enter,
+the team pays \$1 at the start. If the team wins it receives \$3, and nothing
+otherwise.
+
+$A$ and $B$ are placed in two separate rooms with no communication between them.
+Each flips a fair coin. $A$ must guess the outcome of $B$'s flip, and $B$ must
+guess the outcome of $A$'s flip. The team wins only if both guesses are correct,
+and wins nothing if either guess is wrong. The two may agree on a strategy in
+advance, before being separated.
+
+Should the team pay \$1 to play?
+\end{problem}
+
+\begin{solution}
+The two coins land in one of four equally likely states:
+\[
+  \begin{array}{cccc}
+    \{H,H\} & \{H,T\} & \{T,H\} & \{T,T\}
+  \end{array}
+\]
+With no strategy, each player guesses the other coin at random. Each guess is
+correct with probability $\tfrac12$, and the two guesses are independent, so both
+are correct with probability $\tfrac12 \cdot \tfrac12 = \tfrac14$. The expected
+return is $\mathbb{E}[\text{Play}] = \tfrac14 \cdot 3 + \tfrac34 \cdot 0 - 1 = -\tfrac14$, which is negative, so random guessing is not worth playing. 
+
+Instead, the strategy is for each player to guess that the other coin \textit{equals their
+own}. Under this rule, $A$'s guess is correct exactly when $B$'s coin equals
+$A$'s, and $B$'s guess is correct exactly when $A$'s coin equals $B$'s. These are
+the same condition: both coins show the same face. So the two guesses are no
+longer independent, they are both correct together or both wrong together.
+
+The team therefore wins precisely when the coins match. Of the four states, two
+match and two do not:
+\[
+  \underbrace{\{H,H\}, \; \{T,T\}}_{\text{match, win}}
+  \qquad
+  \underbrace{\{H,T\}, \; \{T,H\}}_{\text{no match, lose}}
+\]
+so the win probability is $\tfrac24 = \tfrac12$. The expected return becomes
+\[
+  \mathbb{E}[\text{Play}] = \tfrac12 \cdot 3 + \tfrac12 \cdot 0 - 1 = \tfrac12 \quad \longrightarrow \quad \text{which is positive, so they should play.}
+\]
+\end{solution}
+
+\begin{problem}
+Snow particles fall to the ground one after another. Each snowflake is of type
+``Stellar Dendrite'' with probability $p$ if the preceding particle was also a
+Stellar Dendrite, and with probability $q$ if the preceding particle was some
+other type. If a snowflake is picked at random from the ground, what is the
+probability that it is a Stellar Dendrite?
+\end{problem}
+
+\begin{solution}
+Let $x$ be the probability that a snowflake picked up is an SD. We set this up as
+a Markov chain and use first-step analysis, conditioning on the previous flake.
+
+Assume the system has reached a steady state, so the probability of an SD does not
+change from one flake to the next. Then the previous flake is an SD with the same
+probability $x$. The current flake is an SD in two ways: the previous was an SD
+(probability $x$) and it continues (probability $p$), or the previous was not
+(probability $1 - x$) and it starts (probability $q$). Since the current flake is
+itself a picked-up flake, its SD probability is also $x$:
+\[
+  x = x \cdot p + (1 - x) \cdot q
+\]
+Solving,
+\[
+  x = xp + q - qx \implies x - xp + qx = q \implies x = \frac{q}{1 - p + q}
+\]
+\end{solution}
+
+\newpage
+
+\begin{problem}
+A drawer contains red socks and black socks. When two socks are drawn
+at random, the probability that both are red is $\frac{1}{2}$. (a) How small can the number of socks in the drawer be? (b) How small if the number of black
+socks is even? 
+\end{problem}
+
+\begin{solution}
+Draws are without replacement, so for red socks $r$ and black socks $b$ the probability that both are red factors as
+\[
+p = \frac{r}{r+b} \times \frac{r-1}{r+b-1} = \frac{1}{2}
+\]
+We can test this with $r=3$ and $b=1$:
+\[
+\frac{3}{4} \times \frac{2}{3} = \frac{1}{2}
+\]
+As desired. For (b), the second factor is smaller than the first when $b > 0$, so $\frac{r}{r+b} > \frac{r-1}{r+b-1}$. Multiplying this inequality by each factor and using $p = \frac{1}{2}$ gives
+\[
+\left( \frac{r}{r+b} \right)^2 > \frac{1}{2} > \left( \frac{r-1}{r+b-1} \right)^2
+\]
+We solve these for bounds on $r$ in terms of $b$, then check the admissible candidate $r$ for each even $b$ until the product equals $\frac{1}{2}$.
+\end{solution}
+
+\begin{problem}
+Four people, $A$, $B$, $C$ and $D$ need to get across a river. The only way to cross the river is
+by an old bridge, which holds at most 2 people at a time. Being dark, they can't cross the
+bridge without a torch, of which they only have one. So each pair can only walk at the
+speed of the slower person. They need to get all of them across to the other side as
+quickly as possible. $A$ is the slowest and takes 10 minutes to cross; $B$ takes 5 minutes; $C$
+takes 2 minutes; and $D$ takes 1 minute.
+What is the minimum time to get all of them across to the other side?
+\end{problem}
+
+\begin{solution}
+We could first try using $D$ to `ferry' everyone across, coming back each time for the next person, but this takes 19 minutes and never uses people on \textit{both} sides of the bridge.
+
+Instead, send $C$ and $D$ over (2 min), $D$ back (3 min), $A$ and $B$ over (13 min), $C$ back (15 min), then $C$ and $D$ over again for 17 minutes total. The trick is to pair the two slowest so we pay $A$'s 10 minutes on the same trip as $B$'s, leaving a fast runner across to carry the torch back.
+
+This beats ferrying whenever $2t_2 < t_1 + t_3$, where the $t_i$ are the sorted times: two crossings by the second fastest must cost less than one each by the fastest and second slowest. Here $2C < D + B$, or $4 < 6$, saving 2 minutes.
+\end{solution}
+
+\newpage
+
+\begin{problem}
+Boss $A$'s birthday is one of the following 10 dates:
+\begin{itemize}
+    \item Mar 4, Mar 5, Mar 8
+    \item Jun 4, Jun 7
+    \item Sep 1, Sep 5
+    \item Dec 1, Dec 2, Dec 8
+\end{itemize}
+$A$ tells you only the month and tells colleague $C$ only the day.
+\begin{enumerate}
+    \item You state: ``I do not know $A$'s birthday, and $C$ does not know it either.''
+    \item $C$ replies: ``I did not know $A$'s birthday, but now I do.''
+    \item You state: ``Now I know it, too.''
+\end{enumerate}
+An assistant overhears the exchange and correctly determines the birthday. What is $A$'s birthday?
+\end{problem}
+
+\begin{solution}
+Since we know the month, our personal list of candidate birthdays is restricted to that single month. For our colleague $C$, the same principle applies with respect to the day.
+
+From (1), we announce that we do not know the birthday and that $C$ cannot possibly know it either. This means our month cannot contain any unique day numbers (7 in June, 2 in December), which eliminates both June and December entirely. The candidate list is reduced to the March and September dates:
+\begin{itemize}
+    \item March: 4, 5, 8
+    \item September: 1, 5
+\end{itemize}
+
+From (2), $C$ announces that they now know the birthday. This rules out day 5, since 5 appears in both March and September and would leave $C$ uncertain. The remaining candidate dates are March 4, March 8, and September 1.
+
+From (3), we announce that we now know the birthday as well. If our month were March, we would still have two possibilities (March 4 and March 8). Because we can determine the exact date, our month must be September, making the boss's birthday September 1.
+\end{solution}
+
+\begin{problem}
+A casino offers a card game using a normal deck of 52 cards. The rule is that you turn
+over two cards each time. For each pair, if both are black, they go to the dealer's pile; if
+both are red, they go to your pile; if one black and one red, they are discarded. The
+process is repeated until you two go through all 52 cards. If you have more cards in your
+pile, you win \$100; otherwise (including ties) you get nothing. The casino allows you to
+negotiate the price you want to pay for the game. How much would you be willing to
+pay to play this game?
+\end{problem}
+
+\begin{solution}
+The objective is to have more cards in our pile than the house, so we want some way to ``burn'' black cards. However, the only way that black cards (and symmetrically, red cards) can be used up without awarding points to the house is if they are discarded. Note, however, that this requires a red card burn too. Thus, there is \textit{no} way to build an advantage. In fact, every game will always end in a tie (though the amount of discarded and held cards may differ game to game). The game is unwinnable, so no amount of money makes it worth playing. 
+\end{solution}

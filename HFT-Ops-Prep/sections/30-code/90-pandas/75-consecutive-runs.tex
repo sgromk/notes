@@ -1,0 +1,52 @@
+% ============================================================
+\subsubsection{Consecutive Runs}
+% ============================================================
+
+Some results turn on stretches of adjacent rows that share a property: the same value repeated, or keys that step by a fixed amount with no break between them. A maximal such stretch is a run. The pattern, known as gaps and islands, labels every run with an identifier, after which an ordinary \texttt{groupby} measures each run's length or reduces its rows. As with any row-relative work the rows must be sorted first, since a run is defined by adjacency in the current order.
+
+\vspace{1ex}
+
+\begin{keybox}[Two run labels]
+A run of a repeated value ends wherever the value changes, so \texttt{(s != s.shift()).cumsum()} labels the runs: the comparison is \texttt{True} at each change, and the cumulative sum steps up there and holds flat between the changes. A run of consecutive keys uses a different invariant. Number the rows \texttt{0, 1, 2} in order, and inside a run both the key and the counter rise by one at every step, so their difference \texttt{key - counter} stays constant and jumps exactly where the run breaks. For a key stepping by \texttt{d}, subtract \texttt{counter * d}.
+\end{keybox}
+
+\paragraph{Equal-value runs.} A label built from the change points groups adjacent equal values, which answers questions about a value repeating across consecutive rows. \texttt{transform('size')} broadcasts each run's length back onto its rows, and a mask keeps the runs that reach a threshold.
+
+\begin{lstlisting}[style=python, caption={Numbers appearing on three or more consecutive rows}]
+logs = logs.sort_values('id')
+
+run    = (logs['num'] != logs['num'].shift()).cumsum()
+length = logs.groupby(run)['num'].transform('size')
+result = logs.loc[length >= 3, 'num'].unique()
+\end{lstlisting}
+
+\vspace{-1ex}
+
+\paragraph{Consecutive keys.} When the run is a stretch of consecutive integers or consecutive dates, the \texttt{key - counter} label applies. A per-entity streak resets the counter at each entity through \texttt{groupby(...).cumcount()}, and the label becomes the pair of the entity and the offset key. Duplicate keys within an entity break the unit step, so collapse them with \texttt{drop\_duplicates} before counting.
+
+\begin{lstlisting}[style=python, caption={Users active five or more consecutive days}]
+logins = (logins.drop_duplicates(['user_id', 'day'])
+                .sort_values(['user_id', 'day']))
+
+counter = logins.groupby('user_id').cumcount()
+streak  = logins['day'] - counter * pd.Timedelta('1D')   # constant along a run of consecutive days
+
+length = logins.groupby(['user_id', streak])['day'].transform('size')
+active = logins.loc[length >= 5, 'user_id'].unique()
+\end{lstlisting}
+
+\vspace{-1ex}
+
+A predicate can gate the run before the label is built. Filtering to the qualifying rows first, then labeling the survivors by \texttt{id - counter}, finds consecutive runs among rows that pass a test, such as three or more successive records above a threshold.
+
+\begin{lstlisting}[style=python, caption={Three or more consecutive ids clearing a threshold}]
+busy = stadium[stadium['people'] >= 100].sort_values('id')
+
+grp    = busy['id'] - np.arange(len(busy))    # consecutive ids collapse to one value
+length = busy.groupby(grp)['id'].transform('size')
+result = busy[length >= 3]
+\end{lstlisting}
+
+\vspace{-1ex}
+
+The longest run is the largest group under the same label, \texttt{groupby(run).size().max()}, and the run's own rows come back by selecting the label that attains it.

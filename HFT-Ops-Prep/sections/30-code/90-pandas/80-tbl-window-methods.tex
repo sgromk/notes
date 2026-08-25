@@ -1,0 +1,31 @@
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.225\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Method} & \textit{Arguments} & \textit{What it does} \\
+\midrule
+\textbf{\texttt{shift}} & \texttt{periods}, default 1 & Value \texttt{k} rows earlier in the current order, \texttt{NaN} past the edge. A negative \texttt{k} looks ahead, the \texttt{LEAD}. \\
+\textbf{\texttt{diff}} & \texttt{periods}, default 1 & Current value minus the value \texttt{k} rows back. \\
+\textbf{\texttt{pct\_change}} & \texttt{periods}, \texttt{fill\_method} & Fractional change from the previous row, the one-period return. \\
+\textbf{\texttt{cumsum /\allowbreak cumprod}} & none & Running sum or product from the start to the current row. \\
+\textbf{\texttt{cummax /\allowbreak cummin}} & none & Running maximum or minimum seen so far. \\
+\textbf{\texttt{rank}} & \texttt{method}, \texttt{ascending}, \texttt{pct} & Rank by value. \texttt{dense}, \texttt{min}, \texttt{first} map to \texttt{DENSE\_RANK}, \texttt{RANK}, \texttt{ROW\_NUMBER}. \\
+\textbf{\texttt{cumcount}} & none & 0-based row number within each group in the current order. \\
+\textbf{\texttt{ngroup}} & none & Group label \texttt{0, 1, 2} in order of appearance. \\
+\textbf{\texttt{rolling}} & \texttt{window} as rows or an offset like \texttt{'7D'} & Fixed moving window for a reduction. The offset form needs a \texttt{DatetimeIndex}. \\
+\textbf{\texttt{expanding}} & \texttt{min\_periods} & Window growing from the start, a running reduction. \\
+\textbf{\texttt{ewm}} & \texttt{span}, \texttt{halflife}, \texttt{alpha}, \texttt{com} & Exponentially weighted mean and variance under a decay. \\
+\textbf{\texttt{rolling(w).apply}} & \texttt{func}, \texttt{raw} & Arbitrary reduction over each window, as a numpy array when \texttt{raw=True}. \\
+\textbf{\texttt{nlargest /\allowbreak nsmallest}} & \texttt{(n, col)} & Top or bottom \texttt{n} rows by a column, cheaper than a full sort. \\
+\textbf{\texttt{idxmax /\allowbreak idxmin}} & none & Index label of the extreme value, an argmax read back by \texttt{loc}. \\
+\textbf{\texttt{resample}} & frequency \texttt{'B'}, \texttt{'W'}, \texttt{'ME'}, \texttt{'QE'} & A \texttt{groupby} keyed by a time frequency on a \texttt{DatetimeIndex}. \\
+\textbf{\texttt{transform}} & \texttt{func} & Group reduction broadcast back to every input row. \\
+\bottomrule
+\end{tabularx}
+\caption*{Row-relative and window methods. All read the current row order, so a \texttt{sort\_values} precedes them, and a \texttt{groupby} resets them at each group edge.}
+\end{table}
+
+\newpage

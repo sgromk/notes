@@ -1,0 +1,27 @@
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\rowcolors{2}{gray!10}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.225\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+\textit{Method} & \textit{Arguments} & \textit{What it does} \\
+\midrule
+\textbf{\texttt{pd.to\_datetime}} & \texttt{format}, \texttt{errors}, \texttt{unit} & Parses text or epoch values into \texttt{datetime64[ns]}, the prerequisite for \texttt{.dt}. \\
+\textbf{\texttt{pd.date\_range}} & \texttt{start}, \texttt{end}, \texttt{periods}, \texttt{freq} & Builds a \texttt{DatetimeIndex} at a fixed frequency, used to reindex to a complete span. \\
+\textbf{\texttt{pd.Timedelta}} & \texttt{'1D'}, \texttt{'2h'}, \ldots & A duration, added to or subtracted from timestamps. \\
+\textbf{\texttt{dt.year / month /\allowbreak day}} & none & Calendar components as integers. \\
+\textbf{\texttt{dt.hour / minute /\allowbreak second}} & none & Clock components as integers. \\
+\textbf{\texttt{dt.dayofweek /\allowbreak day\_name}} & none & Weekday as \texttt{0..6} with Monday 0, or its name. \\
+\textbf{\texttt{dt.quarter}} & none & Calendar quarter \texttt{1..4}. \\
+\textbf{\texttt{dt.date / time}} & none & The date or clock part, dropping the other. \\
+\textbf{\texttt{dt.days\_in\_month}} & none & Length of the month in days. \\
+\textbf{\texttt{dt.is\_month\_end}} & none & Boolean calendar-position flag, with \texttt{is\_month\_start} and the quarter and year forms. \\
+\textbf{\texttt{dt.floor / ceil /\allowbreak round}} & \texttt{freq} like \texttt{'D'}, \texttt{'h'} & Snaps each timestamp down, up, or to nearest at a frequency. \\
+\textbf{\texttt{dt.normalize}} & none & Sets the time to midnight, keeping the date. \\
+\textbf{\texttt{dt.to\_period}} & \texttt{'M'}, \texttt{'Q'}, \texttt{'Y'} & Converts to a period, a whole calendar span rather than an instant. \\
+\textbf{\texttt{dt.strftime}} & \texttt{format} & Formats each timestamp as text, e.g.\ \texttt{'\%Y-\%m-\%d'}. \\
+\bottomrule
+\end{tabularx}
+\caption*{The \texttt{.dt} accessor and the datetime constructors. The accessor requires a \texttt{datetime64[ns]} column, which \texttt{pd.to\_datetime} produces from text or epoch input.}
+\end{table}

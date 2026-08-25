@@ -49,6 +49,18 @@ The workhorses are \texttt{.str.contains}, \texttt{.str.extract} for a regex cap
 
 \paragraph{Element mapping.} \texttt{map} on a Series applies a dict or function element by element, which suits recoding a small fixed set of values. \texttt{replace} substitutes chosen values throughout a column, \texttt{astype} casts to a target dtype, and \texttt{round} sets the number of decimals on a numeric column.
 
+\paragraph{Binning into categories.} \texttt{pd.cut} slices a numeric column at explicit edges into labeled bands, the vectorized form of a \texttt{CASE} ladder over ranges. \texttt{pd.qcut} instead cuts at quantiles, producing bins of roughly equal count, which is the \texttt{NTILE} operation. Both return a \texttt{category} column that feeds \texttt{value\_counts} or a \texttt{groupby} directly.
+
+\newpage
+
+\begin{lstlisting}[style=python, caption={Fixed-edge bins and equal-frequency bins}]
+df['band'] = pd.cut(df['salary'],
+                    bins=[0, 50_000, 80_000, np.inf],
+                    labels=['<50k', '50-80k', '80k+'])
+
+df['quartile'] = pd.qcut(df['salary'], 4, labels=False)  # 0..3 by quantile
+\end{lstlisting}
+
 \vspace{1ex}
 
 \begin{keybox}[apply and the axis argument]

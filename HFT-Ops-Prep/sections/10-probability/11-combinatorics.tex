@@ -63,18 +63,19 @@ The size of a union is the alternating sum of the sizes of all intersections. Fo
 
 The mechanism is bookkeeping on how many times each element gets counted. Summing the individual set sizes counts an element that lies in two sets twice, so subtracting the pairwise intersections corrects it back to one. An element in all three sets is now counted $3 - 3 = 0$ times, so adding the triple intersection restores it to one. The pattern continues to any number of sets: terms over an odd number of sets are added and terms over an even number are subtracted, which leaves every element counted exactly once no matter how many sets contain it.
 
+\vspace{2em}
+
 \begin{keybox}[Which counting tool]
 \begin{center}
 \begin{tabular}{lll}
 \toprule
 \textbf{Order matters?} & \textbf{Repeats allowed?} & \textbf{Count} \\
 \midrule
-yes & no  & $P(n,k) = \dfrac{n!}{(n-k)!}$ \\[0.6em]
-no  & no  & $C(n,k) = \dbinom{n}{k}$ \\[0.6em]
-yes & yes & $n^k$ \\[0.3em]
-no  & yes & $\dbinom{n+k-1}{k-1}$ \; (stars and bars) \\
+yes & no  & $P(n,k) = \dfrac{n!}{(n-k)!}$ \\[2em]
+no  & no  & $C(n,k) = \dbinom{n}{k}$ \\[2em]
+yes & yes & $n^k$ \\[2em]
+no  & yes & $\dbinom{n+k-1}{k-1}$ \; (stars and bars) \\[0.5em]
 \bottomrule
 \end{tabular}
 \end{center}
-Two escape hatches handle counts that fan out into many subcases. Use the \textbf{complement} ($1 - P$ of the unwanted case) on ``at least one'' phrasing, and use \textbf{inclusion-exclusion} on ``divisible by $a$ or $b$'' style overlaps.
 \end{keybox}

@@ -1,6 +1,6 @@
 \subsection{Combinatorics}
 
-A counting problem is pinned down by two questions. Does the order of the chosen elements matter, and may an element be chosen more than once. The formulas below are organized around those two axes, plus a correction for identical elements and two escape hatches (the complement and inclusion-exclusion) for when a direct count fans out into many cases.
+A counting problem is pinned down by two questions. Does the order of the chosen elements matter, and may an element be chosen more than once. The formulas below are organized around those two axes.
 
 \subsubsection{Permutations}
 
@@ -40,6 +40,7 @@ C(n,k) = \frac{P(n,k)}{k!}.
 
 \begin{theorem}[Stars and bars]
 The number of ways to place $n$ identical objects into $k$ distinct bins, where a bin may hold any number of objects including zero, is
+
 \[
 \binom{n + k - 1}{\,k - 1\,} = C(n + k - 1,\, k - 1).
 \]

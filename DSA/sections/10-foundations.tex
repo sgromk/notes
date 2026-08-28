@@ -237,4 +237,174 @@ def fib_huge_array(n: int, m: int) -> int:
 
 \medskip
 
-Blah
+We now want the sum of the first $n+1$ Fibonacci numbers, which we call $S(n)$:
+\[
+S(n) = \sum_{i=0}^{n} F(i) = F(0) + F(1) + F(2) + \cdots + F(n)
+\]
+
+Rather than add $n+1$ terms, we look for a closed form. The recurrence $F(i+2) = F(i+1) + F(i)$ rearranges to
+\[
+F(i) = F(i+2) - F(i+1)
+\]
+so each term in the sum is a difference of two consecutive Fibonacci numbers. Writing every summand this way makes the sum telescope: each $F(i+1)$ cancels the $F(i+2)$ of the term before it, leaving only the outermost pieces. Taking $S(4)$ as a check:
+\begin{align*}
+S(4) &= F(0) + F(1) + F(2) + F(3) + F(4) \\
+     &= (F(2) - F(1)) + (F(3) - F(2)) + (F(4) - F(3)) + (F(5) - F(4)) + (F(6) - F(5)) \\
+     &= F(6) - F(1) \\
+     &= F(6) - 1
+\end{align*}
+The surviving terms are $F(n+2)$ from the last summand and $-F(1) = -1$ from the first, giving
+\[
+S(n) = F(n+2) - 1
+\]
+
+For the last digit we reduce mod 10. Since $1 \bmod 10 = 1$,
+\[
+S(n) \bmod 10 = \big(F(n+2) \bmod 10 - 1\big) \bmod 10
+\]
+The outer reduction matters because $F(n+2) \bmod 10$ can be $0$, which makes the subtraction $-1$, and the reduction returns it to $9$. This reuses the last-digit routine from before:
+
+\medskip
+
+\begin{lstlisting}[language=Python]
+def sum_fib_last_digit(n):
+    return (fib_last_digit(n + 2) - 1) % 10
+\end{lstlisting}
+
+The identity replaces the running sum with a single last-digit computation. Both are $O(n)$ time, so this is not an asymptotic improvement. What it removes is the accumulation: the naive sum carries a running total and adds to it at every step, whereas the identity computes one Fibonacci number and subtracts $1$. The routine is \texttt{fib\_last\_digit}, which is $O(n)$ time and $O(1)$ space.
+
+\bigskip
+
+\subsubsection{Last digit of the partial sum of Fibonacci numbers}
+
+\medskip
+
+Now we want to design a program to compute the last digit of the sum of Fibonacci numbers from integers $m$ to $n$ ($m < n$), which we'll call $P(m, n)$:
+\[
+P(m, n) = \left( \sum\limits_{i=m}^n F(i) \right) \bmod 10
+\]
+
+For example, $P(3, 7)$:
+\[
+P(3, 7) = \left( F(3) + F(4) + F(5) + F(6) + F(7) \right) \bmod 10
+\]
+\[
+= (2 + 3 + 5 + 8 + 13) \bmod 10
+\]
+\[
+= 31 \bmod 10 = 1
+\]
+
+We extend the approach from the previous problem. The full-sum identity is $S(k) = \sum_{i=0}^{k} F(i) = F(k+2) - 1$. A sum that starts at $m$ is the full sum up to $n$ with everything below $m$ removed, which is $S(m-1)$:
+\begin{align*}
+P(m, n) &= S(n) - S(m-1) \\
+        &= (F(n+2) - 1) - (F(m+1) - 1) \\
+        &= F(n+2) - F(m+1)
+\end{align*}
+
+Reducing mod 10:
+\[
+P(m, n) = \left( F(n+2) \bmod 10 - F(m+1) \bmod 10 \right) \bmod 10
+\]
+The outer reduction keeps the result in $\{0, \dots, 9\}$, since the subtraction can go negative. We compute $F(n+2) \bmod 10$ with the two-variable loop and capture $F(m+1) \bmod 10$ as we pass it. After $k$ iterations from $(0, 1)$, we have \texttt{current} $= F(k+1) \bmod 10$, so \texttt{current} holds $F(m+1)$ right after iteration $m$ and $F(n+2)$ after iteration $n+1$:
+
+\medskip
+
+\begin{lstlisting}[language=Python]
+def fib_last_digit_of_partial_sum(m, n):
+    previous, current = 0, 1        # F(0), F(1)
+    fib_m_plus_1 = 1                # F(1), used when m == 0
+
+    for i in range(1, n + 2):
+        previous, current = current, (previous + current) % 10
+        if i == m:
+            fib_m_plus_1 = current  # F(m+1)
+
+    return (current - fib_m_plus_1) % 10   # (F(n+2) - F(m+1)) mod 10
+\end{lstlisting}
+
+
+\bigskip
+
+
+\subsubsection{Last digit of sum of squares of Fibonacci numbers}
+
+\medskip
+
+Now we want the last digit of the sum of the squares of Fibonacci numbers, which we'll call $Q(n)$ (for s$Q$uare):
+\[
+Q(n) = \left( \sum\limits_{i=0}^n F(i)^2 \right) \bmod 10
+\]
+
+Reduction commutes with multiplication, so for any product
+\[
+(a \cdot b) \bmod 10 = \left( (a \bmod 10) \cdot (b \bmod 10) \right) \bmod 10
+\]
+This lets us carry the two Fibonacci values already reduced and reduce once more after multiplying, which is what the final step below does.
+
+\newpage
+
+The sum of squares of Fibonacci numbers up to $n$ can be expressed as $F(n) \cdot F(n+1)$, illustrated here:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.6, line join=round]
+  % fill and unit grid
+  \fill[green!15] (0,0) rectangle (8,5);
+  \draw[step=1, gray!35, very thin] (0,0) grid (8,5);
+
+  % square boundaries (side = F_i)
+  \draw[thick] (0,0) rectangle (1,1);   % F_1 = 1
+  \draw[thick] (0,1) rectangle (1,2);   % F_2 = 1
+  \draw[thick] (1,0) rectangle (3,2);   % F_3 = 2
+  \draw[thick] (0,2) rectangle (3,5);   % F_4 = 3
+  \draw[thick] (3,0) rectangle (8,5);   % F_5 = 5
+
+  % outer rectangle F_5 x F_6
+  \draw[very thick] (0,0) rectangle (8,5);
+
+  % side-length labels
+  \node at (0.5,0.5) {\scriptsize $1$};
+  \node at (0.5,1.5) {\scriptsize $1$};
+  \node at (2,1)     {$2$};
+  \node at (1.5,3.5) {$3$};
+  \node at (5.5,2.5) {$5$};
+
+  % dimension labels
+  \node[below=4pt] at (4,0)  {$F_6 = F_5 + F_4 = 8$};
+  \node[left=4pt]  at (0,2.5) {$F_5 = 5$};
+\end{tikzpicture}
+\end{center}
+
+The squares of sides $F_1, \dots, F_5$ tile a rectangle of size $F_5 \times F_6$, so
+\[
+\sum_{i=1}^{5} F_i^2 = F_5 F_6 = 5 \cdot 8 = 40
+\]
+Each new square of side $F_k$ attaches along the full edge of the block built from $F_1, \dots, F_{k-1}$, because $F_k = F_{k-1} + F_{k-2}$ makes that edge exactly $F_k$ long. Iterating gives the general identity
+\[
+\sum_{i=0}^{n} F_i^2 = F_n F_{n+1}
+\]
+where the $F_0 = 0$ term contributes no area.
+
+To support a large $n$, we reuse the period search from the huge-Fibonacci problem. Recall that we wuild the last digits from $(0, 1)$ until the seed pair recurs, which must repeat within $m^2$ steps by pigeonhole. With the period in hand, $F(n) \bmod 10$ is the entry at index $n \bmod \text{period}$, and $F(n+1) \bmod 10$ the entry at $(n+1) \bmod \text{period}$. Their product, reduced once more, is $Q(n)$:
+
+\medskip
+
+\begin{lstlisting}[language=Python]
+def fib_last_digit_of_squares(n):
+    m = 10
+
+    sequence = [0, 1]                   # F(0), F(1)
+    for _ in range(m * m):
+        sequence.append((sequence[-1] + sequence[-2]) % m)
+        if sequence[-2] == 0 and sequence[-1] == 1:
+            break                       # seed pair (0, 1) has returned
+    period = len(sequence) - 2          # drop the trailing seed pair
+
+    return (sequence[n % period] * sequence[(n + 1) % period]) % 10
+\end{lstlisting}
+
+The search builds one period in $O(m^2)$ time and space, but $m$ is fixed at $10$, so the routine is constant time and space.
+
+\newpage
+
+\subsection{Greatest common divisor}

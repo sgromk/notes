@@ -1,0 +1,161 @@
+% notesstyle.sty  --- reusable note-taking package for math / probability / code
+% ------------------------------------------------------------------------------
+% This is a PER-PROJECT FORK. It was copied into this project by
+% initialize-latex-project on 2026-08-28 and is safe to edit in place --
+% changes here affect only this project. The canonical copy lives in the skill.
+%
+% Provides:
+%   theorem-likes : theorem, lemma, corollary, proposition (shared counter);
+%                   definition, example (per-section counters); remark (unnumbered)
+%   math macros   : \R \N \Z \E \Prob \Var \Cov \Corr \ind \given \indep \T
+%                   \argmax \argmin ; paired delimiters \set \abs \norm
+%   keybox        : \begin{keybox}[Optional title]  -- titled highlight box
+%   problem       : \begin{problem}[source, difficulty]  -- referenceable, numbered
+%   solution      : paired with the solutions/nosolutions option below
+%   \complexity{time}{space}  -> "Complexity: time O(...), space O(...)."
+%   listings      : default style "common"; per-language "python", "sql"
+%
+% Options:
+%   warmbg       -> cream page background
+%   solutions    -> print solution blocks (default)
+%   nosolutions  -> hide solution blocks
+% ------------------------------------------------------------------------------
+
+% Load xcolor with [table] before any other package can grab it.
+\PassOptionsToPackage{table}{xcolor}
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{notesstyle}[2026/01/01 v1.0 note-taking macros]
+
+% ---------- options ----------
+\newif\ifns@warmbg      \ns@warmbgfalse
+\newif\ifshowsolutions  \showsolutionstrue
+\DeclareOption{warmbg}{\ns@warmbgtrue}
+\DeclareOption{solutions}{\showsolutionstrue}
+\DeclareOption{nosolutions}{\showsolutionsfalse}
+\ProcessOptions\relax
+
+% ---------- packages (order matters) ----------
+\RequirePackage{amsmath,amssymb,amsthm}
+\RequirePackage{mathtools}                 % \coloneqq, \DeclarePairedDelimiter, etc.
+\RequirePackage{graphicx}
+\RequirePackage{float}                     % [H] placement
+\RequirePackage{caption}
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+\RequirePackage[table]{xcolor}             % [table] -> \rowcolor, \cellcolor
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{listings}
+\RequirePackage{comment}                   % \excludecomment for hidden solutions
+\RequirePackage{enumitem}
+\RequirePackage{parskip}
+\RequirePackage{tocloft}                   % ToC leaders/spacing; load before hyperref
+\RequirePackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+\setlength{\marginparwidth}{2cm}           % silence a todonotes load warning
+\RequirePackage[colorinlistoftodos]{todonotes}
+\RequirePackage{hyperref}                  % load late
+\RequirePackage{cleveref}                  % load after hyperref
+
+% ---------- colors (defined once) ----------
+\definecolor{cream}{RGB}{253,251,245}
+\definecolor{lstbg}{RGB}{248,248,248}
+\definecolor{lstkw}{RGB}{0,0,170}
+\definecolor{lstcm}{RGB}{95,120,95}
+\definecolor{lstst}{RGB}{160,60,60}
+
+\hypersetup{colorlinks=true,
+  linkcolor=blue!50!black, citecolor=blue!50!black, urlcolor=blue!50!black}
+\setuptodonotes{inline,
+  backgroundcolor=orange!40!cream, bordercolor=orange!70!black, linecolor=orange!70!black}
+\setlist{noitemsep, topsep=4pt}
+
+% ---------- table of contents ----------
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}  % dotted leader for \section entries
+\setlength{\cftbeforesecskip}{4pt}                     % a little air between section rows
+
+% ---------- theorem environments (one deliberate scheme) ----------
+% definition/example share a per-section counter; theorem-family shares one counter.
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+% ---------- math shorthand (\newcommand: a name clash fails loudly) ----------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\Corr}{\operatorname{Corr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\given}{\,\vert\,}
+\newcommand{\indep}{\perp\!\!\!\perp}
+\newcommand{\T}{^{\mathsf{T}}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclarePairedDelimiter{\set}{\{}{\}}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+
+% ---------- key-result box ----------
+% \begin{keybox}[Optional title]
+\newtcolorbox{keybox}[1][Key result]{%
+  breakable, enhanced,
+  colback=blue!6, opacityback=0.5,
+  frame hidden, borderline west={2pt}{0pt}{blue!45!black},
+  coltitle=black, colbacktitle=blue!10, opacitybacktitle=0.5,
+  fonttitle=\bfseries\normalsize, title=#1,
+  left=8pt, right=6pt, top=4pt, bottom=4pt}
+
+% ---------- referenceable problem environment ----------
+% \begin{problem}[source, difficulty]
+% (@ is already a letter inside a .sty file -- no \makeatletter/\makeatother here,
+%  a stray \makeatother would break \ifns@warmbg further down)
+\newcounter{problem}[section]
+\renewcommand{\theproblem}{\thesection.\arabic{problem}}
+\newenvironment{problem}[1][]{%
+  \par\medskip\refstepcounter{problem}%
+  \noindent\textbf{Problem~\theproblem}%
+  \def\ns@meta{#1}%
+  \ifx\ns@meta\@empty\else\ \textnormal{\itshape[#1]}\fi%
+  \par\nobreak\smallskip
+}{\par\medskip}
+
+% ---------- toggleable solution environment ----------
+\ifshowsolutions
+  \newenvironment{solution}%
+    {\par\smallskip\noindent\textbf{Solution.}\enspace}%
+    {\par\medskip}
+\else
+  \excludecomment{solution}
+\fi
+
+% ---------- code listings ----------
+\lstdefinestyle{common}{%
+  backgroundcolor=\color{lstbg}, basicstyle=\ttfamily\small,
+  keywordstyle=\color{lstkw}\bfseries, commentstyle=\color{lstcm}\itshape,
+  stringstyle=\color{lstst}, numbers=left, numberstyle=\tiny\color{gray},
+  numbersep=8pt, showstringspaces=false, breaklines=true, frame=single,
+  framerule=0.3pt, rulecolor=\color{gray!40}, tabsize=4, captionpos=b,
+  xleftmargin=12pt, framexleftmargin=20pt,
+  xrightmargin=-8pt, framexrightmargin=0pt, aboveskip=1em, belowskip=1em}
+\lstdefinestyle{python}{style=common, language=Python}
+\lstdefinestyle{sql}{style=common, language=SQL}
+\lstset{style=common}
+
+% \complexity{time}{space} -> "Complexity: time O(...), space O(...)."
+\newcommand{\complexity}[2]{\noindent\textbf{Complexity:}\enspace time $#1$, space $#2$.\par}
+
+% ---------- warm background (opt-in) ----------
+\ifns@warmbg\AtBeginDocument{\pagecolor{cream}}\fi
+
+\endinput

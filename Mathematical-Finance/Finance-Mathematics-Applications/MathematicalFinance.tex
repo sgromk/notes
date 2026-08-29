@@ -1,0 +1,29 @@
+% MathematicalFinance.tex --- thin document shell. All note-taking machinery lives in notesstyle.sty.
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}   % drop these three if compiling with LuaLaTeX/XeLaTeX
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage[english]{babel}
+
+\usepackage[warmbg]{notesstyle}       % local per-project fork; edit it, not this preamble
+% options: \usepackage[warmbg,nosolutions]{notesstyle}
+
+\title{Topics in Mathematics with Applications in Finance\\[0.3em]\large MIT 18.642}
+\author{Gabriel Kinshuk}
+\date{2026}
+
+\begin{document}
+\maketitle
+\vspace*{8\baselineskip}   % push the ToC farther down page 1
+\tableofcontents
+\newpage
+
+\input{sections/10-introduction-bond-math}
+\newpage
+\input{sections/20-linear-algebra}
+\newpage
+\input{sections/30-quantitative-equity-investing}
+
+\end{document}

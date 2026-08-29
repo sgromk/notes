@@ -1,0 +1,41 @@
+# latexmk build output (redirected here by latexmkrc)
+build/
+*.synctex.gz
+
+# fallback: aux-type files if ever produced outside build/ (e.g. plain pdflatex)
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+
+# bibtex / biber
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# beamer
+*.nav
+*.snm
+*.vrb
+
+# makeindex / glossaries
+*.idx
+*.ind
+*.ilg
+*.glo
+*.gls
+*.glg
+
+# Claude Code local/personal config (project-shared .claude/settings.json, if any, stays tracked)
+.claude/settings.local.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~

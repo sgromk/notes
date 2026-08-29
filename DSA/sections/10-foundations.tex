@@ -408,3 +408,99 @@ The search builds one period in $O(m^2)$ time and space, but $m$ is fixed at $10
 \newpage
 
 \subsection{Greatest common divisor}
+
+\medskip
+
+The efficient algorithm for computing $\gcd(a, b)$ comes from Euclid's \textit{Elements} (c. 300 BCE) and is among the oldest algorithms still in use. It rests on division with remainder: for any $a$ and $b > 0$ there are unique integers $q$ and $r$ with
+\[
+a = bq + r \qquad 0 \le r < b
+\]
+The bound $r < b$ is what makes the method shrink.
+
+Any common divisor of $a$ and $b$ divides $r = a - bq$, so it is a common divisor of $b$ and $r$. Conversely, any common divisor of $b$ and $r$ divides $a = bq + r$, so it is a common divisor of $a$ and $b$. The two pairs therefore have identical sets of common divisors, and in particular the same greatest one:
+\[
+\gcd(a, b) = \gcd(b, r)
+\]
+We repeat with $(b, r)$ in place of $(a, b)$. Each step replaces the second argument with a strictly smaller nonnegative remainder, so the remainders strictly decrease and reach $0$ after finitely many steps. When $r = 0$ we have $\gcd(b, 0) = b$, since every integer divides $0$, so the divisor at that final step is the answer. Because each step preserves the GCD, it equals $\gcd(a, b)$ for the original inputs.
+
+For example with $a = 6$, $b = 4$:
+\begin{center}
+$6 = 1 \cdot 4 + 2$ \\
+$4 = 2 \cdot 2 + 0$ \\
+$\gcd(6, 4) = \gcd(4, 2) = 2$
+\end{center}
+
+For illustrative purposes, we also show the naive algorithm, which tests each integer from 2 up to the smaller of $a$ or $b$:
+
+\medskip
+
+\begin{lstlisting}[language=Python]
+def gcd_naive(a, b):
+    current_gcd = 1
+    for d in range(2, min(a, b) + 1):
+        if a % d == 0 and b % d == 0:
+            if d > current_gcd:
+                current_gcd = d
+
+    return current_gcd
+\end{lstlisting}
+
+This runs in $O(\min(a, b))$ time. That is linear in the value of the input but exponential in its size, since $a$ is written in about $\log a$ digits, which is why it is unusable for large inputs. Now the efficient algorithm:
+
+\medskip
+
+\begin{lstlisting}[language=Python]
+def gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+
+    return a
+\end{lstlisting}
+
+This runs in $O(\log(\min(a, b)))$ divisions. The remainder at least halves every two steps: if $b \le a/2$ then $a \bmod b < b \le a/2$, and if $b > a/2$ then $a \bmod b = a - b < a/2$. Halving every two steps bounds the number of steps by $O(\log a)$. The input $a$ need not exceed $b$, since when $a < b$ the first iteration computes $a \bmod b = a$ and swaps them.
+
+\newpage
+
+\subsection{Least common multiple}
+
+\medskip
+
+Lastly, we consider an algorithm for computing the least common multiple of two integers. Again we begin with a naive algorithm, which tests each multiple of the larger integer up to the product of the two:
+
+\medskip
+
+\begin{lstlisting}[language=Python]
+def lcm_naive(a, b):
+    a, b = max(a, b), min(a, b)
+
+    for i in range(a, a * b + 1, a):
+        if i % b == 0:                       # by construction, i % a == 0
+            return i
+\end{lstlisting}
+
+Before finding a more efficient algorithm, we note some properties of the $\gcd$ and $\operatorname{lcm}$. First, the $\gcd$ is the product of the shared terms in the prime factorizations of $a$ and $b$. Take $\gcd(32, 28)$, with factorizations
+\[
+32 = 2^5 \qquad 28 = 2^2 \cdot 7
+\]
+The term common to both is $2^2 = 4$, which is the $\gcd$. Writing $a$ and $b$ over a common set of primes (with zero exponents where a prime is absent):
+\[
+a = \prod\limits_i p_i^{\alpha_i}, \quad b = \prod\limits_i p_i^{\beta_i} \qquad \longrightarrow \qquad \gcd(a, b) = \prod\limits_i p_i^{\min(\alpha_i, \beta_i)}
+\]
+Each exponent is the min because a divisor of $a$ cannot use more copies of $p_i$ than $a$ has.
+
+Now consider the least common multiple, the smallest number that both $a$ and $b$ divide. A number $m$ is divisible by $a$ when, for every prime $p_i$, its exponent on $p_i$ is at least $\alpha_i$. For $m$ to be divisible by both $a$ and $b$, its exponent on each $p_i$ must be at least $\alpha_i$ and at least $\beta_i$, hence at least $\max(\alpha_i, \beta_i)$. Taking exactly that maximum on every prime, and nothing more, gives the smallest such $m$:
+\[
+\operatorname{lcm}(a, b) = \prod\limits_i p_i^{\max(\alpha_i, \beta_i)}
+\]
+On each prime the two exponents satisfy $\min(\alpha_i, \beta_i) + \max(\alpha_i, \beta_i) = \alpha_i + \beta_i$, so multiplying the $\gcd$ and $\operatorname{lcm}$ recovers $a \cdot b$ prime by prime. Hence
+\[
+\operatorname{lcm}(a, b) = \frac{a \cdot b}{\gcd(a, b)}
+\]
+which reduces the $\operatorname{lcm}$ to one $\gcd$ computation. In code:
+
+\medskip
+
+\begin{lstlisting}[language=Python]
+def lcm(a, b):
+    return a // gcd(a, b) * b
+\end{lstlisting}

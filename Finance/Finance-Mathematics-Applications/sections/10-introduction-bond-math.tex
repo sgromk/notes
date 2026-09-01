@@ -1,0 +1,257 @@
+% Requires \usepackage{notesstyle} in the preamble.
+
+\section{Introduction}
+
+\medskip
+
+\subsection{Types of Markets}
+
+Markets differ mainly in how a trade is arranged. For centuries the main venue was the centralized exchange, a single physical location where buyers and sellers met. In recent decades over-the-counter (OTC) trading grew, where two parties trade directly by negotiation rather than through a central venue. More recently electronic communication networks (ECNs) appeared, which match orders electronically and act as distributed exchanges.
+
+The oldest traded products are money, metals such as gold, and currencies (FX).
+
+More recent products include stocks (ownership shares in a company), equity indices (a basket of stocks), and ETFs. Stock trading splits into two markets. In the primary market a company issues new shares to investors, and a first-time issuance is the initial public offering (IPO), which takes the company from private to public. In the secondary market investors trade existing shares among themselves, and the company is no longer a party to the trade.
+
+\bigskip
+
+\subsection{Types of Assets}
+
+Beyond equities lies the fixed income market.
+
+\begin{definition}[Bond]
+A bond is a securitized loan. The issuer pays interest (the coupon) periodically, often semiannually, and repays the full principal (the notional) at maturity. The most common example is the US Treasury bond.
+\end{definition}
+
+The issuer can default on either the coupon or the principal, so the lender carries credit risk, the risk that repayment does not happen.
+
+Another category is commodities, such as gold, crude oil, and agricultural products. With the growth of electronics, industrial metals like copper and lithium have risen in demand and price.
+
+Layered on top of these are derivatives, contracts whose value derives from an underlying product.
+
+\begin{definition}[Option]
+An option gives the holder the right, but not the obligation, to buy or sell the underlying at a set price (the strike) by a future date.
+\end{definition}
+
+\begin{definition}[Forward]
+A forward is an agreement to buy or sell the underlying at a set price on a future date. Both parties are obligated to transact. It trades OTC and is customized to the two parties, so it is not standardized.
+\end{definition}
+
+\begin{definition}[Future]
+A future is the standardized, exchange-traded counterpart of a forward. Uniform terms and clearing through a central counterparty make it more liquid.
+\end{definition}
+
+\begin{remark}
+Forwards and futures are often conflated. Both fix a price for future delivery, but a forward is a customized OTC contract while a future is standardized, exchange-traded, and centrally cleared.
+\end{remark}
+
+\begin{definition}[Swap]
+A swap is an agreement to exchange cash flows over time, for example paying a fixed interest rate and receiving a floating one.
+\end{definition}
+
+\bigskip
+
+\subsection{Market Players}
+
+At its core a market moves capital from those who have it and want a return (investors, lenders) to those who need it and carry risk (borrowers, issuers). Every participant shares one underlying objective, to earn return for the risk it takes, though central banks and corporates act on policy or hedging goals rather than profit. The participants fall into three groups.
+
+The sell-side intermediates trades and sells services.
+\begin{itemize}[label=--]
+    \item Commercial banks take deposits and lend the money out, for example to fund commercial projects, profiting on the gap between deposit and lending rates.
+    \item Investment banks. Their trading desks make markets and their bankers advise clients. They run three main divisions: equity (stocks), fixed income (bonds, interest rate curves, currencies, and often commodities and derivatives), and the Investment Banking Division (IBD), which handles corporate finance such as raising capital, issuing bonds, and managing client relationships. Many also run an asset management arm that produces funds (for example mutual funds) and offers wealth management.
+\end{itemize}
+
+The buy-side commits capital to take positions.
+\begin{itemize}[label=--]
+    \item Asset managers invest client money, usually against a benchmark, and are measured on relative performance. Mutual funds, pension funds, and insurance portfolios sit here.
+    \item Hedge funds pool investor capital to seek absolute returns, frequently using leverage, short positions, and derivatives. They are structured as general partners (GPs), who run the fund and take on risk, and limited partners (LPs), who supply capital passively.
+    \item Retail investors trade their own accounts through a broker.
+\end{itemize}
+
+Other participants provide infrastructure or act on policy.
+\begin{itemize}[label=--]
+    \item Exchanges and clearinghouses supply the venue and guarantee settlement, and brokers route client orders.
+    \item Central banks are policy-driven. They set rates, provide liquidity, and intervene in currency markets.
+    \item Corporates enter markets to hedge, reducing the exposure that comes from their exports or input costs.
+\end{itemize}
+
+\bigskip
+
+\subsection{Trader Types}
+
+Participants can also be classified by why they trade and how they make money.
+\begin{itemize}[label=--]
+    \item Hedgers reduce risk they already hold. They accept an expected cost, such as a spread or an option premium, in exchange for lower exposure. Corporates and asset owners are typical.
+    \item Market makers provide liquidity. They quote a price to buy (the bid) and a price to sell (the offer), earn the spread, and try to stay flat, unwinding or hedging inventory quickly so their profit comes from the spread earned across many trades.
+    \item Arbitrageurs exploit price discrepancies between related instruments. In the idealized case the profit is riskless, which is why the no-arbitrage condition underlies derivative pricing. Real arbitrage still carries execution and model risk.
+    \item Speculators, including proprietary traders and fund portfolio managers, deliberately take directional risk. They open positions to express a view and are paid for bearing risk that others want to shed.
+\end{itemize}
+
+\bigskip
+
+\subsection{The Role of Mathematics}
+
+\medskip
+
+Financial mathematics usually takes one of three forms.
+\begin{itemize}[label=--]
+    \item Pricing models. Derivatives are hard to value. The standard approach prices them by no-arbitrage, replicating the payoff with simpler instruments so the price is set by the cost of that replication (Black-Scholes, and the treatment in John Hull's text).
+    \item Risk management. Once a position carries risk, the questions are how large it should be, when to add or cut, and how much to diversify. These are answered with quantitative measures of exposure, such as variance, Value at Risk, and the Sharpe ratio \((\E[R]-r_f)/\sqrt{\Var(R)}\), even though the behavior behind them is often driven by fear and greed.
+    \item Trading strategies. The search for a repeatable edge. A strategy needs positive expected profit per trade after costs, \(\E[\pi] > 0\), and enough independent bets that the edge survives variance.
+\end{itemize}
+
+Pricing rests on one principle.
+
+\begin{keybox}[No-arbitrage pricing]
+If two portfolios pay off the same amount in every future state, they must have the same price today, or a riskless profit exists. Pricing a derivative means constructing such a replicating portfolio from simpler instruments, which fixes the derivative's price at the cost of replication. This is the principle behind Black-Scholes.
+\end{keybox}
+
+A naive approach is to look at historical trends, ``just look at the data,'' and extrapolate. This tends to fail in practice, which the Efficient Market Hypothesis (EMH) explains. The intuition is that if profit were lying around freely, it would have been taken already. Taken alone, EMH implies there is no excess return to capture.
+
+Since excess returns clearly do exist, behavioral finance offers a resolution. People are not fully rational, and in some situations they act poorly. Those situations create the opportunity to profit.
+
+Trading is sometimes described as a zero-sum game, where every gain to one party is a loss to another. Over the long run it is closer to positive-sum, since markets create economic value through dividends, capital returns, and long-term wealth accumulation.
+
+\bigskip
+
+\subsection{Dimensions of an Approach}
+
+\medskip
+
+An investor faces several recurring choices.
+\begin{itemize}[label=--]
+    \item Internal or external: manage money directly, or allocate to outside managers.
+    \item Public or private: listed markets (stocks, bonds, currencies), or private assets (venture capital, private equity, buyouts, real estate, natural resource funds).
+    \item Passive or active: track a benchmark (beta), or try to beat it (alpha).
+    \item Systematic or discretionary: follow rules drawn from statistical patterns (quant), or use judgment about specific situations (fundamental).
+    \item Trend following or mean reversion: ride the move, or fade it (buy the dip).
+    \item Short term or long term: fast and liquid, or slow and illiquid.
+    \item Value or growth: buy when price sits below present value, \(V(0) \gg P\), or when expected future value far exceeds today's, \(V(T) \gg V(0)\).
+    \item History or extrapolation: assume patterns repeat, or that conditions change.
+\end{itemize}
+
+\bigskip
+
+The first step is to understand your own objectives, choose the area where you hold the strongest comparative advantage relative to the rest of the market, and then find a strategy suited to it.
+
+\bigskip
+
+\subsection{Interest}
+
+\medskip
+
+We expect that after investing our money, in one year we collect the original amount plus a fixed fraction of it, the rate $r$. If we reinvest that, we again expect a return, now with $r$ applied to the increased amount. Starting from a principal of \$1:
+\[
+1 \xrightarrow{y_1} 1 \cdot (1 + r) \xrightarrow{y_2} (1 + r)(1 + r) = (1 + r)^2
+\]
+So over $n$ years an initial principal $P$ grows to $P(1 + r)^n$. If instead we compound $n$ times per year over $t$ years, the accumulated value $A$ is
+\[
+A = P\left(1 + \frac{r}{n}\right)^{nt}
+\]
+Letting the number of compounding periods grow without bound, $n \to \infty$, this approaches $e^{rt}$:
+\[
+\lim_{n \to \infty}\left(1 + \frac{r}{n}\right)^{nt} = e^{rt}
+\]
+so $A \to P e^{rt}$, which is continuous compounding. The term inside the parentheses approaches $1$ while the exponent $nt$ grows without bound, an indeterminate $1^{\infty}$ form. Its value follows from $\lim_{m \to \infty}(1 + 1/m)^m = e$, where $e$ is Euler's number.
+
+We can rearrange the equation for compound interest to find the value we would expect to pay, $P$, for a zero coupon bond of notional $N$ maturing in $n$ years:
+\[
+P = \frac{N}{(1+r)^n}
+\]
+If the bond also pays an annual coupon $C$, we add the present value of those payments as an additional term:
+\[
+P = C\,\frac{(1+r)^n - 1}{r(1+r)^n} + \frac{N}{(1+r)^n}
+\]
+The first term is the present value of an $n$-year stream of coupons $C$, and the second is the present value of the notional repaid at maturity.
+
+Since the price folds together the coupon, the maturity, and the notional, comparing two bonds by price alone is not useful. The standard measure is instead the bond \textit{yield}.
+
+\begin{definition}[Yield]
+The yield of a bond is the single rate $y$ at which the present value of its future cash flows equals its current price $P$. It is the internal rate of return of the bond, the discount rate of the pricing formulas solved for from a known price.
+\end{definition}
+
+Writing the cash flows out, a bond paying a coupon $C$ at each year $t = 1, \dots, n$ and the notional $N$ at maturity has a yield $y$ solving
+\[
+P = \sum_{t=1}^{n} \frac{C}{(1+y)^t} + \frac{N}{(1+y)^n}
+\]
+which is the price from before, with the discount rate now named as the yield.
+
+The rate has two readings.
+
+First, $y$ is a rate of return. Buying at $P$, holding to maturity, and reinvesting each coupon at $y$ earns an annual return of exactly $y$. This is what internal rate of return means, the one rate consistent with the price and the full schedule of payments.
+
+Second, $y$ is a common scale. A price mixes together the coupon, the maturity, and the notional, so two bonds are hard to rank by price. The yield states the bond as one rate, which is why bonds are quoted and compared by yield.
+
+Price and yield move in opposite directions. A bond's cash flows are fixed once it exists, so paying more for that fixed stream means accepting a lower return. Each term $1/(1+y)^t$ decreases in $y$, so $P$ decreases in $y$, and the map between them is monotone. That monotonicity lets us pass between a price and a yield without ambiguity.
+
+Comparing the yield to the coupon rate $c = C/N$ locates the price relative to the notional. The coupon rate is the annual coupon expressed as a fraction of the notional. It is fixed when the bond is issued and, unlike the yield, does not move with the price. It sets the size of the payments, while the yield measures the return given what the bond costs.
+\begin{itemize}[label=--, itemsep=0.3em]
+    \item Par, $P = N$. The notional is paid out and returned unchanged, so the whole return comes from the coupons and $y = c$.
+    \item Premium, $P > N$. We pay more than the notional returned at maturity, a capital loss on principal that holds the return below the coupon rate, so $y < c$.
+    \item Discount, $P < N$. We pay less than the notional returned, a capital gain that raises the return above the coupon rate, so $y > c$.
+\end{itemize}
+
+For a coupon bond this equation is a degree-$n$ polynomial in $1/(1+y)$, so $y$ is found numerically. A zero coupon bond has one cash flow, which makes its yield explicit. Inverting $P = N/(1+y)^n$,
+\[
+y = \left(\frac{N}{P}\right)^{1/n} - 1
+\]
+
+\begin{remark}
+The rate-of-return reading assumes each coupon is reinvested at the yield $y$. Reinvesting at a different rate makes the realized return differ from the quoted yield. A zero coupon bond pays no coupons, so the assumption is empty and its yield equals the return realized if the bond is held to maturity.
+\end{remark}
+
+\medskip
+
+\subsubsection{Yield Curve}
+
+\medskip
+
+Yields have a term structure. Even among bonds of the same credit quality, usually a single government issuer, the yield depends on how long the money is committed. Plotting yield against maturity, with credit held fixed so that only maturity varies, traces out the yield curve. It serves two purposes at once. It is the benchmark set of rates we use to discount other cash flows, and it is a snapshot of where the market thinks rates are headed and what it charges to lend for longer. There are three general shapes for the yield curve:
+\begin{itemize}[label=--, itemsep=0.3em]
+    \item Upward, or normal. Long yields sit above short ones. Lenders ask for more to tie their money up longer, and it fits a market that expects growth or higher rates ahead.
+    \item Inverted. Short yields sit above long ones, so lending for two years pays less than lending for three months. This is unusual and says the market expects rates to fall later, often because it expects growth to slow. An inverted curve has preceded most recent recessions.
+    \item Flat. Yields are close to equal across maturities. It tends to show up while the curve is passing between the normal and inverted shapes.
+\end{itemize}
+
+To see where the slope comes from, compare two ways of putting money to work over the same ten years: locking in a single ten-year rate today, or investing short-term and rolling it over as each piece matures. For an investor to be indifferent between them, the long rate has to track the short rates the market expects to prevail along the way. This is the expectations view of the curve, and it says a ten-year yield is roughly the average of the one-year rates expected over the next ten years. An upward slope then means the market expects short rates to rise.
+
+Expectations alone leave something out, because a long bond is not only a bet on the average rate, it also carries more risk. A given move in yields marks a ten-year bond down far more than a two-year bond, since its longer duration makes its price more sensitive to rates. An investor who might have to sell before maturity bears that price risk the whole time and wants to be paid for it, which is the term premium. The term premium pushes the curve upward on its own, even when the market expects no change in rates at all.
+
+One layer beneath the yield to maturity sits a more basic object. The single yield we attach to a coupon bond is really a blended average of the rates that apply to each of its separate cash flows. Those underlying rates are the spot curve, the yields on zero coupon bonds, where each spot rate $s_t$ discounts one cash flow arriving at time $t$ and nothing else. A coupon bond is priced by discounting each payment at its own spot rate, and its yield to maturity comes out as a weighted average of those spots. This is why two bonds of the same maturity but different coupons can post slightly different yields to maturity while sharing the same underlying spot curve.
+
+\medskip
+
+\begin{keybox}[Forward rate from the curve]
+The forward rate $f_{1,2}$ is the one-year rate, beginning one year from now, implied by today's one- and two-year spot yields $y_1$ and $y_2$. No-arbitrage sets a two-year investment equal to one year rolled into that forward:
+\[
+(1+y_2)^2 = (1+y_1)(1+f_{1,2})
+\]
+so
+\[
+f_{1,2} = \frac{(1+y_2)^2}{1+y_1} - 1
+\]
+\end{keybox}
+
+\newpage
+
+A bond's price responds to changes in its yield, and we can measure that response by expanding $P(y)$ to second order:
+\[
+\Delta P \approx \frac{dP}{dy}\,\Delta y + \frac{1}{2}\frac{d^2P}{dy^2}\,(\Delta y)^2
+\]
+Dividing by $P$ turns this into a fractional price change and names its two coefficients, the standard sensitivity measures for a bond.
+
+\medskip
+
+\begin{keybox}[Duration and convexity]
+\[
+D = -\frac{1}{P}\frac{dP}{dy} \qquad \mathcal{C} = \frac{1}{P}\frac{d^2P}{dy^2}
+\]
+\[
+\frac{\Delta P}{P} \approx -D\,\Delta y + \tfrac{1}{2}\,\mathcal{C}\,(\Delta y)^2
+\]
+\end{keybox}
+
+\bigskip
+
+Duration is the first-order term, the fractional price move per unit change in yield. The minus sign keeps $D$ positive, since $dP/dy < 0$: price falls as yield rises. A duration of $7$ means a one-percentage-point rise in yield ($\Delta y = 0.01$) costs roughly $7\%$ of the price. Duration grows with maturity, since a longer bond's cash flows are discounted over more periods and a shift in $y$ compounds through every one of them.
+
+Convexity is the second-order correction. The price-yield relationship bends rather than running straight, so duration alone overstates the loss on a yield rise and understates the gain on a yield fall. The $\tfrac{1}{2}\mathcal{C}(\Delta y)^2$ term supplies that curvature. Since $(\Delta y)^2 > 0$ either way and $\mathcal{C} > 0$ for an ordinary bond, this correction raises the return whichever direction yields move, so convexity favors the holder.

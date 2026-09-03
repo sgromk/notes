@@ -1,4 +1,5 @@
-# SIE Exam Prep Notes
-My notes on <topic>.
+# SIE Exam Notes
 
-No guarantee of correctness.
+My study notes for FINRA's Securities Industry Essentials exam.
+
+I worked through these alongside Dr. Robert Shiller's *Financial Markets* course, so some of the writing and ideas might reflect overlap there.

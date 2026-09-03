@@ -51,6 +51,7 @@
 \RequirePackage{enumitem}
 \RequirePackage{parskip}
 \RequirePackage{tikz}
+\RequirePackage{makecell}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric}
 \setlength{\marginparwidth}{2cm}           % silence a todonotes load warning
 \RequirePackage[colorinlistoftodos]{todonotes}
@@ -64,12 +65,15 @@
 \definecolor{lstkw}{RGB}{0,0,170}
 \definecolor{lstcm}{RGB}{95,120,95}
 \definecolor{lstst}{RGB}{160,60,60}
+\definecolor{valuerow}{gray}{0.94}         % shaded value row in bid/ask tables
 
 \hypersetup{colorlinks=true,
   linkcolor=blue!50!black, citecolor=blue!50!black, urlcolor=blue!50!black}
 \setuptodonotes{inline,
   backgroundcolor=orange!40!cream, bordercolor=orange!70!black, linecolor=orange!70!black}
 \setlist{noitemsep, topsep=4pt}
+
+\newcolumntype{C}{>{\centering\arraybackslash}X}  % centered flexible-width column
 
 % ---------- table of contents ----------
 \renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}  % dotted leader for \section entries
